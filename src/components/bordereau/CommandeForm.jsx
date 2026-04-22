@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SectionTitle, BtnCoupon } from './shared';
+import { base44 } from '@/api/base44Client';
 
 const FORFAITS = [
   { id: 'poche', name: 'Poche', price: '8,90', desc: '< 300g · roman' },
@@ -12,6 +13,7 @@ export default function CommandeForm({ book, onClose }) {
   const [selectedForfait, setSelectedForfait] = useState('poche');
   const [selectedTransit, setSelectedTransit] = useState('express');
   const [loading, setLoading] = useState(false);
+  const [adresse, setAdresse] = useState('');
   const [jaugeWidth, setJaugeWidth] = useState(0);
 
   useEffect(() => {
@@ -21,13 +23,25 @@ export default function CommandeForm({ book, onClose }) {
   const currentForfait = FORFAITS.find(f => f.id === selectedForfait);
   const total = currentForfait ? currentForfait.price + '€' : '—';
 
-  const confirmer = () => {
+  const confirmer = async () => {
+    // Bloquer si dans un iframe (preview)
+    if (window.self !== window.top) {
+      alert('⚠️ Le paiement ne fonctionne que depuis l\'application publiée, pas depuis la prévisualisation.');
+      return;
+    }
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      onClose();
-      alert('✅ Commande confirmée !\n\nVotre livre est en séquestre.\nUn voyageur va prendre en charge votre mission.');
-    }, 1500);
+    const res = await base44.functions.invoke('createCheckout', {
+      book,
+      forfait: selectedForfait,
+      transit: selectedTransit,
+      adresse,
+    });
+    setLoading(false);
+    if (res.data?.url) {
+      window.location.href = res.data.url;
+    } else {
+      alert('Erreur lors de la création du paiement.');
+    }
   };
 
   return (
@@ -146,6 +160,8 @@ export default function CommandeForm({ book, onClose }) {
         <input
           className="font-special"
           placeholder="Point relais Miami..."
+          value={adresse}
+          onChange={e => setAdresse(e.target.value)}
           style={{
             width: '100%', background: 'var(--creme)', border: '1px solid rgba(26,16,8,0.35)',
             padding: '9px 12px', fontSize: 13, color: 'var(--encre)', outline: 'none',
