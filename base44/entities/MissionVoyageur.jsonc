@@ -1,0 +1,62 @@
+{
+  "name": "MissionVoyageur",
+  "type": "object",
+  "properties": {
+    "voyageur_email": {
+      "type": "string",
+      "description": "Email du voyageur"
+    },
+    "livre": {
+      "type": "string",
+      "description": "Titre du livre"
+    },
+    "auteur": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "Poche",
+        "Broch\u00e9",
+        "BD",
+        "Reli\u00e9"
+      ],
+      "default": "Poche"
+    },
+    "poids": {
+      "type": "string"
+    },
+    "ville_destination": {
+      "type": "string"
+    },
+    "date_limite": {
+      "type": "string"
+    },
+    "statut": {
+      "type": "string",
+      "enum": [
+        "disponible",
+        "acceptee",
+        "engagee",
+        "livree"
+      ],
+      "default": "disponible"
+    },
+    "numero_ordre": {
+      "type": "number",
+      "description": "Position dans la valise du voyageur (1-10)"
+    },
+    "commission": {
+      "type": "number",
+      "description": "Montant de la commission pour ce livre"
+    },
+    "ticket_url": {
+      "type": "string",
+      "description": "URL du ticket de caisse scann\u00e9"
+    }
+  },
+  "required": [
+    "livre",
+    "ville_destination"
+  ]
+}

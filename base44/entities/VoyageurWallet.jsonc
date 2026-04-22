@@ -1,0 +1,37 @@
+{
+  "name": "VoyageurWallet",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email du voyageur"
+    },
+    "solde_disponible": {
+      "type": "number",
+      "default": 0,
+      "description": "Gains confirm\u00e9s disponibles pour virement"
+    },
+    "gains_previsionnels": {
+      "type": "number",
+      "default": 0,
+      "description": "Gains en attente de confirmation relais"
+    },
+    "livres_actifs": {
+      "type": "number",
+      "default": 0,
+      "description": "Nombre de livres en cours de transport (max 10)"
+    },
+    "virement_suspendu": {
+      "type": "boolean",
+      "default": false,
+      "description": "Suspendu suite \u00e0 un signalement relais"
+    },
+    "trajet_actif": {
+      "type": "string",
+      "description": "Ex: Paris \u2192 Miami \u00b7 28 Avril 2026"
+    }
+  },
+  "required": [
+    "user_email"
+  ]
+}
