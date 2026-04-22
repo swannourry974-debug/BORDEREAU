@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import AppHeader from '../components/bordereau/AppHeader';
 import RoleSwitcher from '../components/bordereau/RoleSwitcher';
 import BottomNav from '../components/bordereau/BottomNav';
@@ -7,24 +8,29 @@ import PanelEtagere from '../components/bordereau/PanelEtagere';
 import PanelMissions from '../components/bordereau/PanelMissions';
 import PanelStock from '../components/bordereau/PanelStock.jsx';
 
-export default function Bordereau() {
+export default function Bordereau({ initialPanel }) {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [role, setRole] = useState('lecteur');
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
-  const [activePanel, setActivePanel] = useState('catalogue');
   const [commandeOpen, setCommandeOpen] = useState(false);
   const [commandeBook, setCommandeBook] = useState(null);
+
+  // Derive active panel from URL
+  const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/missions': 'missions', '/stock': 'stock' };
+  const activePanel = pathToPanel[location.pathname] || initialPanel || 'catalogue';
 
   const switchRole = (newRole) => {
     setRole(newRole);
     setRoleSwitcherOpen(false);
     setCommandeOpen(false);
-    const defaults = { lecteur: 'catalogue', voyageur: 'missions', relais: 'stock' };
-    setActivePanel(defaults[newRole]);
+    const defaults = { lecteur: '/catalogue', voyageur: '/missions', relais: '/stock' };
+    navigate(defaults[newRole]);
   };
 
   const switchPanel = (panelId) => {
-    setActivePanel(panelId);
     setCommandeOpen(false);
+    navigate('/' + panelId);
   };
 
   const openCommande = (book) => {
@@ -50,7 +56,7 @@ export default function Bordereau() {
         onSwitch={switchRole}
       />
 
-      <main style={{ maxWidth: 480, margin: '0 auto', padding: '20px 16px 100px', position: 'relative', zIndex: 1 }}>
+      <main style={{ maxWidth: 480, margin: '0 auto', padding: '20px 16px calc(100px + env(safe-area-inset-bottom, 0px))', position: 'relative', zIndex: 1 }}>
         <div className="font-fell" style={{ textAlign: 'center', padding: '8px 0 4px', fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.4)', letterSpacing: 2 }}>
           22 Avril 2026 · Paris → le Monde
         </div>

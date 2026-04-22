@@ -10,6 +10,7 @@ import Bordereau from './pages/Bordereau';
 import LandingLecteur from './pages/LandingLecteur';
 import LandingVoyageur from './pages/LandingVoyageur';
 import LandingRelais from './pages/LandingRelais';
+import PanelProfil from './pages/PanelProfil';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -38,6 +39,11 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/" element={<Bordereau />} />
+      <Route path="/catalogue" element={<Bordereau initialPanel="catalogue" />} />
+      <Route path="/etagere" element={<Bordereau initialPanel="etagere" />} />
+      <Route path="/missions" element={<Bordereau initialPanel="missions" />} />
+      <Route path="/stock" element={<Bordereau initialPanel="stock" />} />
+      <Route path="/profil" element={<PanelProfil />} />
       {/* Add your page Route elements here */}
       <Route path="/landing-lecteur" element={<LandingLecteur />} />
       <Route path="/landing-voyageur" element={<LandingVoyageur />} />

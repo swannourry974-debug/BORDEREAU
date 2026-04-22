@@ -10,7 +10,10 @@ export default function AppHeader({ role, roleSwitcherOpen, onToggleRoleSwitcher
   return (
     <header style={{
       background: 'var(--bordeaux)',
-      padding: '18px 20px 14px',
+      paddingTop: `calc(18px + env(safe-area-inset-top, 0px))`,
+      paddingBottom: 14,
+      paddingLeft: 20,
+      paddingRight: 20,
       position: 'sticky',
       top: 0,
       zIndex: 100,

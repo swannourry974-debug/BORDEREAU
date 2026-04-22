@@ -7,6 +7,10 @@
 @layer base {
   :root {
     --background: 60 33% 97%;
+    --safe-area-top: env(safe-area-inset-top, 0px);
+    --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-area-left: env(safe-area-inset-left, 0px);
+    --safe-area-right: env(safe-area-inset-right, 0px);
     --foreground: 25 35% 8%;
     --card: 48 40% 93%;
     --card-foreground: 25 35% 8%;
@@ -47,6 +51,41 @@
     background-color: var(--creme);
     color: var(--encre);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 25 35% 8%;
+    --foreground: 60 33% 92%;
+    --card: 25 30% 12%;
+    --card-foreground: 60 33% 92%;
+    --popover: 25 30% 12%;
+    --popover-foreground: 60 33% 92%;
+    --primary: 345 80% 40%;
+    --primary-foreground: 60 33% 97%;
+    --secondary: 25 25% 18%;
+    --secondary-foreground: 60 33% 92%;
+    --muted: 25 20% 22%;
+    --muted-foreground: 46 25% 60%;
+    --accent: 40 50% 40%;
+    --accent-foreground: 60 33% 97%;
+    --border: 25 20% 25%;
+    --input: 25 20% 25%;
+    --ring: 345 80% 40%;
+    --creme: #2a1f14;
+    --bordeaux: #c0304a;
+    --bordeaux-dark: #8a1530;
+    --encre: #f0ead8;
+    --sepia: #b08a40;
+    --papier: #231a10;
+    --papier-fonce: #1a120a;
+  }
+
+  body {
+    background-color: var(--creme);
+    color: var(--encre);
   }
 }
 
