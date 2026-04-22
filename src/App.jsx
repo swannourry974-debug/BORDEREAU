@@ -7,6 +7,9 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 // Add page imports here
 import Bordereau from './pages/Bordereau';
+import LandingLecteur from './pages/LandingLecteur';
+import LandingVoyageur from './pages/LandingVoyageur';
+import LandingRelais from './pages/LandingRelais';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -36,6 +39,9 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route path="/" element={<Bordereau />} />
       {/* Add your page Route elements here */}
+      <Route path="/landing-lecteur" element={<LandingLecteur />} />
+      <Route path="/landing-voyageur" element={<LandingVoyageur />} />
+      <Route path="/landing-relais" element={<LandingRelais />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
