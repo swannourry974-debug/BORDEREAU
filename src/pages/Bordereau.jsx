@@ -5,7 +5,7 @@ import BottomNav from '../components/bordereau/BottomNav';
 import PanelCatalogue from '../components/bordereau/PanelCatalogue';
 import PanelEtagere from '../components/bordereau/PanelEtagere';
 import PanelMissions from '../components/bordereau/PanelMissions';
-import PanelStock from '../components/bordereau/PanelStock';
+import PanelStock from '../components/bordereau/PanelStock.jsx';
 
 export default function Bordereau() {
   const [role, setRole] = useState('lecteur');
