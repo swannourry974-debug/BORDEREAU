@@ -66,17 +66,17 @@ module.exports = {
   				ring: 'hsl(var(--sidebar-ring))'
   			},
   			bordeaux: {
-  					DEFAULT: 'var(--bordeaux)',
+  					DEFAULT: '#800020',
   					light: '#a0304a',
-  					dark: 'var(--bordeaux-dark)',
+  					dark: '#5a0015',
   				},
-  				encre: 'var(--encre)',
-  				sepia: 'var(--sepia)',
+  				encre: '#1a1008',
+  				sepia: '#8B6914',
   				papier: {
-  					DEFAULT: 'var(--papier)',
-  					fonce: 'var(--papier-fonce)',
+  					DEFAULT: '#F5F0DC',
+  					fonce: '#E8E0C4',
   				},
-  				creme: 'var(--creme)',
+  				creme: '#FDFCF0',
   		},
   		keyframes: {
   			'accordion-down': {

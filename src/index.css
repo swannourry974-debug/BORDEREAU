@@ -55,39 +55,7 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: 25 35% 8%;
-    --foreground: 60 33% 92%;
-    --card: 25 30% 12%;
-    --card-foreground: 60 33% 92%;
-    --popover: 25 30% 12%;
-    --popover-foreground: 60 33% 92%;
-    --primary: 345 80% 40%;
-    --primary-foreground: 60 33% 97%;
-    --secondary: 25 25% 18%;
-    --secondary-foreground: 60 33% 92%;
-    --muted: 25 20% 22%;
-    --muted-foreground: 46 25% 60%;
-    --accent: 40 50% 40%;
-    --accent-foreground: 60 33% 97%;
-    --border: 25 20% 25%;
-    --input: 25 20% 25%;
-    --ring: 345 80% 40%;
-    --creme: #2a1f14;
-    --bordeaux: #c0304a;
-    --bordeaux-dark: #8a1530;
-    --encre: #f0ead8;
-    --sepia: #b08a40;
-    --papier: #231a10;
-    --papier-fonce: #1a120a;
-  }
-
-  body {
-    background-color: var(--creme);
-    color: var(--encre);
-  }
-}
+/* Dark mode disabled - design always uses light/vintage theme */
 
 /* GRAIN OVERLAY */
 body::before {
