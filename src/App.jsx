@@ -6,7 +6,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 // Add page imports here
-import Bordereau from './pages/Bordereau';
+import Bordereau from './pages/Bordereau.jsx';
 import LandingLecteur from './pages/LandingLecteur';
 import LandingVoyageur from './pages/LandingVoyageur';
 import LandingRelais from './pages/LandingRelais';
