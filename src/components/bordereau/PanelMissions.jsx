@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SectionTitle, BtnCoupon, PerfoStrip } from './shared';
 import JaugeValise from '../missions/JaugeValise';
 import WalletCard from '../missions/WalletCard';
+import PullToRefresh from '../shared/PullToRefresh';
 
 const MAX_LIVRES = 10;
 
@@ -60,10 +61,10 @@ function MissionCard({ mission, rang, onAccept, disabled }) {
       <div className="font-special" style={{ fontSize: 18, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 4 }}>
         {mission.ville}
       </div>
-      <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.55)', marginBottom: 10 }}>
+      <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.55)', marginBottom: 10 }}>
         {isEngaged ? 'Ticket scanné · Achat confirmé · ENGAGÉE' : mission.date}
       </div>
-      <div style={{ fontSize: 12, color: 'rgba(26,16,8,0.6)', marginBottom: 8 }}>
+      <div style={{ fontSize: 13, color: 'rgba(26,16,8,0.6)', marginBottom: 8 }}>
         📚 <em>{mission.livre}</em> · {mission.type} · {mission.poids}
       </div>
 
@@ -75,7 +76,7 @@ function MissionCard({ mission, rang, onAccept, disabled }) {
           border: '1px solid #2d6a2d',
           color: '#2d6a2d',
           fontFamily: 'Special Elite, monospace',
-          fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
+          fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
           padding: '2px 8px', marginBottom: 8,
         }}>
           Livre n°{mission.rang} · +{mission.commission?.toFixed(2)} € de gratification
@@ -87,7 +88,7 @@ function MissionCard({ mission, rang, onAccept, disabled }) {
           <span className="font-playfair" style={{ fontSize: 22, fontWeight: 700, color: isEngaged ? 'rgba(26,16,8,0.4)' : 'var(--bordeaux)' }}>
             {commission ? `${commission.toFixed(2)} €` : (mission.commission ? `${mission.commission.toFixed(2)} €` : '—')}
           </span>
-          <span style={{ fontSize: 9, color: 'rgba(26,16,8,0.5)', letterSpacing: 1, display: 'block', marginTop: -2 }}>
+          <span style={{ fontSize: 11, color: 'rgba(26,16,8,0.5)', letterSpacing: 1, display: 'block', marginTop: -2 }}>
             {isEngaged ? 'En séquestre' : 'Commission'}
           </span>
         </div>
@@ -135,7 +136,13 @@ export default function PanelMissions() {
     setAvailable(prev => prev.filter(m => m.id !== id));
   };
 
+  const handleRefresh = async () => {
+    setAvailable(AVAILABLE_MISSIONS);
+    await new Promise(r => setTimeout(r, 800));
+  };
+
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <div>
       {/* Wallet */}
       <WalletCard
@@ -197,11 +204,12 @@ export default function PanelMissions() {
       <SectionTitle>Déclarer un nouveau vol</SectionTitle>
       <div style={{ background: 'var(--papier)', border: '1.5px dashed rgba(26,16,8,0.3)', padding: 20, textAlign: 'center' }}>
         <div style={{ fontSize: 32, marginBottom: 8 }}>✈️</div>
-        <div className="font-fell" style={{ fontSize: 12, color: 'rgba(26,16,8,0.5)', marginBottom: 14, fontStyle: 'italic' }}>
+        <div className="font-fell" style={{ fontSize: 13, color: 'rgba(26,16,8,0.5)', marginBottom: 14, fontStyle: 'italic' }}>
           Vous avez un autre voyage prévu ?
         </div>
         <BtnCoupon onClick={() => alert('Formulaire de déclaration de vol')}>+ Déclarer un vol</BtnCoupon>
       </div>
     </div>
+    </PullToRefresh>
   );
 }

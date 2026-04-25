@@ -27,15 +27,18 @@ export default function BottomNav({ role, activePanel, onSwitch }) {
     position: 'relative',
     transition: 'all 0.2s',
     borderRight: '1px dashed rgba(26,16,8,0.2)',
+    userSelect: 'none',
+    WebkitTapHighlightColor: 'transparent',
   });
 
   const labelStyle = (active) => ({
-    fontSize: 8,
+    fontSize: 10,
     letterSpacing: 1.5,
     textTransform: 'uppercase',
     color: active ? 'var(--bordeaux)' : 'rgba(26,16,8,0.5)',
     fontWeight: active ? 'bold' : 'normal',
     fontFamily: "'Special Elite', monospace",
+    userSelect: 'none',
   });
 
   const NavItem = ({ panelId, icon, label, badge }) => {

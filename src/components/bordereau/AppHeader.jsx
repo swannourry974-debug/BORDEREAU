@@ -25,7 +25,7 @@ export default function AppHeader({ role, roleSwitcherOpen, onToggleRoleSwitcher
           <div className="font-special" style={{ fontSize: 28, color: 'var(--creme)', letterSpacing: 6, textTransform: 'uppercase' }}>
             BORDEREAU
           </div>
-          <span className="font-fell" style={{ fontStyle: 'italic', fontSize: 11, color: 'rgba(253,252,240,0.7)', letterSpacing: 2, marginTop: 2, display: 'block' }}>
+          <span className="font-fell" style={{ fontStyle: 'italic', fontSize: 12, color: 'rgba(253,252,240,0.7)', letterSpacing: 2, marginTop: 2, display: 'block' }}>
             Manifeste des livres voyageurs
           </span>
         </div>
@@ -35,14 +35,16 @@ export default function AppHeader({ role, roleSwitcherOpen, onToggleRoleSwitcher
           style={{
             background: 'var(--creme)',
             color: 'var(--bordeaux)',
-            fontSize: 9,
+            fontSize: 11,
             letterSpacing: 2,
             textTransform: 'uppercase',
-            padding: '4px 10px',
+            padding: '6px 12px',
             border: '1px solid var(--bordeaux-dark)',
             cursor: 'pointer',
             position: 'relative',
             outline: 'none',
+            userSelect: 'none',
+            WebkitTapHighlightColor: 'transparent',
           }}
         >
           <span style={{

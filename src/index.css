@@ -39,6 +39,36 @@
     --papier: #F5F0DC;
     --papier-fonce: #E8E0C4;
   }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: 20 15% 8%;
+      --foreground: 48 40% 93%;
+      --card: 20 15% 12%;
+      --card-foreground: 48 40% 93%;
+      --popover: 20 15% 12%;
+      --popover-foreground: 48 40% 93%;
+      --primary: 345 80% 45%;
+      --primary-foreground: 48 40% 93%;
+      --secondary: 20 15% 18%;
+      --secondary-foreground: 48 40% 93%;
+      --muted: 20 15% 20%;
+      --muted-foreground: 48 20% 60%;
+      --accent: 40 50% 45%;
+      --accent-foreground: 48 40% 93%;
+      --border: 20 15% 25%;
+      --input: 20 15% 25%;
+      --ring: 345 80% 45%;
+
+      --creme: #2a1f18;
+      --bordeaux: #c0304a;
+      --bordeaux-dark: #800020;
+      --encre: #f5e9c8;
+      --sepia: #c8a96e;
+      --papier: #1e1610;
+      --papier-fonce: #2a1f18;
+    }
+  }
 }
 
 @layer base {
@@ -52,6 +82,7 @@
     color: var(--encre);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
     padding-top: env(safe-area-inset-top, 0px);
+    overscroll-behavior-y: none;
   }
 }
 

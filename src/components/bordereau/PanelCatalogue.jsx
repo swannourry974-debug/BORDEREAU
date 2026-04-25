@@ -4,6 +4,7 @@ import SectionTitle from '@/components/shared/SectionTitle';
 import SearchBlock from '@/components/catalogue/SearchBlock';
 import BookCard from '@/components/catalogue/BookCard';
 import CommandeForm from '@/components/catalogue/CommandeForm';
+import PullToRefresh from '@/components/shared/PullToRefresh';
 import { useOpenLibrary } from '@/hooks/useOpenLibrary';
 import { toast } from 'sonner';
 
@@ -37,7 +38,16 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
     });
   };
 
+  const handleRefresh = async () => {
+    if (hasSearched) {
+      reset();
+      setHasSearched(false);
+    }
+    await new Promise(r => setTimeout(r, 800));
+  };
+
   return (
+    <PullToRefresh onRefresh={handleRefresh}>
     <div>
       <WelcomeCard
         eyebrow="Bonjour, Lecteur"
@@ -84,5 +94,6 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
         </div>
       )}
     </div>
+    </PullToRefresh>
   );
 }
