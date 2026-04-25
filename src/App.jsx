@@ -5,6 +5,8 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import LoadingScreen from '@/components/shared/LoadingScreen';
+import { useState } from 'react';
 // Add page imports here
 import Bordereau from './pages/Bordereau.jsx';
 import LandingLecteur from './pages/LandingLecteur';
@@ -55,10 +57,12 @@ const AuthenticatedApp = () => {
 
 
 function App() {
+  const [loadingDone, setLoadingDone] = useState(false);
 
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
+        {!loadingDone && <LoadingScreen onComplete={() => setLoadingDone(true)} />}
         <Router>
           <AuthenticatedApp />
         </Router>
