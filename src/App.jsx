@@ -6,7 +6,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import LoadingScreen from '@/components/shared/LoadingScreen';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 // Add page imports here
 import Bordereau from './pages/Bordereau.jsx';
 import LandingLecteur from './pages/LandingLecteur';
@@ -56,13 +56,38 @@ const AuthenticatedApp = () => {
 };
 
 
+const IDLE_TIMEOUT = 20000; // 20 secondes
+
 function App() {
   const [loadingDone, setLoadingDone] = useState(false);
+  const [isIdle, setIsIdle] = useState(false);
+
+  useEffect(() => {
+    if (!loadingDone) return;
+
+    let timer = setTimeout(() => setIsIdle(true), IDLE_TIMEOUT);
+
+    const reset = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => setIsIdle(true), IDLE_TIMEOUT);
+    };
+
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll'];
+    events.forEach(e => window.addEventListener(e, reset));
+
+    return () => {
+      clearTimeout(timer);
+      events.forEach(e => window.removeEventListener(e, reset));
+    };
+  }, [loadingDone]);
+
+  const handleWake = () => setIsIdle(false);
 
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
-        {!loadingDone && <LoadingScreen onComplete={() => setLoadingDone(true)} />}
+        {!loadingDone && <LoadingScreen mode="loading" onComplete={() => setLoadingDone(true)} />}
+        {loadingDone && isIdle && <LoadingScreen mode="idle" onWake={handleWake} />}
         <Router>
           <AuthenticatedApp />
         </Router>

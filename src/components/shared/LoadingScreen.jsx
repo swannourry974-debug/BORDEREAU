@@ -17,22 +17,20 @@ function buildGrid(rows, cols) {
 const ROWS = 22;
 const COLS = 14;
 
-export default function LoadingScreen({ onComplete }) {
+// mode: 'loading' (barre de progression + onComplete) | 'idle' (veille, clic pour réveiller)
+export default function LoadingScreen({ onComplete, mode = 'loading', onWake }) {
   const [progress, setProgress] = useState(0);
-  const [grid, setGrid] = useState(() => buildGrid(ROWS, COLS));
-  const [highlightedCities] = useState(() => {
-    // Place cities at fixed positions
-    return [
-      { word: 'MONTREAL', row: 4, col: 4 },
-      { word: 'CHICAGO', row: 13, col: 5 },
-      { word: 'ABIDJAN', row: 18, col: 0 },
-      { word: 'NEW YORK', row: 21, col: 1 },
-      { word: 'CONAKRY', row: 22, col: 6 },
-    ];
-  });
+  const [highlightedCities] = useState(() => [
+    { word: 'MONTREAL', row: 4, col: 4 },
+    { word: 'CHICAGO', row: 13, col: 5 },
+    { word: 'ABIDJAN', row: 18, col: 0 },
+    { word: 'NEW YORK', row: 21, col: 1 },
+    { word: 'CONAKRY', row: 22, col: 6 },
+  ]);
 
-  // Animate progress bar
+  // Animate progress bar (loading mode only)
   useEffect(() => {
+    if (mode !== 'loading') return;
     if (progress >= 100) {
       const t = setTimeout(() => onComplete?.(), 400);
       return () => clearTimeout(t);
@@ -40,22 +38,9 @@ export default function LoadingScreen({ onComplete }) {
     const speed = progress < 60 ? 35 : progress < 85 ? 55 : 80;
     const t = setTimeout(() => setProgress(p => Math.min(p + 1, 100)), speed);
     return () => clearTimeout(t);
-  }, [progress, onComplete]);
-
-  // Shuffle grid letters randomly
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setGrid(g =>
-        g.map(row =>
-          row.map(() => Math.random() < 0.08 ? randomChar() : null)
-        )
-      );
-    }, 120);
-    return () => clearInterval(interval);
-  }, []);
+  }, [progress, onComplete, mode]);
 
   // Stable grid with occasional flicker
-  const [stableGrid] = useState(() => buildGrid(ROWS, COLS));
   const [flickerGrid, setFlickerGrid] = useState(() => buildGrid(ROWS, COLS));
 
   useEffect(() => {
@@ -75,13 +60,13 @@ export default function LoadingScreen({ onComplete }) {
     <div
       className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
       style={{ background: '#5a0015', fontFamily: 'Special Elite, monospace' }}
+      onClick={mode === 'idle' ? onWake : undefined}
     >
       {/* Grid background */}
       <div className="absolute inset-0 flex flex-col items-center justify-start pt-2 px-3 overflow-hidden select-none">
         {flickerGrid.map((row, ri) => (
           <div key={ri} className="flex gap-[6px] leading-[1.55]">
             {row.map((char, ci) => {
-              // Check if this cell is part of a city highlight
               const isCity = highlightedCities.some(({ word, row: cr, col: cc }) => {
                 if (ri !== cr) return false;
                 const letters = word.replace(' ', '');
@@ -178,48 +163,52 @@ export default function LoadingScreen({ onComplete }) {
           </div>
         </div>
 
-        {/* Progress bar */}
+        {/* Progress bar (loading) ou message veille (idle) */}
         <div className="w-full">
-          {/* Bar track */}
-          <div
-            className="w-full relative mb-1"
-            style={{
-              border: '1.5px solid rgba(245,224,180,0.5)',
-              padding: '3px 4px',
-              background: 'rgba(90,0,21,0.6)',
-            }}
-          >
-            <div className="flex gap-[3px]">
-              {Array.from({ length: 16 }).map((_, i) => (
-                <div
-                  key={i}
-                  style={{
-                    flex: 1,
-                    height: 12,
-                    background: i < barFilled
-                      ? '#f5e9c8'
-                      : 'rgba(245,224,180,0.15)',
-                    transition: 'background 0.1s',
-                  }}
-                />
-              ))}
+          {mode === 'loading' ? (
+            <>
+              <div
+                className="w-full relative mb-1"
+                style={{
+                  border: '1.5px solid rgba(245,224,180,0.5)',
+                  padding: '3px 4px',
+                  background: 'rgba(90,0,21,0.6)',
+                }}
+              >
+                <div className="flex gap-[3px]">
+                  {Array.from({ length: 16 }).map((_, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        flex: 1,
+                        height: 12,
+                        background: i < barFilled ? '#f5e9c8' : 'rgba(245,224,180,0.15)',
+                        transition: 'background 0.1s',
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+              <div className="flex justify-between" style={{ fontSize: 9, color: 'rgba(245,224,180,0.6)', letterSpacing: 1 }}>
+                <span>0%</span>
+                <span>50%</span>
+                <span>100%</span>
+              </div>
+              <div
+                className="text-center mt-2"
+                style={{ fontSize: 11, color: 'rgba(245,224,180,0.7)', fontStyle: 'italic', fontFamily: 'IM Fell English, serif' }}
+              >
+                {progress < 100 ? 'Chargement en cours...' : 'Prêt !'}
+              </div>
+            </>
+          ) : (
+            <div
+              className="text-center mt-2"
+              style={{ fontSize: 11, color: 'rgba(245,224,180,0.6)', fontStyle: 'italic', fontFamily: 'IM Fell English, serif', letterSpacing: 1 }}
+            >
+              Touchez l'écran pour reprendre.
             </div>
-          </div>
-
-          {/* Labels */}
-          <div className="flex justify-between" style={{ fontSize: 9, color: 'rgba(245,224,180,0.6)', letterSpacing: 1 }}>
-            <span>0%</span>
-            <span>50%</span>
-            <span>100%</span>
-          </div>
-
-          {/* Status */}
-          <div
-            className="text-center mt-2"
-            style={{ fontSize: 11, color: 'rgba(245,224,180,0.7)', fontStyle: 'italic', fontFamily: 'IM Fell English, serif' }}
-          >
-            {progress < 100 ? 'Chargement en cours...' : 'Prêt !'}
-          </div>
+          )}
         </div>
       </div>
     </div>
