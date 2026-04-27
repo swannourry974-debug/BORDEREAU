@@ -7,9 +7,9 @@ import TransitOptions from './TransitOptions';
 import JaugeBlock from './JaugeBlock';
 
 export default function CommandeForm({ book, onClose, onConfirm }) {
-  const [forfait, setForfait] = useState('poche');
+  const [forfait, setForfait] = useState('S');
   const [transit, setTransit] = useState('express');
-  const [totalAmount, setTotalAmount] = useState(book?.price || '8,90€');
+  const [totalAmount, setTotalAmount] = useState('8,90€');
   const [confirming, setConfirming] = useState(false);
 
   const handleForfaitSelect = (f) => {

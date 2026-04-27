@@ -1,23 +1,40 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 
 /**
- * Calcule la commission incrémentale selon le rang du livre dans la valise.
- * Livre 1 → 5,00€ | Livre 2 → 6,50€ | Livres 3-10 → 8,00€
+ * Calcule la commission voyageur selon le format/poids du livre.
+ * S (< 300g) → 3€ | M (300–700g) → 5€ | L (> 700g) → 10€
+ * Bonus quantité : +2€ par livre si le voyageur accepte > 5 livres au total.
+ *
+ * @param {Array<{type: 'S'|'M'|'L'}>} livres - liste des livres avec leur taille
+ * @param {number} livresDejaActifs - livres déjà dans la valise du voyageur
  */
-function calculateVoyageurCommission(livresDejaValides) {
-  const rank = livresDejaValides + 1; // rang du prochain livre
-  if (rank === 1) return 5.00;
-  if (rank === 2) return 6.50;
-  if (rank >= 3 && rank <= 10) return 8.00;
-  return 0; // au-delà de 10 : interdit
+
+const BASE_COMMISSION = { S: 3, M: 5, L: 10 };
+const BONUS_QUANTITE = 2;
+const SEUIL_BONUS = 5;
+
+function getBaseCommission(type) {
+  return BASE_COMMISSION[type] ?? 5;
 }
 
-function getTotalCommission(nombreLivres) {
-  let total = 0;
-  for (let i = 0; i < nombreLivres; i++) {
-    total += calculateVoyageurCommission(i);
-  }
-  return Math.round(total * 100) / 100;
+function calculerCommissions(livres, livresDejaActifs = 0) {
+  const totalLivres = (livresDejaActifs || 0) + livres.length;
+  const bonusActif = totalLivres > SEUIL_BONUS;
+
+  const breakdown = livres.map((livre, i) => {
+    const base = getBaseCommission(livre.type);
+    const bonus = bonusActif ? BONUS_QUANTITE : 0;
+    return {
+      rank: (livresDejaActifs || 0) + i + 1,
+      type: livre.type,
+      base,
+      bonus,
+      commission: base + bonus,
+    };
+  });
+
+  const total = breakdown.reduce((sum, l) => sum + l.commission, 0);
+  return { breakdown, total: Math.round(total * 100) / 100, bonusActif };
 }
 
 Deno.serve(async (req) => {
@@ -27,44 +44,37 @@ Deno.serve(async (req) => {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await req.json();
-    const { livresActifs, action } = body;
+    const { livres, livresDejaActifs, action } = body;
 
     if (action === 'preview') {
-      // Retourne la commission du prochain livre et le total si on en ajoute un
-      const nextCommission = calculateVoyageurCommission(livresActifs || 0);
-      const totalActuel = getTotalCommission(livresActifs || 0);
-      const totalApres = getTotalCommission((livresActifs || 0) + 1);
-      const rank = (livresActifs || 0) + 1;
+      // Calcul pour 1 livre avec son type
+      const type = livres?.[0]?.type || 'M';
+      const nbActifs = livresDejaActifs || 0;
+      const base = getBaseCommission(type);
+      const totalApres = nbActifs + 1;
+      const bonusActif = totalApres > SEUIL_BONUS;
+      const commission = base + (bonusActif ? BONUS_QUANTITE : 0);
 
       return Response.json({
-        nextCommission,
-        totalActuel,
-        totalApres,
-        rank,
-        isLimitReached: rank > 10,
-        message: rank === 2
-          ? `Ajoutez un 2ème livre pour gagner +6,50 € au lieu de 5 € !`
-          : rank > 10
-          ? 'Limite de sécurité atteinte (10 livres max) pour garantir un passage serein en douane.'
-          : `Livre n°${rank} : +${nextCommission.toFixed(2)} € de gratification.`
+        type,
+        base,
+        bonus: bonusActif ? BONUS_QUANTITE : 0,
+        commission,
+        bonusActif,
+        totalLivresApres: totalApres,
+        message: bonusActif
+          ? `Livre ${type} : ${base}€ + ${BONUS_QUANTITE}€ bonus quantité = ${commission}€`
+          : `Livre ${type} : ${commission}€ (bonus à partir de ${SEUIL_BONUS + 1} livres)`,
       });
     }
 
-    // action === 'full' : calcul complet pour N livres
-    const count = parseInt(livresActifs) || 0;
-    const breakdown = [];
-    for (let i = 0; i < count; i++) {
-      const c = calculateVoyageurCommission(i);
-      breakdown.push({ rank: i + 1, commission: c });
-    }
+    // action === 'full' : calcul complet pour une liste de livres
+    const result = calculerCommissions(livres || [], livresDejaActifs || 0);
 
-    return Response.json({
-      total: getTotalCommission(count),
-      breakdown,
-      livresActifs: count,
-    });
+    return Response.json(result);
 
   } catch (error) {
+    console.error('calculateCommission error:', error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
