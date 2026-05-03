@@ -43,7 +43,7 @@ function MissionCard({ mission, rang, onAccept, disabled }) {
   return (
     <div style={{
       background: 'var(--papier)',
-      border: '1.5px solid var(--encre)',
+      border: '1.5px solid hsl(var(--border))',
       padding: 16,
       marginBottom: 12,
       position: 'relative',
@@ -61,10 +61,10 @@ function MissionCard({ mission, rang, onAccept, disabled }) {
       <div className="font-special" style={{ fontSize: 18, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 4 }}>
         {mission.ville}
       </div>
-      <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.55)', marginBottom: 10 }}>
+      <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))', marginBottom: 10 }}>
         {isEngaged ? 'Ticket scanné · Achat confirmé · ENGAGÉE' : mission.date}
       </div>
-      <div style={{ fontSize: 13, color: 'rgba(26,16,8,0.6)', marginBottom: 8 }}>
+      <div style={{ fontSize: 13, color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
         📚 <em>{mission.livre}</em> · {mission.type} · {mission.poids}
       </div>
 
@@ -85,10 +85,10 @@ function MissionCard({ mission, rang, onAccept, disabled }) {
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px dashed rgba(26,16,8,0.2)', paddingTop: 10, marginTop: 4 }}>
         <div>
-          <span className="font-playfair" style={{ fontSize: 22, fontWeight: 700, color: isEngaged ? 'rgba(26,16,8,0.4)' : 'var(--bordeaux)' }}>
+          <span className="font-playfair" style={{ fontSize: 22, fontWeight: 700, color: isEngaged ? 'hsl(var(--muted-foreground))' : 'var(--bordeaux)' }}>
             {commission ? `${commission.toFixed(2)} €` : (mission.commission ? `${mission.commission.toFixed(2)} €` : '—')}
           </span>
-          <span style={{ fontSize: 11, color: 'rgba(26,16,8,0.5)', letterSpacing: 1, display: 'block', marginTop: -2 }}>
+          <span style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))', letterSpacing: 1, display: 'block', marginTop: -2 }}>
             {isEngaged ? 'En séquestre' : 'Commission'}
           </span>
         </div>
@@ -174,14 +174,14 @@ export default function PanelMissions() {
           border: '1px dashed #800020',
           padding: '12px 16px', marginBottom: 16,
           fontFamily: 'IM Fell English, serif', fontStyle: 'italic',
-          fontSize: 13, color: '#800020', lineHeight: 1.6,
+          fontSize: 13, color: 'var(--bordeaux)', lineHeight: 1.6,
         }}>
           🔒 Limite de sécurité atteinte (10 livres max) pour garantir un passage serein en douane.
         </div>
       )}
 
       {available.length === 0 && !limitAtteinte && (
-        <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.4)', textAlign: 'center', padding: 20 }}>
+        <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))', textAlign: 'center', padding: 20 }}>
           Aucune mission disponible pour ce trajet.
         </div>
       )}
@@ -202,7 +202,7 @@ export default function PanelMissions() {
       <PerfoStrip />
 
       <SectionTitle>Déclarer un nouveau vol</SectionTitle>
-      <div style={{ background: 'var(--papier)', border: '1.5px dashed rgba(26,16,8,0.3)', padding: 20, textAlign: 'center' }}>
+      <div style={{ background: 'var(--papier)', border: '1.5px dashed hsl(var(--border))', padding: 20, textAlign: 'center' }}>
         <div style={{ fontSize: 32, marginBottom: 8 }}>✈️</div>
         <div className="font-fell" style={{ fontSize: 13, color: 'rgba(26,16,8,0.5)', marginBottom: 14, fontStyle: 'italic' }}>
           Vous avez un autre voyage prévu ?

@@ -39,14 +39,14 @@ export default function PanelProfil() {
 
   const sectionStyle = {
     background: 'var(--papier)',
-    border: '1.5px solid var(--encre)',
+    border: '1.5px solid rgba(26,16,8,0.25)',
     padding: 20,
     marginBottom: 16,
-    boxShadow: '3px 3px 0 rgba(26,16,8,0.12)',
+    boxShadow: '3px 3px 0 rgba(26,16,8,0.10)',
   };
 
   return (
-    <div style={{ background: 'var(--creme)', minHeight: '100vh', paddingBottom: 'env(safe-area-inset-bottom, 20px)' }}>
+    <div style={{ background: 'hsl(var(--background))', minHeight: '100vh', paddingBottom: 'env(safe-area-inset-bottom, 20px)' }}>
       {/* Header */}
       <div style={{
         background: 'var(--bordeaux)',
@@ -54,15 +54,8 @@ export default function PanelProfil() {
         paddingBottom: 14,
         paddingLeft: 20,
         paddingRight: 20,
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
         boxShadow: '0 3px 12px rgba(128,0,32,0.4)',
       }}>
-        <button
-          onClick={() => navigate(-1)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--creme)', fontSize: 22, lineHeight: 1 }}
-        >←</button>
         <div className="font-special" style={{ fontSize: 20, color: 'var(--creme)', letterSpacing: 4, textTransform: 'uppercase' }}>
           Profil
         </div>
@@ -71,13 +64,13 @@ export default function PanelProfil() {
       <div style={{ maxWidth: 480, margin: '0 auto', padding: '24px 16px' }}>
         {/* Identité */}
         <div style={sectionStyle}>
-          <div className="font-special" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.5)', marginBottom: 12 }}>
+          <div className="font-special" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--muted-foreground)', marginBottom: 12 }}>
             Compte
           </div>
           <div className="font-playfair" style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>
             {user?.full_name || '—'}
           </div>
-          <div className="font-fell" style={{ fontSize: 13, fontStyle: 'italic', color: 'rgba(26,16,8,0.6)' }}>
+          <div className="font-fell" style={{ fontSize: 13, fontStyle: 'italic', color: 'var(--muted-foreground)' }}>
             {user?.email || '—'}
           </div>
         </div>
@@ -93,7 +86,7 @@ export default function PanelProfil() {
               fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
               cursor: 'pointer', color: 'var(--encre)', transition: 'all 0.2s',
             }}
-            onMouseEnter={e => e.target.style.background = 'rgba(26,16,8,0.05)'}
+            onMouseEnter={e => e.target.style.background = 'hsl(var(--muted))'}
             onMouseLeave={e => e.target.style.background = 'none'}
           >
             ✦ Se déconnecter
@@ -112,7 +105,7 @@ export default function PanelProfil() {
 
           {!showDeleteConfirm ? (
             <>
-              <div className="font-fell" style={{ fontSize: 12, fontStyle: 'italic', color: 'rgba(26,16,8,0.6)', marginBottom: 14, lineHeight: 1.6 }}>
+              <div className="font-fell" style={{ fontSize: 12, fontStyle: 'italic', color: 'var(--muted-foreground)', marginBottom: 14, lineHeight: 1.6 }}>
                 La suppression de votre compte est irréversible. Toutes vos données (missions, wallet, historique) seront définitivement effacées.
               </div>
               <button

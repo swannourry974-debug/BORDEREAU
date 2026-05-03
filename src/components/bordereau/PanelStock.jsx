@@ -72,7 +72,7 @@ export default function PanelStock() {
       {MOCK_STOCK.map((item) => (
         <div key={item.ref} style={{
           background: 'var(--papier)',
-          border: '1px solid rgba(26,16,8,0.15)',
+          border: '1px solid hsl(var(--border))',
           borderLeft: `4px solid ${item.type === 'depot' ? '#800020' : '#2d5a27'}`,
           padding: '12px 14px', marginBottom: 10,
           display: 'flex', alignItems: 'center', gap: 12
@@ -82,8 +82,8 @@ export default function PanelStock() {
             background: item.type === 'depot' ? '#800020' : '#2d5a27'
           }} />
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 13, fontWeight: 700 }}>{item.livre}</div>
-            <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 10, color: 'rgba(26,16,8,0.5)', marginTop: 2 }}>{item.auteur} · #{item.ref}</div>
+            <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 13, fontWeight: 700, color: 'hsl(var(--foreground))' }}>{item.livre}</div>
+            <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 10, color: 'hsl(var(--muted-foreground))', marginTop: 2 }}>{item.auteur} · #{item.ref}</div>
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{
@@ -96,7 +96,7 @@ export default function PanelStock() {
               {item.type === 'depot' ? 'À ranger' : 'À remettre'}
             </div>
             {item.emplacement && (
-              <div style={{ fontSize: 9, marginTop: 4, color: 'rgba(26,16,8,0.4)', fontFamily: 'Special Elite, monospace' }}>{item.emplacement}</div>
+              <div style={{ fontSize: 9, marginTop: 4, color: 'hsl(var(--muted-foreground))', fontFamily: 'Special Elite, monospace' }}>{item.emplacement}</div>
             )}
           </div>
         </div>

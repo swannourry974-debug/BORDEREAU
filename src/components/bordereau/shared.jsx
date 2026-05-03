@@ -77,16 +77,16 @@ export function PerfoStrip() {
     <div style={{ display: 'flex', alignItems: 'center', margin: '20px -16px', overflow: 'hidden' }}>
       <div style={{
         flex: 1, height: 1,
-        background: 'repeating-linear-gradient(90deg, rgba(26,16,8,0.2) 0, rgba(26,16,8,0.2) 6px, transparent 6px, transparent 12px)',
+        background: 'repeating-linear-gradient(90deg, hsl(var(--border)) 0, hsl(var(--border)) 4px, transparent 4px, transparent 8px)',
       }} />
       <div style={{ display: 'flex', gap: 4, padding: '0 8px' }}>
         {[0,1,2,3,4].map(i => (
-          <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', border: '1px solid rgba(26,16,8,0.2)', background: 'var(--creme)' }} />
+          <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', border: '1px solid hsl(var(--border))', background: 'hsl(var(--background))' }} />
         ))}
       </div>
       <div style={{
         flex: 1, height: 1,
-        background: 'repeating-linear-gradient(90deg, rgba(26,16,8,0.2) 0, rgba(26,16,8,0.2) 6px, transparent 6px, transparent 12px)',
+        background: 'repeating-linear-gradient(90deg, hsl(var(--border)) 0, hsl(var(--border)) 4px, transparent 4px, transparent 8px)',
       }} />
     </div>
   );
@@ -110,7 +110,7 @@ export function EtagereItem({ statusClass, dotClass, title, sub, stampColor, sta
   return (
     <div className="animate-fade-slide" style={{
       background: 'var(--papier)',
-      border: '1px solid rgba(26,16,8,0.2)',
+      border: '1px solid hsl(var(--border))',
       borderLeft: `4px solid ${borderColor}`,
       padding: '12px 14px',
       marginBottom: 10,
@@ -129,7 +129,7 @@ export function EtagereItem({ statusClass, dotClass, title, sub, stampColor, sta
       )}
       <div style={{ flex: 1 }}>
         <div className="font-playfair" style={{ fontSize: 13, fontWeight: 700 }}>{title}</div>
-        {sub && <div style={{ fontSize: 10, color: 'rgba(26,16,8,0.5)', marginTop: 2 }}>{sub}</div>}
+        {sub && <div style={{ fontSize: 10, color: 'hsl(var(--muted-foreground))', marginTop: 2 }}>{sub}</div>}
       </div>
       <div style={{ textAlign: 'right' }}>
         <div style={{
@@ -138,7 +138,7 @@ export function EtagereItem({ statusClass, dotClass, title, sub, stampColor, sta
         }}>
           {stampLabel}
         </div>
-        {stampSub && <div style={{ fontSize: 9, marginTop: 4, color: 'rgba(26,16,8,0.4)' }}>{stampSub}</div>}
+        {stampSub && <div style={{ fontSize: 9, marginTop: 4, color: 'hsl(var(--muted-foreground))' }}>{stampSub}</div>}
       </div>
     </div>
   );
