@@ -20,7 +20,7 @@ export default function AppHeader({ role, roleSwitcherOpen, onToggleRoleSwitcher
       boxShadow: '0 3px 12px rgba(128,0,32,0.4)',
       borderBottom: '2px solid var(--bordeaux-dark)',
     }}>
-      <div style={{ maxWidth: 480, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ maxWidth: '1024px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ lineHeight: 1 }}>
           <div className="font-special" style={{ fontSize: 28, color: 'var(--creme)', letterSpacing: 6, textTransform: 'uppercase' }}>
             BORDEREAU
