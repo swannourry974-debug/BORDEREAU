@@ -1,0 +1,53 @@
+{
+  "name": "PointRelais",
+  "type": "object",
+  "properties": {
+    "nom": {
+      "type": "string",
+      "description": "Nom du commerce partenaire"
+    },
+    "adresse": {
+      "type": "string"
+    },
+    "ville": {
+      "type": "string"
+    },
+    "pays_code": {
+      "type": "string",
+      "description": "Code ISO pays"
+    },
+    "zone_id": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence vers ZonesTarifs"
+    },
+    "gerant_email": {
+      "type": "string",
+      "description": "Email du g\u00e9rant (compte relais)"
+    },
+    "telephone": {
+      "type": "string"
+    },
+    "horaires": {
+      "type": "string",
+      "description": "Ex: Lun-Sam 9h-19h"
+    },
+    "stock_actuel": {
+      "type": "number",
+      "default": 0,
+      "description": "Nombre de colis actuellement en stock"
+    },
+    "actif": {
+      "type": "boolean",
+      "default": true
+    },
+    "note_moyenne": {
+      "type": "number",
+      "description": "Note de satisfaction (1-5)"
+    }
+  },
+  "required": [
+    "nom",
+    "ville",
+    "pays_code"
+  ]
+}

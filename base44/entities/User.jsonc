@@ -1,0 +1,42 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "lecteur",
+        "voyageur",
+        "relais",
+        "admin"
+      ],
+      "default": "lecteur",
+      "description": "R\u00f4le de l'utilisateur dans l'application"
+    },
+    "ville_destination": {
+      "type": "string",
+      "description": "Ville de destination pr\u00e9f\u00e9r\u00e9e (pour lecteurs)"
+    },
+    "point_relais_id": {
+      "type": "string",
+      "description": "Point relais associ\u00e9 (pour g\u00e9rants de relais)"
+    },
+    "iban": {
+      "type": "string",
+      "description": "IBAN pour les virements (voyageurs et relais)"
+    },
+    "stripe_account_id": {
+      "type": "string",
+      "description": "ID compte Stripe Connect"
+    },
+    "documents_valides": {
+      "type": "boolean",
+      "default": false,
+      "description": "KYC valid\u00e9"
+    },
+    "virement_suspendu": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "name": "ZonesTarifs",
+  "type": "object",
+  "properties": {
+    "zone_nom": {
+      "type": "string",
+      "description": "Nom de la destination (ex: Miami, Abidjan)"
+    },
+    "pays_code": {
+      "type": "string",
+      "description": "Code ISO pays (US, CA, CI, FR...)"
+    },
+    "pays_nom": {
+      "type": "string",
+      "description": "Nom complet du pays"
+    },
+    "frais_lecteur_express": {
+      "type": "number",
+      "description": "Prix total pay\u00e9 par le lecteur en mode Express"
+    },
+    "frais_lecteur_collectif": {
+      "type": "number",
+      "description": "Prix r\u00e9duit pay\u00e9 par le lecteur en mode Collectif"
+    },
+    "part_voyageur_express": {
+      "type": "number",
+      "description": "R\u00e9mun\u00e9ration fixe vers\u00e9e au voyageur"
+    },
+    "part_relais": {
+      "type": "number",
+      "description": "R\u00e9mun\u00e9ration fixe vers\u00e9e au point relais partenaire"
+    },
+    "cout_fret_estime_kg": {
+      "type": "number",
+      "description": "Co\u00fbt de transport moyen par kg pour le mode Collectif"
+    },
+    "taxe_assurance": {
+      "type": "number",
+      "description": "Provision pour risque pays (ex: 0.50 pour USA, 1.50 pour CI)"
+    },
+    "devise": {
+      "type": "string",
+      "description": "Devise locale d'affichage (USD, CAD, XOF, EUR)"
+    },
+    "actif": {
+      "type": "boolean",
+      "default": true,
+      "description": "Zone active ou d\u00e9sactiv\u00e9e"
+    },
+    "emoji_drapeau": {
+      "type": "string",
+      "description": "Emoji drapeau pour l'affichage (ex: \ud83c\uddfa\ud83c\uddf8)"
+    }
+  },
+  "required": [
+    "zone_nom",
+    "pays_code",
+    "frais_lecteur_express",
+    "frais_lecteur_collectif"
+  ]
+}

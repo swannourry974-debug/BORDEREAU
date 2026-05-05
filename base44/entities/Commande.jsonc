@@ -1,0 +1,96 @@
+{
+  "name": "Commande",
+  "type": "object",
+  "properties": {
+    "lecteur_email": {
+      "type": "string",
+      "description": "Email du lecteur"
+    },
+    "livre_titre": {
+      "type": "string",
+      "description": "Titre du livre command\u00e9"
+    },
+    "livre_auteur": {
+      "type": "string"
+    },
+    "livre_type": {
+      "type": "string",
+      "enum": [
+        "Poche",
+        "Broch\u00e9",
+        "BD",
+        "Reli\u00e9"
+      ],
+      "default": "Poche"
+    },
+    "zone_id": {
+      "type": "string",
+      "description": "ID de la zone de destination (ref ZonesTarifs)"
+    },
+    "zone_nom": {
+      "type": "string",
+      "description": "Nom de la zone destination"
+    },
+    "point_relais_id": {
+      "type": "string",
+      "description": "ID du point relais s\u00e9lectionn\u00e9"
+    },
+    "mode_livraison": {
+      "type": "string",
+      "enum": [
+        "express",
+        "collectif"
+      ],
+      "default": "express"
+    },
+    "montant_paye": {
+      "type": "number",
+      "description": "Montant total pay\u00e9 par le lecteur"
+    },
+    "stripe_session_id": {
+      "type": "string",
+      "description": "ID session Stripe pour le s\u00e9questre"
+    },
+    "statut": {
+      "type": "string",
+      "enum": [
+        "en_attente_paiement",
+        "payee",
+        "en_transit",
+        "au_relais",
+        "livree",
+        "litige"
+      ],
+      "default": "en_attente_paiement"
+    },
+    "voyageur_email": {
+      "type": "string",
+      "description": "Email du voyageur assign\u00e9"
+    },
+    "mission_id": {
+      "type": "string",
+      "description": "ID de la MissionVoyageur associ\u00e9e"
+    },
+    "ticket_url": {
+      "type": "string",
+      "description": "URL du ticket de caisse"
+    },
+    "qr_code_depot": {
+      "type": "string",
+      "description": "QR code pour d\u00e9p\u00f4t au relais"
+    },
+    "date_limite_collecte": {
+      "type": "string",
+      "description": "Date limite pour le retrait"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "lecteur_email",
+    "livre_titre",
+    "zone_nom",
+    "mode_livraison"
+  ]
+}
