@@ -7,6 +7,7 @@ import PanelCatalogue from '../components/bordereau/PanelCatalogue';
 import PanelEtagere from '../components/bordereau/PanelEtagere';
 import PanelMissions from '../components/bordereau/PanelMissions';
 import PanelStock from '../components/bordereau/PanelStock';
+import PanelAccueilVoyageur from '../components/voyageur/PanelAccueilVoyageur';
 
 function SidebarItem({ icon, label, active, onClick, badge }) {
   return (
@@ -65,14 +66,14 @@ export default function Bordereau({ initialPanel }) {
   const [commandeOpen, setCommandeOpen] = useState(false);
   const [commandeBook, setCommandeBook] = useState(null);
 
-  const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/missions': 'missions', '/stock': 'stock' };
+  const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/missions': 'missions', '/stock': 'stock', '/accueil-voyageur': 'accueil-voyageur' };
   const activePanel = pathToPanel[location.pathname] || initialPanel || 'catalogue';
 
   const switchRole = (newRole) => {
     setRole(newRole);
     setRoleSwitcherOpen(false);
     setCommandeOpen(false);
-    const defaults = { lecteur: '/catalogue', voyageur: '/missions', relais: '/stock' };
+    const defaults = { lecteur: '/catalogue', voyageur: '/accueil-voyageur', relais: '/stock' };
     navigate(defaults[newRole]);
   };
 
@@ -132,7 +133,10 @@ export default function Bordereau({ initialPanel }) {
               </>
             )}
             {role === 'voyageur' && (
-              <SidebarItem icon="🗺️" label="Missions" panelId="missions" active={activePanel === 'missions'} onClick={() => switchPanel('missions')} />
+              <>
+                <SidebarItem icon="🏠" label="Accueil" panelId="accueil-voyageur" active={activePanel === 'accueil-voyageur'} onClick={() => switchPanel('accueil-voyageur')} />
+                <SidebarItem icon="🗺️" label="Missions" panelId="missions" active={activePanel === 'missions'} onClick={() => switchPanel('missions')} />
+              </>
             )}
             {role === 'relais' && (
               <SidebarItem icon="📦" label="Stock" panelId="stock" active={activePanel === 'stock'} onClick={() => switchPanel('stock')} />
@@ -169,6 +173,7 @@ export default function Bordereau({ initialPanel }) {
               />
             )}
             {activePanel === 'etagere' && <PanelEtagere />}
+            {activePanel === 'accueil-voyageur' && <PanelAccueilVoyageur />}
             {activePanel === 'missions' && <PanelMissions />}
             {activePanel === 'stock' && <PanelStock />}
           </div>

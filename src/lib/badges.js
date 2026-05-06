@@ -5,6 +5,32 @@
 // ============================================================
 
 export const BADGES_CONFIG = [
+  // — Badges Bordereau principaux —
+  {
+    id: 'petit_courrier',
+    emoji: '📬',
+    nom: 'Petit Courrier',
+    description: 'Votre première mission livrée avec succès.',
+    rarete: 'commune',
+    condition: (stats) => stats.livresLivres >= 1,
+  },
+  {
+    id: 'globe_trotteur',
+    emoji: '🌍',
+    nom: 'Globe-Trotteur',
+    description: '10 missions livrées à travers le monde.',
+    rarete: 'rare',
+    condition: (stats) => stats.livresLivres >= 10,
+  },
+  {
+    id: 'ambassadeur',
+    emoji: '🎖️',
+    nom: 'Ambassadeur',
+    description: '30 missions livrées. Vous portez l\'âme de Bordereau.',
+    rarete: 'legendaire',
+    condition: (stats) => stats.livresLivres >= 30,
+  },
+
   // — Quantité de livres transportés —
   {
     id: 'premier_pas',

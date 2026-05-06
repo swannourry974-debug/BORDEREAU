@@ -2,15 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 
+const DISTINCTIONS = [
+  { id: 'petit_courrier', emoji: '📬', nom: 'Petit Courrier', seuil: 1 },
+  { id: 'globe_trotteur', emoji: '🌍', nom: 'Globe-Trotteur', seuil: 10 },
+  { id: 'ambassadeur', emoji: '🎖️', nom: 'Ambassadeur', seuil: 30 },
+];
+
 export default function PanelProfil() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [missionsLivrees, setMissionsLivrees] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [confirmText, setConfirmText] = useState('');
 
   useEffect(() => {
-    base44.auth.me().then(setUser).catch(() => {});
+    base44.auth.me().then(async (u) => {
+      setUser(u);
+      if (!u) return;
+      const livrees = await base44.entities.MissionVoyageur.filter({ voyageur_email: u.email, statut: 'livree' });
+      setMissionsLivrees(livrees.length);
+    }).catch(() => {});
   }, []);
 
   const handleLogout = () => {
@@ -72,6 +84,41 @@ export default function PanelProfil() {
           </div>
           <div className="font-fell" style={{ fontSize: 13, fontStyle: 'italic', color: 'var(--muted-foreground)' }}>
             {user?.email || '—'}
+          </div>
+        </div>
+
+        {/* Mes Distinctions */}
+        <div style={sectionStyle}>
+          <div className="font-special" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.45)', marginBottom: 14 }}>
+            Mes Distinctions
+          </div>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between' }}>
+            {DISTINCTIONS.map(d => {
+              const debloque = missionsLivrees >= d.seuil;
+              return (
+                <div key={d.id} style={{
+                  flex: 1,
+                  textAlign: 'center',
+                  padding: '14px 8px',
+                  background: debloque ? 'rgba(128,0,32,0.06)' : 'rgba(26,16,8,0.03)',
+                  border: debloque ? '1.5px solid var(--bordeaux)' : '1.5px dashed rgba(26,16,8,0.15)',
+                  filter: debloque ? 'none' : 'grayscale(1)',
+                  opacity: debloque ? 1 : 0.45,
+                  transition: 'all 0.3s',
+                }}>
+                  <div style={{ fontSize: 28, marginBottom: 6 }}>{d.emoji}</div>
+                  <div className="font-special" style={{ fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', color: debloque ? 'var(--bordeaux)' : 'rgba(26,16,8,0.4)', lineHeight: 1.3 }}>
+                    {d.nom}
+                  </div>
+                  <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 10, color: 'rgba(26,16,8,0.35)', marginTop: 4 }}>
+                    {debloque ? '✓ Obtenu' : `≥ ${d.seuil} livr.`}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.4)', marginTop: 12, textAlign: 'center' }}>
+            {missionsLivrees} mission{missionsLivrees !== 1 ? 's' : ''} livrée{missionsLivrees !== 1 ? 's' : ''} au total
           </div>
         </div>
 

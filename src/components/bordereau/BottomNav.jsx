@@ -72,7 +72,10 @@ export default function BottomNav({ role, activePanel, onSwitch }) {
         </>
       )}
       {role === 'voyageur' && (
-        <NavItem panelId="missions" icon="🗺️" label="Missions" />
+        <>
+          <NavItem panelId="accueil-voyageur" icon="🏠" label="Accueil" />
+          <NavItem panelId="missions" icon="🗺️" label="Missions" />
+        </>
       )}
       {role === 'relais' && (
         <NavItem panelId="stock" icon="📦" label="Stock" />

@@ -1,0 +1,34 @@
+{
+  "name": "Voyage",
+  "type": "object",
+  "properties": {
+    "voyageur_email": {
+      "type": "string",
+      "description": "Email du voyageur ayant d\u00e9clar\u00e9 le vol"
+    },
+    "depart_ville": {
+      "type": "string",
+      "description": "Ville de d\u00e9part du vol"
+    },
+    "arrivee_ville": {
+      "type": "string",
+      "description": "Ville d'arriv\u00e9e du vol"
+    },
+    "date_vol": {
+      "type": "string",
+      "format": "date",
+      "description": "Date du vol"
+    },
+    "actif": {
+      "type": "boolean",
+      "default": true,
+      "description": "Indique si le vol est toujours actif"
+    }
+  },
+  "required": [
+    "voyageur_email",
+    "depart_ville",
+    "arrivee_ville",
+    "date_vol"
+  ]
+}

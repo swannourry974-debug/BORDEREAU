@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SectionTitle, BtnCoupon, PerfoStrip } from './shared';
 import JaugeValise from '../missions/JaugeValise';
 import WalletCard from '../missions/WalletCard';
 import BadgeShowcase from '../missions/BadgeShowcase';
 import PullToRefresh from '../shared/PullToRefresh';
 import ScanValidation from '../missions/ScanValidation';
+import FormulaireVol from '../missions/FormulaireVol';
 import { BADGES_CONFIG, getBadgesDebloques } from '@/lib/badges';
-import { toast } from 'sonner';
+import { base44 } from '@/api/base44Client';
 
 const MAX_LIVRES = 10;
 
@@ -126,9 +127,21 @@ export default function PanelMissions() {
   const [available, setAvailable] = useState(AVAILABLE_MISSIONS);
   const [scanMission, setScanMission] = useState(null);
   const [newBadge, setNewBadge] = useState(null);
+  const [user, setUser] = useState(null);
+  const [voyageActif, setVoyageActif] = useState(null);
+  const [showFormVol, setShowFormVol] = useState(false);
 
   // Wallet (simulé)
   const [wallet] = useState({ soldeDisponible: 12.50, gainsPrevisionnels: 5.00, virementSuspendu: false });
+
+  useEffect(() => {
+    base44.auth.me().then(async (u) => {
+      setUser(u);
+      if (!u) return;
+      const voyages = await base44.entities.Voyage.filter({ voyageur_email: u.email, actif: true });
+      if (voyages.length > 0) setVoyageActif(voyages[0]);
+    }).catch(() => {});
+  }, []);
 
   const livresActifs = engagees.length;
   const totalCommission = getTotalCommission(livresActifs);
@@ -143,6 +156,11 @@ export default function PanelMissions() {
     missionsAcceptees: 7 + engagees.filter(e => e.engaged).length,
     paysVisites: 2,
   };
+
+  // Filtrer les missions selon la ville d'arrivée du voyage actif
+  const missionsFiltered = voyageActif
+    ? available.filter(m => m.ville.toLowerCase().includes(voyageActif.arrivee_ville.toLowerCase()))
+    : available;
 
   const acceptMission = (id, commission) => {
     const mission = available.find(m => m.id === id);
@@ -257,7 +275,27 @@ export default function PanelMissions() {
         </div>
       )}
 
-      {available.map((m, i) => {
+      {voyageActif && (
+        <div style={{
+          background: 'rgba(45,106,45,0.07)', border: '1px solid #2d6a2d',
+          padding: '10px 14px', marginBottom: 12,
+          fontFamily: 'IM Fell English, serif', fontStyle: 'italic',
+          fontSize: 12, color: '#2d6a2d', lineHeight: 1.6,
+          display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          ✈️ <span>Filtré sur <strong>{voyageActif.arrivee_ville}</strong> · {voyageActif.date_vol}</span>
+        </div>
+      )}
+
+      {missionsFiltered.length === 0 && !limitAtteinte && (
+        <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))', textAlign: 'center', padding: 20 }}>
+          {voyageActif
+            ? `Aucune mission pour "${voyageActif.arrivee_ville}" pour le moment.`
+            : 'Aucune mission disponible pour ce trajet.'}
+        </div>
+      )}
+
+      {missionsFiltered.map((m, i) => {
         const rang = livresActifs + 1;
         return (
           <MissionCard
@@ -279,13 +317,28 @@ export default function PanelMissions() {
       <PerfoStrip />
 
       <SectionTitle>Déclarer un nouveau vol</SectionTitle>
-      <div style={{ background: 'var(--papier)', border: '1.5px dashed hsl(var(--border))', padding: 20, textAlign: 'center' }}>
-        <div style={{ fontSize: 32, marginBottom: 8 }}>✈️</div>
-        <div className="font-fell" style={{ fontSize: 13, color: 'rgba(26,16,8,0.5)', marginBottom: 14, fontStyle: 'italic' }}>
-          Vous avez un autre voyage prévu ?
+      {!showFormVol ? (
+        <div style={{ background: 'var(--papier)', border: '1.5px dashed hsl(var(--border))', padding: 20, textAlign: 'center' }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>✈️</div>
+          {voyageActif && (
+            <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.55)', marginBottom: 10 }}>
+              Vol actif : <strong>{voyageActif.depart_ville} → {voyageActif.arrivee_ville}</strong> · {voyageActif.date_vol}
+            </div>
+          )}
+          <div className="font-fell" style={{ fontSize: 13, color: 'rgba(26,16,8,0.5)', marginBottom: 14, fontStyle: 'italic' }}>
+            {voyageActif ? 'Déclarer un autre voyage ?' : 'Vous avez un voyage prévu ?'}
+          </div>
+          <BtnCoupon onClick={() => setShowFormVol(true)}>+ Déclarer un vol</BtnCoupon>
         </div>
-        <BtnCoupon onClick={() => alert('Formulaire de déclaration de vol')}>+ Déclarer un vol</BtnCoupon>
-      </div>
+      ) : (
+        <FormulaireVol
+          user={user}
+          onVolDeclare={(voyage) => {
+            setVoyageActif(voyage);
+            setShowFormVol(false);
+          }}
+        />
+      )}
     </div>
     </PullToRefresh>
   );
