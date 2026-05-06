@@ -5,7 +5,7 @@ export default function BottomNav({ role, activePanel, onSwitch }) {
   const navigate = useNavigate();
   const navStyle = {
     position: 'fixed',
-    bottom: '3.5cm',
+    bottom: '2cm',
     left: '50%',
     transform: 'translateX(-50%)',
     width: '100%',
