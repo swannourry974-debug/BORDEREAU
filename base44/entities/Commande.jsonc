@@ -85,6 +85,38 @@
     },
     "notes": {
       "type": "string"
+    },
+    "code_barre_isbn": {
+      "type": "string",
+      "description": "ISBN scann\u00e9 du livre"
+    },
+    "ticket_caisse_url": {
+      "type": "string",
+      "description": "Photo du ticket de caisse upload\u00e9e par le voyageur"
+    },
+    "scan_valide_par_voyageur": {
+      "type": "boolean",
+      "default": false,
+      "description": "Le voyageur a scann\u00e9 le livre et le ticket"
+    },
+    "validation_admin": {
+      "type": "string",
+      "enum": [
+        "en_attente",
+        "validee",
+        "rejetee"
+      ],
+      "default": "en_attente",
+      "description": "Statut de validation par l'admin"
+    },
+    "admin_notes": {
+      "type": "string",
+      "description": "Notes de l'admin lors de la validation"
+    },
+    "notification_lecteur_envoyee": {
+      "type": "boolean",
+      "default": false,
+      "description": "Notification envoy\u00e9e au lecteur apr\u00e8s validation"
     }
   },
   "required": [

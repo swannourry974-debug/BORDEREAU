@@ -3,6 +3,7 @@ import { SectionTitle, BtnCoupon, PerfoStrip } from './shared';
 import JaugeValise from '../missions/JaugeValise';
 import WalletCard from '../missions/WalletCard';
 import PullToRefresh from '../shared/PullToRefresh';
+import ScanValidation from '../missions/ScanValidation';
 
 const MAX_LIVRES = 10;
 
@@ -25,7 +26,7 @@ const AVAILABLE_MISSIONS = [
   { id: 12, ville: 'MIAMI, FL', date: "Accepte jusqu'au 28 avril", livre: 'Madame Bovary', type: 'Poche', poids: '290g' },
 ];
 
-function MissionCard({ mission, rang, onAccept, disabled }) {
+function MissionCard({ mission, rang, onAccept, disabled, onScan }) {
   const [loading, setLoading] = useState(false);
   const commission = rang ? getCommission(rang) : null;
 
@@ -94,7 +95,7 @@ function MissionCard({ mission, rang, onAccept, disabled }) {
         </div>
 
         {isEngaged ? (
-          <BtnCoupon secondary disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>ENGAGÉ 🔒</BtnCoupon>
+          <BtnCoupon onClick={() => onScan && onScan(mission)} secondary style={{ borderColor: '#1a3a5c', color: '#1a3a5c' }}>📷 Scanner l'achat</BtnCoupon>
         ) : (
           <BtnCoupon onClick={handleAccept} disabled={disabled || loading}>
             {loading ? '⟳ ...' : disabled ? '⛔ Valise pleine' : 'Accepter'}
@@ -120,6 +121,7 @@ export default function PanelMissions() {
     { id: 3, ville: 'MIAMI, FL', date: 'Ticket scanné · Achat confirmé', livre: 'Astérix T.1', type: 'BD', poids: '250g', engaged: true, rang: 1, commission: 5.00 },
   ]);
   const [available, setAvailable] = useState(AVAILABLE_MISSIONS);
+  const [scanMission, setScanMission] = useState(null); // mission en cours de scan
 
   // Wallet (simulé)
   const [wallet] = useState({ soldeDisponible: 12.50, gainsPrevisionnels: 5.00, virementSuspendu: false });
@@ -154,12 +156,21 @@ export default function PanelMissions() {
       {/* Jauge valise */}
       <JaugeValise livresActifs={livresActifs} totalCommission={totalCommission} />
 
+      {/* Scan Validation Modal */}
+      {scanMission && (
+        <ScanValidation
+          mission={scanMission}
+          onClose={() => setScanMission(null)}
+          onValidated={() => setScanMission(null)}
+        />
+      )}
+
       {/* Missions engagées */}
       {engagees.length > 0 && (
         <>
           <SectionTitle>Missions engagées</SectionTitle>
           {engagees.map(m => (
-            <MissionCard key={m.id} mission={m} onAccept={() => {}} disabled={false} />
+            <MissionCard key={m.id} mission={m} onAccept={() => {}} disabled={false} onScan={setScanMission} />
           ))}
           <PerfoStrip />
         </>

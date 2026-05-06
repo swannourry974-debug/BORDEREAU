@@ -3,9 +3,11 @@ import { base44 } from '@/api/base44Client';
 import ZonesTarifsManager from '@/components/admin/ZonesTarifsManager';
 import MargeSimulateur from '@/components/admin/MargeSimulateur';
 import AdminStats from '@/components/admin/AdminStats';
+import ValidationLivraisons from '@/components/admin/ValidationLivraisons';
 
 const TABS = [
   { id: 'stats', label: '📊 Tableau de bord', icon: '📊' },
+  { id: 'validations', label: '✅ Validations', icon: '✅' },
   { id: 'zones', label: '🌍 Zones & Tarifs', icon: '🌍' },
   { id: 'marges', label: '🧮 Simulateur de marges', icon: '🧮' },
 ];
@@ -96,6 +98,7 @@ export default function AdminDashboard() {
       {/* Content */}
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
         {activeTab === 'stats' && <AdminStats />}
+        {activeTab === 'validations' && <ValidationLivraisons />}
         {activeTab === 'zones' && <ZonesTarifsManager />}
         {activeTab === 'marges' && <MargeSimulateur />}
       </div>
