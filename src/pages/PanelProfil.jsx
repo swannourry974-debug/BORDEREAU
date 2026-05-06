@@ -106,11 +106,11 @@ export default function PanelProfil() {
                   opacity: debloque ? 1 : 0.45,
                   transition: 'all 0.3s',
                 }}>
-                  <div style={{ fontSize: 28, marginBottom: 6 }}>{d.emoji}</div>
-                  <div className="font-special" style={{ fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', color: debloque ? 'var(--bordeaux)' : 'rgba(26,16,8,0.4)', lineHeight: 1.3 }}>
+                  <div style={{ fontSize: 28, marginBottom: 6, userSelect: 'none', WebkitUserSelect: 'none' }}>{d.emoji}</div>
+                  <div className="font-special" style={{ fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', color: debloque ? 'var(--bordeaux)' : 'rgba(26,16,8,0.4)', lineHeight: 1.3, userSelect: 'none', WebkitUserSelect: 'none' }}>
                     {d.nom}
                   </div>
-                  <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 10, color: 'rgba(26,16,8,0.35)', marginTop: 4 }}>
+                  <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 10, color: 'rgba(26,16,8,0.35)', marginTop: 4, userSelect: 'none', WebkitUserSelect: 'none' }}>
                     {debloque ? '✓ Obtenu' : `≥ ${d.seuil} livr.`}
                   </div>
                 </div>

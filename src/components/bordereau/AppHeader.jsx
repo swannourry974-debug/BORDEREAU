@@ -1,4 +1,6 @@
 import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 
 const roleLabels = {
   lecteur: '✦ LECTEUR',
@@ -6,7 +8,13 @@ const roleLabels = {
   relais: '🏪 RELAIS',
 };
 
+const ROOT_PANELS = ['/', '/catalogue', '/etagere', '/missions', '/accueil-voyageur', '/stock'];
+
 export default function AppHeader({ role, roleSwitcherOpen, onToggleRoleSwitcher }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const showBack = !ROOT_PANELS.includes(location.pathname);
+
   return (
     <header style={{
       background: 'var(--bordeaux)',
@@ -21,13 +29,23 @@ export default function AppHeader({ role, roleSwitcherOpen, onToggleRoleSwitcher
       borderBottom: '2px solid var(--bordeaux-dark)',
     }}>
       <div style={{ maxWidth: '1024px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ lineHeight: 1 }}>
-          <div className="font-special" style={{ fontSize: 28, color: 'var(--creme)', letterSpacing: 6, textTransform: 'uppercase' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, lineHeight: 1 }}>
+          {showBack && (
+            <button
+              onClick={() => navigate(-1)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--creme)', display: 'flex', alignItems: 'center', userSelect: 'none' }}
+            >
+              <ArrowLeft size={20} />
+            </button>
+          )}
+          <div>
+          <div className="font-special" style={{ fontSize: 28, color: 'var(--creme)', letterSpacing: 6, textTransform: 'uppercase', userSelect: 'none' }}>
             BORDEREAU
           </div>
-          <span className="font-fell" style={{ fontStyle: 'italic', fontSize: 12, color: 'rgba(253,252,240,0.7)', letterSpacing: 2, marginTop: 2, display: 'block' }}>
+          <span className="font-fell" style={{ fontStyle: 'italic', fontSize: 12, color: 'rgba(253,252,240,0.7)', letterSpacing: 2, marginTop: 2, display: 'block', userSelect: 'none' }}>
             Manifeste des livres voyageurs
           </span>
+          </div>
         </div>
         <button
           onClick={onToggleRoleSwitcher}

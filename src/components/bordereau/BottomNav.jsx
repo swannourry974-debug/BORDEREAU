@@ -28,6 +28,7 @@ export default function BottomNav({ role, activePanel, onSwitch }) {
     transition: 'all 0.2s',
     borderRight: '1px dashed hsl(var(--border))',
     userSelect: 'none',
+    WebkitUserSelect: 'none',
     WebkitTapHighlightColor: 'transparent',
   });
 
@@ -39,6 +40,7 @@ export default function BottomNav({ role, activePanel, onSwitch }) {
     fontWeight: active ? 'bold' : 'normal',
     fontFamily: "'Special Elite', monospace",
     userSelect: 'none',
+    WebkitUserSelect: 'none',
   });
 
   const NavItem = ({ panelId, icon, label, badge }) => {

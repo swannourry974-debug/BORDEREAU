@@ -72,7 +72,28 @@
   }
 }
 
-/* Dark mode désactivé volontairement — la palette Bordereau est fixe (voir variables ci-dessus) */
+/* Dark mode — bordeaux reste identique, seul le fond change */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: 25 35% 6%;       /* #1a1008 noir encre */
+    --foreground: 40 33% 92%;      /* #F5F0DC crème papier */
+    --card: 25 30% 9%;
+    --card-foreground: 40 33% 92%;
+    --popover: 25 30% 9%;
+    --popover-foreground: 40 33% 92%;
+    --primary: 345 100% 25%;       /* bordeaux — inchangé */
+    --primary-foreground: 60 33% 97%;
+    --secondary: 25 20% 14%;
+    --secondary-foreground: 40 33% 92%;
+    --muted: 25 15% 12%;
+    --muted-foreground: 40 20% 60%;
+    --accent: 345 100% 25%;        /* bordeaux — inchangé */
+    --accent-foreground: 60 33% 97%;
+    --border: 25 15% 18%;
+    --input: 25 15% 18%;
+    --ring: 345 100% 25%;
+  }
+}
 
 /* GRAIN OVERLAY — visible en toutes circonstances */
 body::before {
