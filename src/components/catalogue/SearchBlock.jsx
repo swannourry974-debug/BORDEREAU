@@ -16,7 +16,7 @@ export default function SearchBlock({ onSearch }) {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && onSearch(query)}
           placeholder="Le Petit Prince..."
-          className="flex-1 bg-creme border border-foreground/30 px-3 py-2 text-[15px] text-foreground outline-none focus:border-bordeaux focus:shadow-[0_0_0_2px_rgba(128,0,32,0.1)]" style={{ fontFamily: 'Georgia, serif', color: 'var(--encre)' }}
+          className="flex-1 bg-creme border border-foreground/30 px-3 py-2 text-[15px] text-foreground outline-none focus:border-bordeaux focus:shadow-[0_0_0_2px_rgba(128,0,32,0.1)]" style={{ fontFamily: 'Georgia, serif', color: '#000000' }}
         />
         <CouponButton onClick={() => onSearch(query)}>Chercher</CouponButton>
       </div>
