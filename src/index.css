@@ -4,6 +4,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   BORDEREAU — PALETTE OFFICIELLE (NE PAS MODIFIER)
+   Ces couleurs sont l'identité visuelle de l'application.
+   Toute modification doit être intentionnelle et concertée.
+
+   FOND EN-TÊTE & NAV BAS : bordeaux (#800020) sur fond crème
+   --bordeaux      → rouge bordeaux profond (header, boutons CTA, accents)
+   --bordeaux-dark → bordeaux foncé (ombres, borders)
+   --creme         → fond principal chaud (body, texte sur bordeaux)
+   --papier        → fond cartes / panneaux (texture vieux papier)
+   --papier-fonce  → variante plus sombre (hover, séparateurs)
+   --encre         → texte principal (quasi-noir chaud)
+   --sepia         → texte secondaire / sous-titres (brun doré)
+   ============================================================ */
+
 @layer base {
   :root {
     --background: 60 33% 97%;
@@ -31,43 +46,14 @@
     --ring: 345 100% 25%;
     --radius: 0rem;
 
-    --creme: #FDFCF0;
-    --bordeaux: #800020;
-    --bordeaux-dark: #5a0015;
-    --encre: #1a1008;
-    --sepia: #8B6914;
-    --papier: #F5F0DC;
-    --papier-fonce: #E8E0C4;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --background: 20 15% 8%;
-      --foreground: 48 40% 93%;
-      --card: 20 15% 12%;
-      --card-foreground: 48 40% 93%;
-      --popover: 20 15% 12%;
-      --popover-foreground: 48 40% 93%;
-      --primary: 345 80% 45%;
-      --primary-foreground: 48 40% 93%;
-      --secondary: 20 15% 18%;
-      --secondary-foreground: 48 40% 93%;
-      --muted: 20 15% 20%;
-      --muted-foreground: 48 20% 60%;
-      --accent: 40 50% 45%;
-      --accent-foreground: 48 40% 93%;
-      --border: 20 15% 25%;
-      --input: 20 15% 25%;
-      --ring: 345 80% 45%;
-
-      --creme: #2a1f18;
-      --bordeaux: #c0304a;
-      --bordeaux-dark: #800020;
-      --encre: #f5e9c8;
-      --sepia: #c8a96e;
-      --papier: #1e1610;
-      --papier-fonce: #2a1f18;
-    }
+    /* — Palette Bordereau — */
+    --creme:         #FDFCF0;  /* fond corps / texte sur bordeaux */
+    --bordeaux:      #800020;  /* couleur signature — header, CTA */
+    --bordeaux-dark: #5a0015;  /* ombre / border bordeaux */
+    --encre:         #1a1008;  /* texte principal */
+    --sepia:         #8B6914;  /* texte secondaire doré */
+    --papier:        #F5F0DC;  /* fond cartes */
+    --papier-fonce:  #E8E0C4;  /* fond cartes hover */
   }
 }
 
@@ -86,9 +72,9 @@
   }
 }
 
-/* Dark mode enabled — follows system preference */
+/* Dark mode désactivé volontairement — la palette Bordereau est fixe (voir variables ci-dessus) */
 
-/* GRAIN OVERLAY — visible in both light and dark */
+/* GRAIN OVERLAY — visible en toutes circonstances */
 body::before {
   content: '';
   position: fixed;
