@@ -1,0 +1,31 @@
+{
+  "name": "VoyageurBadge",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email du voyageur"
+    },
+    "badge_id": {
+      "type": "string",
+      "description": "Identifiant unique du badge (ex: premier_livre, grand_lecteur)"
+    },
+    "badge_nom": {
+      "type": "string",
+      "description": "Nom affich\u00e9 du badge"
+    },
+    "badge_emoji": {
+      "type": "string",
+      "description": "Emoji repr\u00e9sentant le badge"
+    },
+    "debloque_le": {
+      "type": "string",
+      "description": "Date de d\u00e9verrouillage"
+    }
+  },
+  "required": [
+    "user_email",
+    "badge_id",
+    "badge_nom"
+  ]
+}

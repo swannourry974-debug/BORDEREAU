@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import { SectionTitle, BtnCoupon, PerfoStrip } from './shared';
 import JaugeValise from '../missions/JaugeValise';
 import WalletCard from '../missions/WalletCard';
+import BadgeShowcase from '../missions/BadgeShowcase';
 import PullToRefresh from '../shared/PullToRefresh';
 import ScanValidation from '../missions/ScanValidation';
+import { BADGES_CONFIG, getBadgesDebloques } from '@/lib/badges';
+import { toast } from 'sonner';
 
 const MAX_LIVRES = 10;
 
@@ -121,7 +124,8 @@ export default function PanelMissions() {
     { id: 3, ville: 'MIAMI, FL', date: 'Ticket scanné · Achat confirmé', livre: 'Astérix T.1', type: 'BD', poids: '250g', engaged: true, rang: 1, commission: 5.00 },
   ]);
   const [available, setAvailable] = useState(AVAILABLE_MISSIONS);
-  const [scanMission, setScanMission] = useState(null); // mission en cours de scan
+  const [scanMission, setScanMission] = useState(null);
+  const [newBadge, setNewBadge] = useState(null);
 
   // Wallet (simulé)
   const [wallet] = useState({ soldeDisponible: 12.50, gainsPrevisionnels: 5.00, virementSuspendu: false });
@@ -130,12 +134,37 @@ export default function PanelMissions() {
   const totalCommission = getTotalCommission(livresActifs);
   const limitAtteinte = livresActifs >= MAX_LIVRES;
 
+  // Stats pour les badges (simulées — missionsAcceptees = nb total engagées)
+  const statsActuelles = {
+    livresLivres: 12,
+    livraisonsRapides: 4,
+    livraisonsUltraRapides: 1,
+    maxLivresParVoyage: livresActifs,
+    missionsAcceptees: 7 + engagees.filter(e => e.engaged).length,
+    paysVisites: 2,
+  };
+
   const acceptMission = (id, commission) => {
     const mission = available.find(m => m.id === id);
     if (!mission || limitAtteinte) return;
     const rang = livresActifs + 1;
+
+    const statsBefore = { ...statsActuelles };
+    const statsAfter = { ...statsActuelles, missionsAcceptees: statsActuelles.missionsAcceptees + 1, maxLivresParVoyage: rang };
+
+    const before = getBadgesDebloques(statsBefore);
+    const after = getBadgesDebloques(statsAfter);
+    const nouveaux = after.filter(id => !before.includes(id));
+
     setEngagees(prev => [...prev, { ...mission, engaged: true, rang, commission }]);
     setAvailable(prev => prev.filter(m => m.id !== id));
+
+    if (nouveaux.length > 0) {
+      const badge = BADGES_CONFIG.find(b => b.id === nouveaux[0]);
+      if (badge) {
+        setTimeout(() => setNewBadge(badge), 500);
+      }
+    }
   };
 
   const handleRefresh = async () => {
@@ -146,6 +175,37 @@ export default function PanelMissions() {
   return (
     <PullToRefresh onRefresh={handleRefresh}>
     <div>
+
+      {/* Notification nouveau badge */}
+      {newBadge && (
+        <div
+          onClick={() => setNewBadge(null)}
+          style={{
+            position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)',
+            zIndex: 500, background: 'var(--encre)', color: 'var(--creme)',
+            padding: '16px 24px', maxWidth: 320, width: '90%',
+            border: '2px solid var(--bordeaux)',
+            boxShadow: '0 0 20px rgba(128,0,32,0.4)',
+            animation: 'fadeSlideIn 0.4s ease',
+            cursor: 'pointer', textAlign: 'center',
+          }}
+        >
+          <div style={{ fontSize: 36, marginBottom: 6 }}>{newBadge.emoji}</div>
+          <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 4 }}>
+            Badge débloqué !
+          </div>
+          <div style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: 16, marginBottom: 4 }}>
+            {newBadge.nom}
+          </div>
+          <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, opacity: 0.7, lineHeight: 1.5 }}>
+            {newBadge.description}
+          </div>
+          <div style={{ marginTop: 10, fontFamily: 'Special Elite, monospace', fontSize: 8, letterSpacing: 2, opacity: 0.4, textTransform: 'uppercase' }}>
+            Appuyez pour fermer
+          </div>
+        </div>
+      )}
+
       {/* Wallet */}
       <WalletCard
         soldeDisponible={wallet.soldeDisponible}
@@ -209,6 +269,12 @@ export default function PanelMissions() {
           />
         );
       })}
+
+      <PerfoStrip />
+
+      {/* Palmarès Voyageur */}
+      <SectionTitle>Palmarès</SectionTitle>
+      <BadgeShowcase stats={statsActuelles} />
 
       <PerfoStrip />
 
