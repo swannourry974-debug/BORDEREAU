@@ -34,7 +34,7 @@ export default function BookCard({ book, index, onClick }) {
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="font-serif text-[15px] font-bold leading-tight mb-[3px]">{book.title}</div>
+          <div className="font-serif text-[15px] font-bold leading-tight mb-[3px]" style={{ color: '#000000' }}>{book.title}</div>
           <div className="font-fell italic text-[12px] text-foreground/60 mb-2">{book.author}</div>
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[9px] tracking-[1.5px] uppercase px-[7px] py-[2px] border border-encre">
