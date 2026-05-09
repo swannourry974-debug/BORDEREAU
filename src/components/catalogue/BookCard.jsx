@@ -26,10 +26,14 @@ export default function BookCard({ book, index, onClick }) {
 
       <div className="flex gap-3 items-start">
         {/* Cover */}
-        <div className={`w-12 h-16 border border-foreground/30 flex-shrink-0 flex items-center justify-center overflow-hidden ${coverClass}`}>
-          <span className="font-serif text-[9px] text-creme/80 text-center px-[2px] leading-tight tracking-[0.5px]">
-            {book.coverText}
-          </span>
+        <div className={`w-12 h-16 border border-foreground/30 flex-shrink-0 flex items-center justify-center overflow-hidden ${book.coverUrl ? '' : coverClass}`}>
+          {book.coverUrl ? (
+            <img src={book.coverUrl} alt={book.title} className="w-full h-full object-cover" />
+          ) : (
+            <span className="font-serif text-[9px] text-creme/80 text-center px-[2px] leading-tight tracking-[0.5px]">
+              {book.coverText}
+            </span>
+          )}
         </div>
 
         {/* Info */}

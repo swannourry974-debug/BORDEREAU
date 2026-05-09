@@ -20,6 +20,7 @@ export function useOpenLibrary() {
         author: doc.author_name?.[0] || 'Auteur inconnu',
         isbn: doc.isbn?.[0] || null,
         coverId: doc.cover_i || null,
+        coverUrl: doc.cover_i ? `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg` : null,
         pages: doc.number_of_pages_median || null,
         year: doc.publish_year?.[0] || null,
         // Poids estimé basé sur le nombre de pages
