@@ -47,6 +47,8 @@ const AuthenticatedApp = () => {
       <Route path="/missions" element={<Bordereau initialPanel="missions" />} />
       <Route path="/accueil-voyageur" element={<Bordereau initialPanel="accueil-voyageur" />} />
       <Route path="/stock" element={<Bordereau initialPanel="stock" />} />
+      <Route path="/scanner" element={<Bordereau initialPanel="scanner" />} />
+      <Route path="/profils" element={<Bordereau initialPanel="profils" />} />
       <Route path="/profil" element={<PanelProfil />} />
       {/* Add your page Route elements here */}
       <Route path="/landing-lecteur" element={<LandingLecteur />} />

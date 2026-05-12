@@ -80,7 +80,11 @@ export default function BottomNav({ role, activePanel, onSwitch }) {
         </>
       )}
       {role === 'relais' && (
-        <NavItem panelId="stock" icon="📦" label="Stock" />
+        <>
+          <NavItem panelId="scanner" icon="⬡" label="Scanner" />
+          <NavItem panelId="stock" icon="📦" label="Stock" />
+          <NavItem panelId="profils" icon="📊" label="Profils" />
+        </>
       )}
       <div
         style={{ ...itemStyle(false), borderRight: 'none' }}

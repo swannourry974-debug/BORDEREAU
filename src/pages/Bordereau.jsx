@@ -8,6 +8,8 @@ import PanelEtagere from '../components/bordereau/PanelEtagere';
 import PanelMissions from '../components/bordereau/PanelMissions';
 import PanelStock from '../components/bordereau/PanelStock';
 import PanelAccueilVoyageur from '../components/voyageur/PanelAccueilVoyageur';
+import PanelScanner from '../components/relais/PanelScanner';
+import PanelProfils from '../components/relais/PanelProfils';
 
 function SidebarItem({ icon, label, active, onClick, badge }) {
   return (
@@ -66,7 +68,7 @@ export default function Bordereau({ initialPanel }) {
   const [commandeOpen, setCommandeOpen] = useState(false);
   const [commandeBook, setCommandeBook] = useState(null);
 
-  const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/missions': 'missions', '/stock': 'stock', '/accueil-voyageur': 'accueil-voyageur' };
+  const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/missions': 'missions', '/stock': 'stock', '/accueil-voyageur': 'accueil-voyageur', '/scanner': 'scanner', '/profils': 'profils' };
   const activePanel = pathToPanel[location.pathname] || initialPanel || 'catalogue';
 
   const switchRole = (newRole) => {
@@ -139,7 +141,11 @@ export default function Bordereau({ initialPanel }) {
               </>
             )}
             {role === 'relais' && (
-              <SidebarItem icon="📦" label="Stock" panelId="stock" active={activePanel === 'stock'} onClick={() => switchPanel('stock')} />
+              <>
+                <SidebarItem icon="⬡" label="Scanner" panelId="scanner" active={activePanel === 'scanner'} onClick={() => switchPanel('scanner')} />
+                <SidebarItem icon="📦" label="Stock" panelId="stock" active={activePanel === 'stock'} onClick={() => switchPanel('stock')} />
+                <SidebarItem icon="📊" label="Profils" panelId="profils" active={activePanel === 'profils'} onClick={() => switchPanel('profils')} />
+              </>
             )}
             <SidebarItem icon="👤" label="Profil" panelId="profil" active={false} onClick={() => navigate('/profil')} />
           </nav>
@@ -176,6 +182,8 @@ export default function Bordereau({ initialPanel }) {
             {activePanel === 'accueil-voyageur' && <PanelAccueilVoyageur />}
             {activePanel === 'missions' && <PanelMissions />}
             {activePanel === 'stock' && <PanelStock />}
+            {activePanel === 'scanner' && <PanelScanner />}
+            {activePanel === 'profils' && <PanelProfils />}
           </div>
         </main>
       </div>
