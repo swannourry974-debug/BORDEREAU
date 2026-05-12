@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import QrScannerModal from '../relais/QrScannerModal';
 import ScanResult from '../relais/ScanResult';
+import ProfilsTableau from '../relais/ProfilsTableau';
 
 const MOCK_STOCK = [
   { ref: 'BDX-1042', livre: 'Les Misérables', auteur: 'Victor Hugo', type: 'retrait', utilisateur: 'Marie L.', emplacement: 'Étagère A3' },
@@ -46,22 +47,38 @@ export default function PanelStock() {
         </div>
       </div>
 
-      {/* Scan Button */}
-      <button
-        onClick={() => setScanning(true)}
-        style={{
-          width: '100%', background: 'var(--bordeaux)', color: 'var(--creme)',
-          border: 'none', padding: '18px 24px', marginBottom: 24,
-          fontFamily: 'Special Elite, monospace', fontSize: 13,
-          letterSpacing: 4, textTransform: 'uppercase', cursor: 'pointer',
-          outline: '2px dashed var(--bordeaux)', outlineOffset: 3,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-          transition: 'all 0.15s'
-        }}
-      >
-        <span style={{ fontSize: 20 }}>⬡</span>
-        Scanner un bordereau
-      </button>
+      {/* Action Buttons */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
+        <button
+          onClick={() => setScanning(true)}
+          style={{
+            flex: 1, background: 'var(--bordeaux)', color: 'var(--creme)',
+            border: 'none', padding: '16px 12px',
+            fontFamily: 'Special Elite, monospace', fontSize: 11,
+            letterSpacing: 3, textTransform: 'uppercase', cursor: 'pointer',
+            outline: '2px dashed var(--bordeaux)', outlineOffset: 3,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            transition: 'all 0.15s'
+          }}
+        >
+          <span style={{ fontSize: 18 }}>⬡</span>
+          Scanner un bordereau
+        </button>
+        <button
+          onClick={() => {}}
+          style={{
+            flex: 1, background: 'var(--papier)', color: 'var(--bordeaux)',
+            border: '1.5px solid var(--bordeaux)', padding: '16px 12px',
+            fontFamily: 'Special Elite, monospace', fontSize: 11,
+            letterSpacing: 3, textTransform: 'uppercase', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            transition: 'all 0.15s'
+          }}
+        >
+          <span style={{ fontSize: 18 }}>📦</span>
+          Gestion du stock
+        </button>
+      </div>
 
       {/* Stock list */}
       <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -101,6 +118,7 @@ export default function PanelStock() {
           </div>
         </div>
       ))}
+      <ProfilsTableau />
     </div>
   );
 }
