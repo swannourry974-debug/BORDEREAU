@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AppHeader from '../components/bordereau/AppHeader';
 import RoleSwitcher from '../components/bordereau/RoleSwitcher';
@@ -68,6 +69,17 @@ export default function Bordereau({ initialPanel }) {
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
   const [commandeOpen, setCommandeOpen] = useState(false);
   const [commandeBook, setCommandeBook] = useState(null);
+
+  const RELAIS_EMAILS = ['nourryswanny@gmail.com'];
+
+  useEffect(() => {
+    base44.auth.me().then(user => {
+      if (user && RELAIS_EMAILS.includes(user.email)) {
+        setRole('relais');
+        navigate('/scanner');
+      }
+    }).catch(() => {});
+  }, []);
 
   const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/missions': 'missions', '/stock': 'stock', '/accueil-voyageur': 'accueil-voyageur', '/scanner': 'scanner', '/profils': 'profils', '/profil': 'profil' };
   const activePanel = pathToPanel[location.pathname] || initialPanel || 'catalogue';
