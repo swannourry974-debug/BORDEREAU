@@ -1,8 +1,6 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 
 export default function BottomNav({ role, activePanel, onSwitch }) {
-  const navigate = useNavigate();
   const navStyle = {
     position: 'fixed',
     bottom: '1.5cm',
@@ -87,11 +85,14 @@ export default function BottomNav({ role, activePanel, onSwitch }) {
         </>
       )}
       <div
-        style={{ ...itemStyle(false), borderRight: 'none' }}
-        onClick={() => navigate('/profil')}
+        style={{ ...itemStyle(activePanel === 'profil'), borderRight: 'none' }}
+        onClick={() => onSwitch('profil')}
       >
+        {activePanel === 'profil' && (
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'var(--bordeaux)' }} />
+        )}
         <span style={{ fontSize: 22, marginBottom: 3 }}>👤</span>
-        <span style={labelStyle(false)}>Profil</span>
+        <span style={labelStyle(activePanel === 'profil')}>Profil</span>
       </div>
     </nav>
   );

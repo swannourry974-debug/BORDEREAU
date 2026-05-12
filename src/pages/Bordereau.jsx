@@ -10,6 +10,7 @@ import PanelStock from '../components/bordereau/PanelStock';
 import PanelAccueilVoyageur from '../components/voyageur/PanelAccueilVoyageur';
 import PanelScanner from '../components/relais/PanelScanner';
 import PanelProfils from '../components/relais/PanelProfils';
+import PanelProfil from './PanelProfil';
 
 function SidebarItem({ icon, label, active, onClick, badge }) {
   return (
@@ -68,7 +69,7 @@ export default function Bordereau({ initialPanel }) {
   const [commandeOpen, setCommandeOpen] = useState(false);
   const [commandeBook, setCommandeBook] = useState(null);
 
-  const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/missions': 'missions', '/stock': 'stock', '/accueil-voyageur': 'accueil-voyageur', '/scanner': 'scanner', '/profils': 'profils' };
+  const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/missions': 'missions', '/stock': 'stock', '/accueil-voyageur': 'accueil-voyageur', '/scanner': 'scanner', '/profils': 'profils', '/profil': 'profil' };
   const activePanel = pathToPanel[location.pathname] || initialPanel || 'catalogue';
 
   const switchRole = (newRole) => {
@@ -147,7 +148,7 @@ export default function Bordereau({ initialPanel }) {
                 <SidebarItem icon="📊" label="Profils" panelId="profils" active={activePanel === 'profils'} onClick={() => switchPanel('profils')} />
               </>
             )}
-            <SidebarItem icon="👤" label="Profil" panelId="profil" active={false} onClick={() => navigate('/profil')} />
+            <SidebarItem icon="👤" label="Profil" panelId="profil" active={activePanel === 'profil'} onClick={() => switchPanel('profil')} />
           </nav>
 
           {/* Footer sidebar */}
@@ -184,6 +185,7 @@ export default function Bordereau({ initialPanel }) {
             {activePanel === 'stock' && <PanelStock />}
             {activePanel === 'scanner' && <PanelScanner />}
             {activePanel === 'profils' && <PanelProfils />}
+            {activePanel === 'profil' && <PanelProfil />}
           </div>
         </main>
       </div>

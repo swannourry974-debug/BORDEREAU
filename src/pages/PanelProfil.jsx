@@ -58,22 +58,8 @@ export default function PanelProfil() {
   };
 
   return (
-    <div style={{ background: 'hsl(var(--background))', minHeight: '100vh', paddingBottom: 'env(safe-area-inset-bottom, 20px)' }}>
-      {/* Header */}
-      <div style={{
-        background: 'var(--bordeaux)',
-        paddingTop: `calc(18px + env(safe-area-inset-top, 0px))`,
-        paddingBottom: 14,
-        paddingLeft: 20,
-        paddingRight: 20,
-        boxShadow: '0 3px 12px rgba(128,0,32,0.4)',
-      }}>
-        <div className="font-special" style={{ fontSize: 20, color: 'var(--creme)', letterSpacing: 4, textTransform: 'uppercase' }}>
-          Profil
-        </div>
-      </div>
-
-      <div style={{ maxWidth: 480, margin: '0 auto', padding: '24px 16px' }}>
+    <div>
+      <div style={{ maxWidth: 480, margin: '0 auto', padding: '8px 0' }}>
         {/* Identité */}
         <div style={sectionStyle}>
           <div className="font-special" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--muted-foreground)', marginBottom: 12 }}>
