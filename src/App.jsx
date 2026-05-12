@@ -61,7 +61,7 @@ const AuthenticatedApp = () => {
 };
 
 
-const IDLE_TIMEOUT = 20000; // 20 secondes
+const IDLE_TIMEOUT = 120000; // 2 minutes
 
 function App() {
   const [loadingDone, setLoadingDone] = useState(false);
