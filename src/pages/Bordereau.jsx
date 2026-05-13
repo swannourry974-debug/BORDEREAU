@@ -5,13 +5,16 @@ import AppHeader from '../components/bordereau/AppHeader';
 import RoleSwitcher from '../components/bordereau/RoleSwitcher';
 import BottomNav from '../components/bordereau/BottomNav';
 import PanelCatalogue from '../components/bordereau/PanelCatalogue';
-import PanelEtagere from '../components/bordereau/PanelEtagere';
+import PanelEtagere from '../components/bordereau/PanelEtagere.jsx';
 import PanelMissions from '../components/bordereau/PanelMissions';
-import PanelStock from '../components/bordereau/PanelStock';
+import PanelStock from '../components/bordereau/PanelStockReal';
 import PanelAccueilVoyageur from '../components/voyageur/PanelAccueilVoyageur';
-import PanelScanner from '../components/relais/PanelScanner';
+import PanelScanner from '../components/relais/PanelScannerReal';
 import PanelProfils from '../components/relais/PanelProfils';
 import PanelProfil from './PanelProfil';
+import PanelWalletLecteur from '../components/wallet/PanelWalletLecteur';
+import PanelWalletAdmin from '../components/wallet/PanelWalletAdmin';
+import PanelAide from '../components/aide/PanelAide';
 
 function SidebarItem({ icon, label, active, onClick, badge }) {
   return (
@@ -81,7 +84,7 @@ export default function Bordereau({ initialPanel }) {
     }).catch(() => {});
   }, []);
 
-  const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/missions': 'missions', '/stock': 'stock', '/accueil-voyageur': 'accueil-voyageur', '/scanner': 'scanner', '/profils': 'profils', '/profil': 'profil' };
+  const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/missions': 'missions', '/stock': 'stock', '/accueil-voyageur': 'accueil-voyageur', '/scanner': 'scanner', '/profils': 'profils', '/profil': 'profil', '/wallet': 'wallet', '/aide': 'aide' };
   const activePanel = pathToPanel[location.pathname] || initialPanel || 'catalogue';
 
   const switchRole = (newRole) => {
@@ -144,13 +147,17 @@ export default function Bordereau({ initialPanel }) {
             {role === 'lecteur' && (
               <>
                 <SidebarItem icon="🔍" label="Catalogue" panelId="catalogue" active={activePanel === 'catalogue'} onClick={() => switchPanel('catalogue')} />
-                <SidebarItem icon="📚" label="Étagère" panelId="etagere" active={activePanel === 'etagere'} onClick={() => switchPanel('etagere')} badge="2" />
+                <SidebarItem icon="📚" label="Étagère" panelId="etagere" active={activePanel === 'etagere'} onClick={() => switchPanel('etagere')} />
+                <SidebarItem icon="💳" label="Wallet" panelId="wallet" active={activePanel === 'wallet'} onClick={() => switchPanel('wallet')} />
+                <SidebarItem icon="❓" label="Aide" panelId="aide" active={activePanel === 'aide'} onClick={() => switchPanel('aide')} />
               </>
             )}
             {role === 'voyageur' && (
               <>
                 <SidebarItem icon="🏠" label="Accueil" panelId="accueil-voyageur" active={activePanel === 'accueil-voyageur'} onClick={() => switchPanel('accueil-voyageur')} />
                 <SidebarItem icon="🗺️" label="Missions" panelId="missions" active={activePanel === 'missions'} onClick={() => switchPanel('missions')} />
+                <SidebarItem icon="💳" label="Wallet" panelId="wallet" active={activePanel === 'wallet'} onClick={() => switchPanel('wallet')} />
+                <SidebarItem icon="❓" label="Aide" panelId="aide" active={activePanel === 'aide'} onClick={() => switchPanel('aide')} />
               </>
             )}
             {role === 'relais' && (
@@ -158,6 +165,7 @@ export default function Bordereau({ initialPanel }) {
                 <SidebarItem icon="⬡" label="Scanner" panelId="scanner" active={activePanel === 'scanner'} onClick={() => switchPanel('scanner')} />
                 <SidebarItem icon="📦" label="Stock" panelId="stock" active={activePanel === 'stock'} onClick={() => switchPanel('stock')} />
                 <SidebarItem icon="📊" label="Profils" panelId="profils" active={activePanel === 'profils'} onClick={() => switchPanel('profils')} />
+                <SidebarItem icon="❓" label="Aide" panelId="aide" active={activePanel === 'aide'} onClick={() => switchPanel('aide')} />
               </>
             )}
             <SidebarItem icon="👤" label="Profil" panelId="profil" active={activePanel === 'profil'} onClick={() => switchPanel('profil')} />
@@ -198,6 +206,8 @@ export default function Bordereau({ initialPanel }) {
             {activePanel === 'scanner' && <PanelScanner />}
             {activePanel === 'profils' && <PanelProfils />}
             {activePanel === 'profil' && <PanelProfil />}
+            {activePanel === 'wallet' && (role === 'lecteur' ? <PanelWalletLecteur /> : role === 'voyageur' ? <PanelAccueilVoyageur /> : <PanelWalletAdmin />)}
+            {activePanel === 'aide' && <PanelAide role={role} />}
           </div>
         </main>
       </div>

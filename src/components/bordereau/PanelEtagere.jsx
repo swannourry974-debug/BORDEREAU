@@ -1,58 +1,118 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
 import { WelcomeCard, SectionTitle, PerfoStrip, EtagereItem } from './shared';
 
+const STATUT_CONFIG = {
+  en_attente_paiement: { statusClass: 'default', dotClass: 'paye', stampLabel: 'EN ATTENTE', stampColor: 'var(--sepia)', label: 'Paiement en attente' },
+  payee:               { statusClass: 'default', dotClass: 'paye', stampLabel: 'PAYÉ', stampColor: 'var(--bordeaux)', label: 'Payé' },
+  en_transit:          { statusClass: 'enVol',   dotClass: 'enVol', stampLabel: 'EN TRANSIT', stampColor: '#1a3a5c', label: 'En transit' },
+  au_relais:           { statusClass: 'auRelais',dotClass: 'auRelais', stampLabel: 'AU RELAIS', stampColor: '#8B6914', label: 'Au relais' },
+  livree:              { statusClass: 'recu',    dotClass: 'recu',  stampLabel: 'REÇU ✓', stampColor: '#2d6a2d', label: 'Livré' },
+  litige:              { statusClass: 'default', dotClass: 'paye', stampLabel: 'LITIGE', stampColor: '#b41414', label: 'Litige' },
+};
+
 export default function PanelEtagere() {
+  const [user, setUser] = useState(null);
+  const [commandes, setCommandes] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    base44.auth.me().then(async (u) => {
+      setUser(u);
+      if (!u) { setLoading(false); return; }
+      const data = await base44.entities.Commande.filter({ lecteur_email: u.email }, '-created_date', 50);
+      setCommandes(data || []);
+      setLoading(false);
+    }).catch(() => setLoading(false));
+  }, []);
+
+  const enCours = commandes.filter(c => !['livree'].includes(c.statut));
+  const recues  = commandes.filter(c => c.statut === 'livree');
+
+  const toItem = (c) => {
+    const cfg = STATUT_CONFIG[c.statut] || STATUT_CONFIG.en_attente_paiement;
+    return {
+      ...cfg,
+      id: c.id,
+      title: c.livre_titre || '—',
+      sub: `${c.livre_type || 'Poche'} · ${c.montant_paye ? c.montant_paye.toFixed(2) + ' €' : '—'} · ${c.zone_nom || '—'}`,
+      stampSub: c.point_relais_id ? `Relais · ${c.zone_nom}` : c.zone_nom || '—',
+    };
+  };
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: 40 }}>
+        <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.4)' }}>Chargement…</div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <WelcomeCard
         eyebrow="Votre bibliothèque en transit"
         title="Étagère Virtuelle"
-        sub="3 livres en cours · 1 reçu"
+        sub={`${enCours.length} livre${enCours.length !== 1 ? 's' : ''} en cours · ${recues.length} reçu${recues.length !== 1 ? 's' : ''}`}
       />
 
-      <SectionTitle>En cours</SectionTitle>
+      {commandes.length === 0 ? (
+        <div style={{
+          background: 'var(--papier)', border: '1.5px dashed rgba(26,16,8,0.2)',
+          padding: 32, textAlign: 'center',
+        }}>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>📚</div>
+          <div className="font-playfair" style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>Votre étagère est vide</div>
+          <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.45)' }}>
+            Commandez votre premier livre depuis le Catalogue
+          </div>
+        </div>
+      ) : (
+        <>
+          {enCours.length > 0 && (
+            <>
+              <SectionTitle>En cours</SectionTitle>
+              {enCours.map((c) => {
+                const item = toItem(c);
+                return (
+                  <EtagereItem
+                    key={c.id}
+                    statusClass={item.statusClass}
+                    dotClass={item.dotClass}
+                    title={item.title}
+                    sub={item.sub}
+                    stampColor={item.stampColor}
+                    stampLabel={item.stampLabel}
+                    stampSub={item.stampSub}
+                  />
+                );
+              })}
+            </>
+          )}
 
-      <EtagereItem
-        statusClass="enVol"
-        dotClass="enVol"
-        title="Le Petit Prince"
-        sub="Poche · 8,90€ · Miami"
-        stampColor="#1a3a5c"
-        stampLabel="EN VOL"
-        stampSub="CDG → MIA · 28 avr."
-      />
-      <EtagereItem
-        statusClass="auRelais"
-        dotClass="auRelais"
-        title="L'Élégance du hérisson"
-        sub="Poche · 9,50€ · Miami"
-        stampColor="#8B6914"
-        stampLabel="AU RELAIS"
-        stampSub="Café Lumière · Miami"
-      />
-      <EtagereItem
-        statusClass="default"
-        dotClass="paye"
-        title="Les Misérables"
-        sub="Broché · 28,00€ · Miami"
-        stampColor="var(--bordeaux)"
-        stampLabel="PAYÉ"
-        stampSub="Collecte · 3 mai"
-      />
-
-      <PerfoStrip />
-
-      <SectionTitle>Reçu</SectionTitle>
-
-      <EtagereItem
-        statusClass="recu"
-        dotClass="recu"
-        title="Astérix T.1"
-        sub="BD · 11,50€ · Miami"
-        stampColor="#2d6a2d"
-        stampLabel="REÇU ✓"
-        stampSub="14 avr. 2026"
-      />
+          {recues.length > 0 && (
+            <>
+              <PerfoStrip />
+              <SectionTitle>Reçu</SectionTitle>
+              {recues.map((c) => {
+                const item = toItem(c);
+                return (
+                  <EtagereItem
+                    key={c.id}
+                    statusClass={item.statusClass}
+                    dotClass={item.dotClass}
+                    title={item.title}
+                    sub={item.sub}
+                    stampColor={item.stampColor}
+                    stampLabel={item.stampLabel}
+                    stampSub={item.stampSub}
+                  />
+                );
+              })}
+            </>
+          )}
+        </>
+      )}
     </div>
   );
 }

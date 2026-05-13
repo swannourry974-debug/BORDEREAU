@@ -68,13 +68,17 @@ export default function BottomNav({ role, activePanel, onSwitch }) {
       {role === 'lecteur' && (
         <>
           <NavItem panelId="catalogue" icon="🔍" label="Catalogue" />
-          <NavItem panelId="etagere" icon="📚" label="Étagère" badge="2" />
+          <NavItem panelId="etagere" icon="📚" label="Étagère" />
+          <NavItem panelId="wallet" icon="💳" label="Wallet" />
+          <NavItem panelId="aide" icon="❓" label="Aide" />
         </>
       )}
       {role === 'voyageur' && (
         <>
           <NavItem panelId="accueil-voyageur" icon="🏠" label="Accueil" />
           <NavItem panelId="missions" icon="🗺️" label="Missions" />
+          <NavItem panelId="wallet" icon="💳" label="Wallet" />
+          <NavItem panelId="aide" icon="❓" label="Aide" />
         </>
       )}
       {role === 'relais' && (
@@ -82,6 +86,7 @@ export default function BottomNav({ role, activePanel, onSwitch }) {
           <NavItem panelId="scanner" icon="⬡" label="Scanner" />
           <NavItem panelId="stock" icon="📦" label="Stock" />
           <NavItem panelId="profils" icon="📊" label="Profils" />
+          <NavItem panelId="aide" icon="❓" label="Aide" />
         </>
       )}
       <div
