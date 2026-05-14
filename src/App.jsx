@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import LoadingScreen from '@/components/shared/LoadingScreen';
 import { useState, useEffect } from 'react';
+import { CartProvider } from '@/lib/CartContext';
 // Add page imports here
 import Bordereau from './pages/Bordereau.jsx';
 import LandingLecteur from './pages/LandingLecteur';
@@ -93,12 +94,14 @@ function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
-        {!loadingDone && <LoadingScreen mode="loading" onComplete={() => setLoadingDone(true)} />}
-        {loadingDone && isIdle && <LoadingScreen mode="idle" onWake={handleWake} />}
-        <Router>
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
+        <CartProvider>
+          {!loadingDone && <LoadingScreen mode="loading" onComplete={() => setLoadingDone(true)} />}
+          {loadingDone && isIdle && <LoadingScreen mode="idle" onWake={handleWake} />}
+          <Router>
+            <AuthenticatedApp />
+          </Router>
+          <Toaster />
+        </CartProvider>
       </QueryClientProvider>
     </AuthProvider>
   )

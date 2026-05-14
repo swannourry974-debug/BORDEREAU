@@ -3,11 +3,13 @@ import WelcomeCard from '@/components/shared/WelcomeCard';
 import SectionTitle from '@/components/shared/SectionTitle';
 import SearchBlock from '@/components/catalogue/SearchBlock';
 import BookCard from '@/components/catalogue/BookCard';
-import CommandeForm from '@/components/catalogue/CommandeForm';
+import AddToCartForm from '@/components/catalogue/AddToCartForm';
 import ISBNScanner from '@/components/catalogue/ISBNScanner';
 import BookValidation from '@/components/catalogue/BookValidation';
 import PullToRefresh from '@/components/shared/PullToRefresh';
+import PanierCheckout from '@/components/catalogue/PanierCheckout';
 import { useOpenLibrary } from '@/hooks/useOpenLibrary';
+import { useCart } from '@/lib/CartContext';
 import { toast } from 'sonner';
 
 const DEFAULT_BOOKS = [
@@ -19,10 +21,13 @@ const DEFAULT_BOOKS = [
 
 export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenCommande, onCloseCommande }) {
   const { results, loading, error, search, reset, searchByISBN } = useOpenLibrary();
+  const { items } = useCart();
   const [hasSearched, setHasSearched] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
-  const [scannedBook, setScannedBook] = useState(null); // livre trouvé via ISBN → validation
+  const [scannedBook, setScannedBook] = useState(null);
   const [isbnLoading, setIsbnLoading] = useState(false);
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [panierOpen, setPanierOpen] = useState(false);
 
   const handleSearch = (query) => {
     if (!query || query.trim().length < 2) {
@@ -88,13 +93,6 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
 
   const displayBooks = hasSearched ? results : DEFAULT_BOOKS;
 
-  const handleConfirm = () => {
-    onCloseCommande();
-    toast.success('Commande confirmée ! Votre livre est en séquestre.', {
-      description: 'Un voyageur va prendre en charge votre mission.',
-    });
-  };
-
   const handleRefresh = async () => {
     if (hasSearched) { reset(); setHasSearched(false); }
     await new Promise(r => setTimeout(r, 800));
@@ -110,6 +108,9 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
         />
       )}
 
+      {/* Panier checkout */}
+      {panierOpen && <PanierCheckout onClose={() => setPanierOpen(false)} />}
+
       <PullToRefresh onRefresh={handleRefresh}>
         <div>
           <WelcomeCard
@@ -120,6 +121,26 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
 
           <SectionTitle>Rechercher un livre</SectionTitle>
           <SearchBlock onSearch={handleSearch} onScanOpen={() => setScannerOpen(true)} />
+
+          {/* Bouton panier flottant */}
+          {items.length > 0 && (
+            <button
+              onClick={() => setPanierOpen(true)}
+              style={{
+                position: 'sticky', top: 12, zIndex: 50, width: '100%',
+                background: 'var(--bordeaux)', color: 'var(--creme)',
+                border: 'none', padding: '11px 16px', cursor: 'pointer',
+                fontFamily: 'Special Elite, monospace', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                marginBottom: 14, boxShadow: '3px 3px 0 rgba(90,0,21,0.5)',
+              }}
+            >
+              <span>🛒 Mon panier — {items.length} livre{items.length !== 1 ? 's' : ''}</span>
+              <span style={{ fontFamily: 'Playfair Display, serif', fontSize: 15, fontWeight: 700 }}>
+                {items.reduce((s, i) => s + i.prixVal, 0).toFixed(2)} € →
+              </span>
+            </button>
+          )}
 
           {/* Chargement ISBN */}
           {isbnLoading && (
@@ -141,12 +162,11 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
             </>
           )}
 
-          {/* Formulaire commande classique */}
+          {/* Formulaire ajout au panier */}
           {!scannedBook && (
-            <CommandeForm
-              book={commandeBook}
-              onClose={onCloseCommande}
-              onConfirm={handleConfirm}
+            <AddToCartForm
+              book={selectedBook}
+              onClose={() => setSelectedBook(null)}
             />
           )}
 
@@ -169,7 +189,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
                   key={book.id}
                   book={book}
                   index={i}
-                  onClick={() => onOpenCommande(book)}
+                  onClick={() => setSelectedBook(book)}
                 />
               ))}
               {hasSearched && !loading && displayBooks.length === 0 && (
