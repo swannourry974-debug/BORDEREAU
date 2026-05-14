@@ -25,9 +25,9 @@ export default function PanelWalletLecteur() {
     }).catch(() => setLoading(false));
   }, []);
 
-  const totalDepense = commandes
-    .filter(c => c.statut !== 'en_attente_paiement')
-    .reduce((sum, c) => sum + (c.montant_paye || 0), 0);
+  const totalEconomies = commandes
+    .filter(c => c.statut !== 'en_attente_paiement' && c.economie_realisee > 0)
+    .reduce((sum, c) => sum + (c.economie_realisee || 0), 0);
 
   const nbLivres = commandes.filter(c => c.statut === 'livree').length;
 
@@ -53,10 +53,13 @@ export default function PanelWalletLecteur() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           <div>
             <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 8, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.55, marginBottom: 4 }}>
-              Total dépensé
+              💰 Économies réalisées
             </div>
-            <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 26, fontWeight: 700, color: '#d4b896' }}>
-              {totalDepense.toFixed(2)} €
+            <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 26, fontWeight: 700, color: '#f0c040' }}>
+              {totalEconomies > 0 ? `${totalEconomies.toFixed(2)} €` : '—'}
+            </div>
+            <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 8, opacity: 0.45, marginTop: 3 }}>
+              vs UPS Express
             </div>
           </div>
           <div>
@@ -100,6 +103,11 @@ export default function PanelWalletLecteur() {
                 {c.mode_livraison && (
                   <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, color: 'rgba(26,16,8,0.4)', marginTop: 2 }}>
                     {c.mode_livraison === 'express' ? '⚡ Express' : '📦 Collectif'}
+                  </div>
+                )}
+                {c.economie_realisee > 0 && (
+                  <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, color: '#8B6914', marginTop: 3, background: 'rgba(139,105,20,0.08)', padding: '2px 6px', display: 'inline-block' }}>
+                    💰 −{c.economie_realisee.toFixed(2)} € vs UPS
                   </div>
                 )}
               </div>

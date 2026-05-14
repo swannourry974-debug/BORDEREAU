@@ -117,6 +117,22 @@
       "type": "boolean",
       "default": false,
       "description": "Notification envoy\u00e9e au lecteur apr\u00e8s validation"
+    },
+    "prix_livre_neuf": {
+      "type": "number",
+      "description": "Prix du livre neuf sur Amazon/Fnac (captur\u00e9 \u00e0 la commande)"
+    },
+    "frais_port_ref": {
+      "type": "number",
+      "description": "Frais de port de r\u00e9f\u00e9rence UPS/FedEx Express (captur\u00e9s \u00e0 la commande)"
+    },
+    "frais_bordereau": {
+      "type": "number",
+      "description": "Commission Bordereau + Voyageur (captur\u00e9e \u00e0 la commande)"
+    },
+    "economie_realisee": {
+      "type": "number",
+      "description": "\u00c9conomie totale r\u00e9alis\u00e9e = frais_port_ref - frais_bordereau (calcul\u00e9e \u00e0 la commande)"
     }
   },
   "required": [

@@ -1,0 +1,39 @@
+{
+  "name": "ShippingRates",
+  "type": "object",
+  "properties": {
+    "zone_id": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence vers ZonesTarifs (zone_nom ou ID)"
+    },
+    "zone_nom": {
+      "type": "string",
+      "description": "Nom de la zone (ex: Miami, Abidjan)"
+    },
+    "poids_max_kg": {
+      "type": "number",
+      "description": "Poids maximum pour ce tarif (ex: 0.5, 1, 2)"
+    },
+    "prix_ups_express": {
+      "type": "number",
+      "description": "Tarif UPS/FedEx Express de r\u00e9f\u00e9rence en EUR"
+    },
+    "prix_amazon_fnac": {
+      "type": "number",
+      "description": "Frais de port moyens Amazon/Fnac international de r\u00e9f\u00e9rence en EUR"
+    },
+    "actif": {
+      "type": "boolean",
+      "default": true
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes (ex: mise \u00e0 jour Q1 2026)"
+    }
+  },
+  "required": [
+    "zone_nom",
+    "poids_max_kg",
+    "prix_ups_express"
+  ]
+}
