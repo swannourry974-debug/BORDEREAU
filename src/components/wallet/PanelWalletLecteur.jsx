@@ -30,6 +30,8 @@ export default function PanelWalletLecteur() {
     .reduce((sum, c) => sum + (c.economie_realisee || 0), 0);
 
   const nbLivres = commandes.filter(c => c.statut === 'livree').length;
+  const panier = commandes.filter(c => c.statut === 'en_attente_paiement');
+  const historique = commandes.filter(c => c.statut !== 'en_attente_paiement');
 
   if (loading) {
     return (
@@ -73,20 +75,66 @@ export default function PanelWalletLecteur() {
         </div>
       </div>
 
+      {/* Panier — achats en suspens */}
+      {panier.length > 0 && (
+        <>
+          <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--sepia)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+            🛒 Panier · {panier.length} en attente
+            <span style={{ flex: 1, height: 1, background: 'repeating-linear-gradient(90deg, var(--sepia) 0, var(--sepia) 4px, transparent 4px, transparent 8px)' }} />
+          </div>
+          {panier.map(c => {
+            const date = c.created_date ? new Date(c.created_date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+            return (
+              <div key={c.id} style={{
+                background: 'rgba(139,105,20,0.06)',
+                border: '1.5px dashed rgba(139,105,20,0.4)',
+                borderLeft: '3px solid var(--sepia)',
+                padding: '12px 14px', marginBottom: 10,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 13, fontWeight: 700 }}>{c.livre_titre || '—'}</div>
+                    <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 10, color: 'rgba(26,16,8,0.5)', marginTop: 3 }}>
+                      {c.livre_auteur || ''} · {c.zone_nom || ''} · {date}
+                    </div>
+                    <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, color: 'rgba(139,105,20,0.7)', marginTop: 4 }}>
+                      ⏳ Paiement non finalisé
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 15, fontWeight: 700, color: 'var(--sepia)' }}>
+                      {c.montant_paye ? c.montant_paye.toFixed(2) + ' €' : '—'}
+                    </div>
+                    <div style={{
+                      marginTop: 4, fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase',
+                      padding: '2px 6px', border: '1px solid var(--sepia)', color: 'var(--sepia)',
+                      fontFamily: 'Special Elite, monospace', display: 'inline-block',
+                    }}>
+                      En attente
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+          <div style={{ height: 1, background: 'repeating-linear-gradient(90deg, rgba(26,16,8,0.12) 0, rgba(26,16,8,0.12) 4px, transparent 4px, transparent 8px)', margin: '20px 0' }} />
+        </>
+      )}
+
       {/* Historique */}
       <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
         Historique des commandes
         <span style={{ flex: 1, height: 1, background: 'repeating-linear-gradient(90deg, var(--bordeaux) 0, var(--bordeaux) 4px, transparent 4px, transparent 8px)' }} />
       </div>
 
-      {commandes.length === 0 ? (
+      {historique.length === 0 ? (
         <div style={{ background: 'var(--papier)', border: '1.5px dashed rgba(26,16,8,0.2)', padding: 32, textAlign: 'center' }}>
           <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.45)' }}>
             Aucune commande pour le moment.
           </div>
         </div>
-      ) : commandes.map(c => {
-        const cfg = STATUT_CONFIG[c.statut] || STATUT_CONFIG.en_attente_paiement;
+      ) : historique.map(c => {
+        const cfg = STATUT_CONFIG[c.statut] || STATUT_CONFIG.payee;
         const date = c.created_date ? new Date(c.created_date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
         return (
           <div key={c.id} style={{
