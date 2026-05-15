@@ -67,7 +67,7 @@ export default function PanierCheckout({ onClose }) {
         animate={{ y: 0 }}
         exit={{ y: '100%' }}
         transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-        style={{ background: 'var(--creme)', width: '100%', maxWidth: 560, maxHeight: '92vh', overflowY: 'auto', padding: 24 }}
+        style={{ background: 'var(--creme)', width: '100%', maxWidth: 560, maxHeight: '92vh', overflowY: 'auto', padding: 24, paddingBottom: 'calc(80px + env(safe-area-inset-bottom, 0px))' }}
       >
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
