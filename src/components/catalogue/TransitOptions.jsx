@@ -35,7 +35,7 @@ export default function TransitOptions({ selected, onSelect }) {
           <span className="text-[28px]">{opt.icon}</span>
           <div className="flex-1">
             <div className="text-[13px] tracking-[1px] uppercase font-typewriter mb-[3px]">{opt.name}</div>
-            <div className="text-[11px] text-foreground/55 italic font-fell">{opt.detail}</div>
+            <div className="text-[11px] text-encre italic font-fell">{opt.detail}</div>
           </div>
           <span className={`text-[9px] tracking-[1px] uppercase px-2 py-[3px] border border-dashed ${opt.badgeClass}`}>
             {opt.badge}
