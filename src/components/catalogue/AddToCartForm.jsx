@@ -9,9 +9,9 @@ import { useCart } from '@/lib/CartContext';
 import { toast } from 'sonner';
 
 const FORFAITS_MAP = {
-  S: { prixVal: 8.90, label: '8,90€' },
-  M: { prixVal: 12.90, label: '12,90€' },
-  L: { prixVal: 19.90, label: '19,90€' },
+  S: { express: 8.90, collecte: 6.90 },
+  M: { express: 12.90, collecte: 9.90 },
+  L: { express: 19.90, collecte: 14.90 },
 };
 
 export default function AddToCartForm({ book, onClose }) {
@@ -20,9 +20,7 @@ export default function AddToCartForm({ book, onClose }) {
   const [transit, setTransit] = useState('express');
   const [adresse, setAdresse] = useState('');
 
-  const prixVal = transit === 'collecte'
-    ? (FORFAITS_MAP[forfait]?.prixVal || 8.90) - 2
-    : (FORFAITS_MAP[forfait]?.prixVal || 8.90);
+  const prixVal = FORFAITS_MAP[forfait]?.[transit] ?? 8.90;
 
   const handleForfaitSelect = (f) => setForfait(f.id);
 
@@ -56,7 +54,7 @@ export default function AddToCartForm({ book, onClose }) {
             </div>
 
             <SectionTitle>Forfait</SectionTitle>
-            <ForfaitGrid selected={forfait} onSelect={handleForfaitSelect} />
+            <ForfaitGrid selected={forfait} onSelect={handleForfaitSelect} transit={transit} />
 
             <SectionTitle>Mode de transit</SectionTitle>
             <TransitOptions selected={transit} onSelect={setTransit} />

@@ -6,7 +6,7 @@ const OPTIONS = [
     icon: '✈️',
     name: 'Express · Individuel',
     detail: 'Prochain vol disponible · 5–10 jours',
-    badge: '+0€',
+    badge: 'Plein tarif',
     badgeClass: 'border-sepia text-sepia',
   },
   {
@@ -14,7 +14,7 @@ const OPTIONS = [
     icon: '📦',
     name: 'Collecte · Carton 20kg',
     detail: 'Rempli à 63% · 5 livres manquants',
-    badge: '-2€',
+    badge: 'Jusqu\'à −5€',
     badgeClass: 'border-bordeaux text-bordeaux',
   },
 ];
