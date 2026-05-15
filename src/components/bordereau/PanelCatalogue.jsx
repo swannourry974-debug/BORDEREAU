@@ -4,6 +4,7 @@ import SectionTitle from '@/components/shared/SectionTitle';
 import SearchBlock from '@/components/catalogue/SearchBlock';
 import BookCard from '@/components/catalogue/BookCard';
 import AddToCartForm from '@/components/catalogue/AddToCartForm';
+import BookOrders from '@/components/catalogue/BookOrders';
 import ISBNScanner from '@/components/catalogue/ISBNScanner';
 import BookValidation from '@/components/catalogue/BookValidation';
 import PullToRefresh from '@/components/shared/PullToRefresh';
@@ -27,6 +28,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
   const [scannedBook, setScannedBook] = useState(null);
   const [isbnLoading, setIsbnLoading] = useState(false);
   const [selectedBook, setSelectedBook] = useState(null);
+  const [orderingBook, setOrderingBook] = useState(null);
   const [panierOpen, setPanierOpen] = useState(false);
 
   const handleSearch = (query) => {
@@ -162,11 +164,20 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
             </>
           )}
 
+          {/* Commandes des autres pour ce livre */}
+          {!scannedBook && selectedBook && !orderingBook && (
+            <BookOrders
+              book={selectedBook}
+              onOrder={() => { setOrderingBook(selectedBook); setSelectedBook(null); }}
+              onClose={() => setSelectedBook(null)}
+            />
+          )}
+
           {/* Formulaire ajout au panier */}
           {!scannedBook && (
             <AddToCartForm
-              book={selectedBook}
-              onClose={() => setSelectedBook(null)}
+              book={orderingBook}
+              onClose={() => setOrderingBook(null)}
             />
           )}
 
@@ -189,7 +200,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
                   key={book.id}
                   book={book}
                   index={i}
-                  onClick={() => setSelectedBook(book)}
+                  onClick={() => { setSelectedBook(book); setOrderingBook(null); }}
                 />
               ))}
               {hasSearched && !loading && displayBooks.length === 0 && (
