@@ -24,10 +24,10 @@ export default function ForfaitGrid({ selected, onSelect }) {
           {selected === f.id && (
             <span className="absolute top-[5px] right-[6px] text-bordeaux text-[11px]">✓</span>
           )}
-          <div className="text-[10px] tracking-[1.5px] uppercase text-foreground mb-1 font-typewriter">{f.name}</div>
+          <div className="text-[10px] tracking-[1.5px] uppercase text-encre mb-1 font-typewriter">{f.name}</div>
           <div className="font-serif text-[20px] font-bold text-bordeaux leading-none mb-[3px]">{f.price}</div>
-          <div className="text-[9px] text-foreground/50 tracking-[0.5px] leading-tight">{f.desc}</div>
-          <div className="mt-[6px] text-[9px] text-foreground/40 italic font-fell">
+          <div className="text-[9px] text-encre/70 tracking-[0.5px] leading-tight">{f.desc}</div>
+          <div className="mt-[6px] text-[9px] text-encre/60 italic font-fell">
             ✈ {f.commission}€ voyageur
           </div>
         </div>
