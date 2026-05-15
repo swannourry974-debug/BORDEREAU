@@ -4,9 +4,11 @@ import ZonesTarifsManager from '@/components/admin/ZonesTarifsManager';
 import MargeSimulateur from '@/components/admin/MargeSimulateur';
 import AdminStats from '@/components/admin/AdminStats';
 import ValidationLivraisons from '@/components/admin/ValidationLivraisons';
+import SuiviAcheminement from '@/components/admin/SuiviAcheminement';
 
 const TABS = [
   { id: 'stats', label: '📊 Tableau de bord', icon: '📊' },
+  { id: 'suivi', label: '🗺️ Suivi Acheminement', icon: '🗺️' },
   { id: 'validations', label: '✅ Validations', icon: '✅' },
   { id: 'zones', label: '🌍 Zones & Tarifs', icon: '🌍' },
   { id: 'marges', label: '🧮 Simulateur de marges', icon: '🧮' },
@@ -98,6 +100,7 @@ export default function AdminDashboard() {
       {/* Content */}
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
         {activeTab === 'stats' && <AdminStats />}
+        {activeTab === 'suivi' && <SuiviAcheminement />}
         {activeTab === 'validations' && <ValidationLivraisons />}
         {activeTab === 'zones' && <ZonesTarifsManager />}
         {activeTab === 'marges' && <MargeSimulateur />}
