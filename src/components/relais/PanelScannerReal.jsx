@@ -52,7 +52,13 @@ export default function PanelScanner() {
   const handleDepot = async () => {
     if (!commande) return;
     setLoading(true);
-    await base44.entities.Commande.update(commande.id, { statut: 'au_relais' });
+    const now = new Date();
+    const dateLimite = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    await base44.entities.Commande.update(commande.id, {
+      statut: 'au_relais',
+      date_arrivee_relais: now.toISOString(),
+      date_limite_collecte: dateLimite,
+    });
     if (relais) {
       await base44.entities.PointRelais.update(relais.id, {
         stock_actuel: (relais.stock_actuel || 0) + 1,

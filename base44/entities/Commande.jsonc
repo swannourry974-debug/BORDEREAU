@@ -30,16 +30,13 @@
         "international",
         "grand_export",
         "maghreb"
-      ],
-      "description": "ID de la zone tarifaire (europe | international | grand_export | maghreb)"
+      ]
     },
     "zone_nom": {
-      "type": "string",
-      "description": "Nom lisible de la zone destination"
+      "type": "string"
     },
     "point_relais_id": {
-      "type": "string",
-      "description": "ID du point relais s\u00e9lectionn\u00e9"
+      "type": "string"
     },
     "mode_livraison": {
       "type": "string",
@@ -50,12 +47,10 @@
       "default": "express"
     },
     "montant_paye": {
-      "type": "number",
-      "description": "Montant total pay\u00e9 par le lecteur"
+      "type": "number"
     },
     "stripe_session_id": {
-      "type": "string",
-      "description": "ID session Stripe pour le s\u00e9questre"
+      "type": "string"
     },
     "statut": {
       "type": "string",
@@ -70,40 +65,47 @@
       "default": "en_attente_paiement"
     },
     "voyageur_email": {
-      "type": "string",
-      "description": "Email du voyageur assign\u00e9"
+      "type": "string"
     },
     "mission_id": {
-      "type": "string",
-      "description": "ID de la MissionVoyageur associ\u00e9e"
+      "type": "string"
     },
     "ticket_url": {
-      "type": "string",
-      "description": "URL du ticket de caisse"
+      "type": "string"
     },
     "qr_code_depot": {
-      "type": "string",
-      "description": "QR code pour d\u00e9p\u00f4t au relais"
+      "type": "string"
     },
     "date_limite_collecte": {
       "type": "string",
-      "description": "Date limite pour le retrait"
+      "description": "Date limite sans p\u00e9nalit\u00e9 (J+7 apr\u00e8s arriv\u00e9e relais)"
+    },
+    "date_arrivee_relais": {
+      "type": "string",
+      "description": "Date ISO de flashage \u00e0 l'arriv\u00e9e au relais \u2014 d\u00e9clenche le compte \u00e0 rebours"
+    },
+    "penalite_retard": {
+      "type": "number",
+      "default": 0,
+      "description": "P\u00e9nalit\u00e9 cumul\u00e9e en \u20ac (0,50\u20ac/jour apr\u00e8s 7j) revers\u00e9e au relais"
+    },
+    "jours_retard": {
+      "type": "number",
+      "default": 0,
+      "description": "Nombre de jours de retard au-del\u00e0 du d\u00e9lai de gr\u00e2ce de 7 jours"
     },
     "notes": {
       "type": "string"
     },
     "code_barre_isbn": {
-      "type": "string",
-      "description": "ISBN scann\u00e9 du livre"
+      "type": "string"
     },
     "ticket_caisse_url": {
-      "type": "string",
-      "description": "Photo du ticket de caisse upload\u00e9e par le voyageur"
+      "type": "string"
     },
     "scan_valide_par_voyageur": {
       "type": "boolean",
-      "default": false,
-      "description": "Le voyageur a scann\u00e9 le livre et le ticket"
+      "default": false
     },
     "validation_admin": {
       "type": "string",
@@ -112,49 +114,39 @@
         "validee",
         "rejetee"
       ],
-      "default": "en_attente",
-      "description": "Statut de validation par l'admin"
+      "default": "en_attente"
     },
     "admin_notes": {
-      "type": "string",
-      "description": "Notes de l'admin lors de la validation"
+      "type": "string"
     },
     "notification_lecteur_envoyee": {
       "type": "boolean",
-      "default": false,
-      "description": "Notification envoy\u00e9e au lecteur apr\u00e8s validation"
+      "default": false
     },
     "prix_livre_neuf": {
-      "type": "number",
-      "description": "Prix du livre neuf (captur\u00e9 \u00e0 la commande)"
+      "type": "number"
     },
     "frais_port_ref": {
-      "type": "number",
-      "description": "Frais de port de r\u00e9f\u00e9rence UPS/FedEx Express"
+      "type": "number"
     },
     "frais_bordereau": {
-      "type": "number",
-      "description": "Commission Bordereau + Voyageur"
+      "type": "number"
     },
     "economie_realisee": {
-      "type": "number",
-      "description": "\u00c9conomie totale r\u00e9alis\u00e9e = frais_port_ref - frais_bordereau"
+      "type": "number"
     },
     "code_secret": {
       "type": "string",
-      "description": "Code secret 3 chiffres pour valider la remise physique et d\u00e9bloquer le paiement Stripe"
+      "description": "Code secret 3 chiffres pour valider la remise physique"
     },
     "part_voyageur": {
-      "type": "number",
-      "description": "Montant d\u00fb au voyageur selon la zone (d\u00e9bloqu\u00e9 apr\u00e8s code secret)"
+      "type": "number"
     },
     "part_relais": {
-      "type": "number",
-      "description": "Montant d\u00fb au point relais (d\u00e9bloqu\u00e9 apr\u00e8s d\u00e9p\u00f4t confirm\u00e9)"
+      "type": "number"
     },
     "part_admin": {
-      "type": "number",
-      "description": "Part Bordereau (admin)"
+      "type": "number"
     }
   },
   "required": [
