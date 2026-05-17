@@ -6,28 +6,27 @@ import BadgeShowcase from '../missions/BadgeShowcase';
 import PullToRefresh from '../shared/PullToRefresh';
 import ScanValidation from '../missions/ScanValidation';
 import FormulaireVol from '../missions/FormulaireVol';
+import QuotaJauge from '@/components/voyageur/QuotaJauge';
 import { BADGES_CONFIG, getBadgesDebloques } from '@/lib/badges';
 import { base44 } from '@/api/base44Client';
+import { ZONES, POIDS_FORMAT, getQuotaLivres, getQuotaKg } from '@/lib/tarifsConfig';
 
-const MAX_LIVRES = 10;
-
-// Commission par rang
-function getCommission(rang) {
-  if (rang === 1) return 5.00;
-  if (rang === 2) return 6.50;
-  return 8.00;
+// Commission Express par zone et rang du livre dans la valise
+function getCommission(zone, rang) {
+  const part = zone?.express?.part_voyageur ?? 10.00;
+  // Bonus progressif : +10% par rang supplémentaire (encourage à remplir la valise)
+  return Math.round(part * (1 + (rang - 1) * 0.1) * 100) / 100;
 }
 
-function getTotalCommission(n) {
-  let t = 0;
-  for (let i = 1; i <= n; i++) t += getCommission(i);
-  return Math.round(t * 100) / 100;
+function getTotalCommission(missions, zone) {
+  return missions.reduce((t, m, i) => t + getCommission(zone, i + 1), 0);
 }
 
+// Missions de démonstration — seront remplacées par les vraies MissionVoyageur en BDD
 const AVAILABLE_MISSIONS = [
-  { id: 10, ville: 'MIAMI, FL', date: "Accepte jusqu'au 26 avril · Vol AF038", livre: 'Le Petit Prince', type: 'Poche', poids: '180g' },
-  { id: 11, ville: 'MIAMI, FL', date: "Accepte jusqu'au 26 avril", livre: "L'Élégance du hérisson", type: 'Poche', poids: '310g' },
-  { id: 12, ville: 'MIAMI, FL', date: "Accepte jusqu'au 28 avril", livre: 'Madame Bovary', type: 'Poche', poids: '290g' },
+  { id: 10, ville: 'MIAMI, FL', date: "Accepte jusqu'au 26 mai · Vol AF038", livre: 'Le Petit Prince', type: 'Poche', poids: '180g', zone_id: 'international' },
+  { id: 11, ville: 'MIAMI, FL', date: "Accepte jusqu'au 26 mai", livre: "L'Élégance du hérisson", type: 'Poche', poids: '310g', zone_id: 'international' },
+  { id: 12, ville: 'BERLIN', date: "Accepte jusqu'au 28 mai", livre: 'Madame Bovary', type: 'Poche', poids: '290g', zone_id: 'europe' },
 ];
 
 function MissionCard({ mission, rang, onAccept, disabled, onScan }) {
@@ -122,7 +121,7 @@ function MissionCard({ mission, rang, onAccept, disabled, onScan }) {
 
 export default function PanelMissions() {
   const [engagees, setEngagees] = useState([
-    { id: 3, ville: 'MIAMI, FL', date: 'Ticket scanné · Achat confirmé', livre: 'Astérix T.1', type: 'BD', poids: '250g', engaged: true, rang: 1, commission: 5.00 },
+    { id: 3, ville: 'MIAMI, FL', date: 'Ticket scanné · Achat confirmé', livre: 'Astérix T.1', type: 'BD', poids: '250g', engaged: true, rang: 1, commission: 10.00, zone_id: 'international' },
   ]);
   const [available, setAvailable] = useState(AVAILABLE_MISSIONS);
   const [scanMission, setScanMission] = useState(null);
@@ -143,9 +142,23 @@ export default function PanelMissions() {
     }).catch(() => {});
   }, []);
 
+  // Détecter la zone du voyage actif pour appliquer le bon quota
+  const zoneVoyage = voyageActif
+    ? Object.values(ZONES).find(z => voyageActif.arrivee_ville?.toLowerCase().includes(z.id.split('_')[0])) || ZONES.INTERNATIONAL
+    : ZONES.INTERNATIONAL;
+
+  const quotaLivres = getQuotaLivres(zoneVoyage);
+  const quotaKg = getQuotaKg(zoneVoyage);
+
+  // Calcul poids total engagé (en grammes)
+  const poidsEngageG = engagees.reduce((sum, m) => {
+    const poidsStr = m.poids || '200g';
+    return sum + parseInt(poidsStr.replace('g', '')) || 200;
+  }, 0);
+
   const livresActifs = engagees.length;
-  const totalCommission = getTotalCommission(livresActifs);
-  const limitAtteinte = livresActifs >= MAX_LIVRES;
+  const totalCommission = getTotalCommission(engagees, zoneVoyage);
+  const limitAtteinte = livresActifs >= quotaLivres || poidsEngageG / 1000 >= quotaKg;
 
   // Stats pour les badges (simulées — missionsAcceptees = nb total engagées)
   const statsActuelles = {
@@ -166,6 +179,9 @@ export default function PanelMissions() {
     const mission = available.find(m => m.id === id);
     if (!mission || limitAtteinte) return;
     const rang = livresActifs + 1;
+    // Recalcul commission selon zone de la mission
+    const missionZone = Object.values(ZONES).find(z => z.id === mission.zone_id) || zoneVoyage;
+    commission = getCommission(missionZone, rang);
 
     const statsBefore = { ...statsActuelles };
     const statsAfter = { ...statsActuelles, missionsAcceptees: statsActuelles.missionsAcceptees + 1, maxLivresParVoyage: rang };
@@ -231,6 +247,9 @@ export default function PanelMissions() {
         virementSuspendu={wallet.virementSuspendu}
       />
 
+      {/* Quota douanier par zone */}
+      <QuotaJauge zone={zoneVoyage} poidsActuelG={poidsEngageG} nbLivres={livresActifs} />
+
       {/* Jauge valise */}
       <JaugeValise livresActifs={livresActifs} totalCommission={totalCommission} />
 
@@ -265,7 +284,7 @@ export default function PanelMissions() {
           fontFamily: 'IM Fell English, serif', fontStyle: 'italic',
           fontSize: 13, color: 'var(--bordeaux)', lineHeight: 1.6,
         }}>
-          🔒 Limite de sécurité atteinte (10 livres max) pour garantir un passage serein en douane.
+          🔒 Quota atteint ({quotaLivres} livres / {quotaKg} kg max — Zone {zoneVoyage.label}) pour garantir un passage serein en douane.
         </div>
       )}
 
