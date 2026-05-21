@@ -60,7 +60,7 @@ export default function BookValidation({ book, zone: zoneProp, onConfirm, onCanc
     setLoading(true);
     try {
       const codeSecret = genererCodeSecret();
-      await base44.entities.Commande.create({
+      const commande = await base44.entities.Commande.create({
         livre_titre: book.title,
         livre_auteur: book.author,
         livre_type: format,
@@ -72,8 +72,11 @@ export default function BookValidation({ book, zone: zoneProp, onConfirm, onCanc
         zone_id: zone.id,
         notes: `Prix achat: ${prixNum}€ · Format: ${format} · Poids: ~${poids}g · Condition: ${condition} · Code: ${codeSecret}`,
         prix_livre_neuf: prixNum,
+        code_secret: codeSecret,
       });
-      onConfirm({ book, format, prix: prixNum, total, poids, zone, modeLivraison, codeSecret });
+      // Stocker l'ID dans qr_code_depot pour que le scanner relais puisse retrouver la commande
+      await base44.entities.Commande.update(commande.id, { qr_code_depot: commande.id });
+      onConfirm({ book, format, prix: prixNum, total, poids, zone, modeLivraison, codeSecret, commandeId: commande.id });
     } catch (e) {
       alert('Erreur lors de la commande. Réessayez.');
     } finally {
