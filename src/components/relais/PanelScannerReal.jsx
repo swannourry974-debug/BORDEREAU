@@ -10,6 +10,8 @@ export default function PanelScanner() {
   const [actionDone, setActionDone] = useState(false);
   const [user, setUser] = useState(null);
   const [relais, setRelais] = useState(null);
+  const [manualId, setManualId] = useState('');
+  const [showManual, setShowManual] = useState(false);
 
   useEffect(() => {
     base44.auth.me().then(async (u) => {
@@ -122,7 +124,7 @@ export default function PanelScanner() {
         onClick={() => { reset(); setScanning(true); }}
         style={{
           width: '100%', background: 'var(--bordeaux)', color: 'var(--creme)',
-          border: 'none', padding: '20px 24px', marginBottom: 28,
+          border: 'none', padding: '20px 24px', marginBottom: 12,
           fontFamily: 'Special Elite, monospace', fontSize: 13,
           letterSpacing: 4, textTransform: 'uppercase', cursor: 'pointer',
           outline: '2px dashed var(--bordeaux)', outlineOffset: 4,
@@ -132,6 +134,49 @@ export default function PanelScanner() {
         <span style={{ fontSize: 24 }}>⬡</span>
         Lancer le scanner
       </button>
+
+      {/* Mode de secours — saisie manuelle */}
+      <div style={{ marginBottom: 28 }}>
+        <button
+          onClick={() => setShowManual(v => !v)}
+          style={{
+            width: '100%', background: 'none', border: '1px dashed rgba(26,16,8,0.25)',
+            padding: '10px 16px', cursor: 'pointer', color: 'rgba(26,16,8,0.5)',
+            fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          }}
+        >
+          ✎ Saisie manuelle de l'ID commande
+        </button>
+        {showManual && (
+          <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
+            <input
+              type="text"
+              value={manualId}
+              onChange={e => setManualId(e.target.value)}
+              placeholder="ID ou QR code de la commande…"
+              style={{
+                flex: 1, padding: '10px 12px', fontFamily: 'monospace', fontSize: 12,
+                background: 'var(--creme)', border: '1.5px solid hsl(var(--border))',
+                color: 'var(--encre)', outline: 'none', letterSpacing: 1,
+              }}
+              onKeyDown={e => { if (e.key === 'Enter' && manualId.trim()) { reset(); handleScan(manualId.trim()); setManualId(''); setShowManual(false); } }}
+            />
+            <button
+              onClick={() => { if (manualId.trim()) { reset(); handleScan(manualId.trim()); setManualId(''); setShowManual(false); } }}
+              disabled={!manualId.trim()}
+              style={{
+                background: 'var(--bordeaux)', color: 'var(--creme)', border: 'none',
+                padding: '10px 16px', cursor: manualId.trim() ? 'pointer' : 'not-allowed',
+                fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 2,
+                textTransform: 'uppercase', opacity: manualId.trim() ? 1 : 0.5,
+              }}
+            >
+              OK
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Loading */}
       {loading && (
