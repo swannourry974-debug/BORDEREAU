@@ -9,6 +9,7 @@ import ISBNScanner from '@/components/catalogue/ISBNScanner';
 import BookValidation from '@/components/catalogue/BookValidation';
 import PullToRefresh from '@/components/shared/PullToRefresh';
 import PanierCheckout from '@/components/catalogue/PanierCheckout';
+import ConfirmationBordereau from '@/components/catalogue/ConfirmationBordereau';
 import { useOpenLibrary } from '@/hooks/useOpenLibrary';
 import { useCart } from '@/lib/CartContext';
 import { toast } from 'sonner';
@@ -30,6 +31,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
   const [selectedBook, setSelectedBook] = useState(null);
   const [orderingBook, setOrderingBook] = useState(null);
   const [panierOpen, setPanierOpen] = useState(false);
+  const [confirmation, setConfirmation] = useState(null); // { commandeId, bookTitle }
 
   const handleSearch = (query) => {
     if (!query || query.trim().length < 2) {
@@ -86,10 +88,11 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
     }
   };
 
-  const handleValidationConfirm = ({ book, format, prix, total }) => {
+  const handleValidationConfirm = ({ book, total, commandeId }) => {
     setScannedBook(null);
+    setConfirmation({ commandeId, bookTitle: book.title });
     toast.success(`"${book.title}" ajouté à votre liste !`, {
-      description: `Total séquestre : ${total} € · Un voyageur prend en charge.`,
+      description: `Total séquestre : ${total} €`,
     });
   };
 
@@ -142,6 +145,15 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
                 {items.reduce((s, i) => s + i.prixVal, 0).toFixed(2)} € →
               </span>
             </button>
+          )}
+
+          {/* QR Code confirmation après commande */}
+          {confirmation && (
+            <ConfirmationBordereau
+              commandeId={confirmation.commandeId}
+              bookTitle={confirmation.bookTitle}
+              onClose={() => setConfirmation(null)}
+            />
           )}
 
           {/* Chargement ISBN */}
