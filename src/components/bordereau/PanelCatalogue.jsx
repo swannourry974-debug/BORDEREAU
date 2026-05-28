@@ -46,38 +46,65 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
   const handleISBNResult = async (isbn) => {
     setScannerOpen(false);
 
-    // Si c'est un ISBN (numérique), on fetch directement les métadonnées enrichies
     const isISBN = /^[0-9X]{10,13}$/.test(isbn);
     if (isISBN) {
       setIsbnLoading(true);
       try {
-        const res = await fetch(
-          `https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`
-        );
-        const data = await res.json();
-        const key = `ISBN:${isbn}`;
-        const book = data[key];
-        if (book) {
-          const pages = book.number_of_pages || null;
-          const formatted = {
-            id: isbn,
-            title: book.title,
-            author: book.authors?.[0]?.name || 'Auteur inconnu',
-            isbn,
-            coverId: null,
-            coverUrl: book.cover?.large || book.cover?.medium || null,
-            pages,
-            type: pages > 400 ? 'Broché' : 'Poche',
-            priceVal: pages > 400 ? 24.0 : 9.9,
-          };
+        let formatted = null;
+
+        // 1) Essai Google Books (meilleure couverture livres français)
+        try {
+          const gbRes = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
+          const gbData = await gbRes.json();
+          const item = gbData?.items?.[0]?.volumeInfo;
+          if (item) {
+            const pages = item.pageCount || null;
+            formatted = {
+              id: isbn,
+              title: item.title,
+              author: item.authors?.[0] || 'Auteur inconnu',
+              isbn,
+              coverId: null,
+              coverUrl: item.imageLinks?.thumbnail?.replace('http://', 'https://') || null,
+              pages,
+              type: pages > 400 ? 'Broché' : 'Poche',
+              priceVal: pages > 400 ? 24.0 : 9.9,
+            };
+          }
+        } catch {}
+
+        // 2) Fallback Open Library si Google Books n'a rien trouvé
+        if (!formatted) {
+          try {
+            const olRes = await fetch(
+              `https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`
+            );
+            const olData = await olRes.json();
+            const book = olData[`ISBN:${isbn}`];
+            if (book) {
+              const pages = book.number_of_pages || null;
+              formatted = {
+                id: isbn,
+                title: book.title,
+                author: book.authors?.[0]?.name || 'Auteur inconnu',
+                isbn,
+                coverId: null,
+                coverUrl: book.cover?.large || book.cover?.medium || null,
+                pages,
+                type: pages > 400 ? 'Broché' : 'Poche',
+                priceVal: pages > 400 ? 24.0 : 9.9,
+              };
+            }
+          } catch {}
+        }
+
+        if (formatted) {
           setScannedBook(formatted);
         } else {
-          // ISBN inconnu → formulaire manuel vide
+          // ISBN non trouvé nulle part → formulaire manuel
           setScannedBook({ id: isbn, title: '', author: '', isbn, coverUrl: null, pages: null, type: 'Poche', priceVal: '' });
-          toast('ISBN inconnu — veuillez compléter les informations manuellement.');
+          toast('ISBN non trouvé — veuillez compléter les informations manuellement.');
         }
-      } catch {
-        toast.error('Erreur lors de la recherche ISBN.');
       } finally {
         setIsbnLoading(false);
       }
