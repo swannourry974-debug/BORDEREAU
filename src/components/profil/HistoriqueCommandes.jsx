@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
+import NotationVoyageur from './NotationVoyageur';
 
 const STATUT_CONFIG = {
   en_attente_paiement: { label: 'Paiement en attente', color: '#8B6914', bg: 'rgba(139,105,20,0.08)', emoji: '⏳' },
@@ -177,6 +178,13 @@ function CommandeCard({ commande }) {
               color: '#b41414', textTransform: 'uppercase',
             }}>
               ⚠️ Pénalité de retard : {commande.penalite_retard.toFixed(2)} €
+            </div>
+          )}
+
+          {/* Notation voyageur */}
+          {commande.statut === 'livree' && commande.voyageur_email && (
+            <div style={{ marginTop: 14 }}>
+              <NotationVoyageur commande={commande} />
             </div>
           )}
         </div>

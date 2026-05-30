@@ -1,0 +1,42 @@
+{
+  "name": "NotationVoyageur",
+  "type": "object",
+  "properties": {
+    "mission_id": {
+      "type": "string",
+      "description": "ID de la MissionVoyageur not\u00e9e"
+    },
+    "commande_id": {
+      "type": "string",
+      "description": "ID de la Commande associ\u00e9e"
+    },
+    "voyageur_email": {
+      "type": "string",
+      "description": "Email du voyageur not\u00e9"
+    },
+    "lecteur_email": {
+      "type": "string",
+      "description": "Email du lecteur qui note"
+    },
+    "note_ponctualite": {
+      "type": "number",
+      "description": "Note de 1 \u00e0 5 \u00e9toiles pour la ponctualit\u00e9"
+    },
+    "note_soin": {
+      "type": "number",
+      "description": "Note de 1 \u00e0 5 \u00e9toiles pour le soin apport\u00e9 au livre"
+    },
+    "commentaire": {
+      "type": "string",
+      "description": "Commentaire libre du lecteur"
+    },
+    "livre_titre": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "voyageur_email",
+    "lecteur_email",
+    "note_ponctualite"
+  ]
+}

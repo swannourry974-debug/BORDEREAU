@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import WalletCard from '@/components/missions/WalletCard';
 import { SectionTitle, PerfoStrip } from '@/components/bordereau/shared';
+import HistoriqueVoyageur from './HistoriqueVoyageur';
 
 export default function PanelAccueilVoyageur() {
   const [user, setUser] = useState(null);
@@ -106,6 +107,13 @@ export default function PanelAccueilVoyageur() {
           </div>
         )}
       </div>
+
+      {/* Historique des trajets */}
+      <PerfoStrip />
+      <SectionTitle>Historique & Réputation</SectionTitle>
+      <HistoriqueVoyageur userEmail={user?.email} />
+
+      <PerfoStrip />
 
       {/* Livres à déposer */}
       <div style={{
