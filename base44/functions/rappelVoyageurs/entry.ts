@@ -1,0 +1,89 @@
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+
+// Envoie un rappel email aux voyageurs dont la date limite de livraison approche (J-3, J-1)
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+
+    // Vérification admin ou appel automatisé (pas d'utilisateur connecté)
+    let isAuthorized = false;
+    try {
+      const user = await base44.auth.me();
+      if (user?.role === 'admin') isAuthorized = true;
+    } catch {
+      // Appel depuis une automation (pas d'auth user) → on autorise via service role
+      isAuthorized = true;
+    }
+
+    if (!isAuthorized) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Récupérer toutes les commandes en transit (pas encore livrées au relais ou au lecteur)
+    const commandes = await base44.asServiceRole.entities.Commande.filter(
+      { statut: 'en_transit' }, '-created_date', 200
+    );
+
+    let envois = 0;
+    const erreurs = [];
+
+    for (const cmd of commandes) {
+      if (!cmd.date_limite_collecte || !cmd.voyageur_email) continue;
+
+      const dateLimite = new Date(cmd.date_limite_collecte);
+      dateLimite.setHours(0, 0, 0, 0);
+      const diffJours = Math.round((dateLimite - today) / (1000 * 60 * 60 * 24));
+
+      // Rappel à J-3 et J-1 avant la date limite
+      if (diffJours !== 3 && diffJours !== 1) continue;
+
+      const urgence = diffJours === 1 ? '🚨 URGENT — ' : '⚠️ Rappel — ';
+      const jourTexte = diffJours === 1 ? 'demain' : 'dans 3 jours';
+
+      try {
+        await base44.asServiceRole.integrations.Core.SendEmail({
+          to: cmd.voyageur_email,
+          subject: `${urgence}Livraison "${cmd.livre_titre}" attendue ${jourTexte}`,
+          body: `
+Bonjour,
+
+Vous avez accepté de transporter le livre suivant pour Bordereau :
+
+📚 ${cmd.livre_titre}${cmd.livre_auteur ? ` — ${cmd.livre_auteur}` : ''}
+📍 Destination : ${cmd.zone_nom || '—'}
+📦 Mode : ${cmd.mode_livraison === 'express' ? 'Express' : 'Collectif'}
+
+⏰ Date limite de dépôt au relais : ${new Date(cmd.date_limite_collecte).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} (${jourTexte})
+
+Après ce délai, des pénalités de retard (0,50 €/jour) s'appliqueront et seront déduites de votre commission.
+
+Pour rappel, votre commission sera versée dès confirmation de la réception par le point relais.
+
+Merci de votre ponctualité !
+
+L'équipe Bordereau
+          `.trim(),
+          from_name: 'Bordereau · Rappel Livraison',
+        });
+        envois++;
+        console.log(`Rappel J-${diffJours} envoyé à ${cmd.voyageur_email} pour "${cmd.livre_titre}"`);
+      } catch (e) {
+        erreurs.push({ commandeId: cmd.id, error: e.message });
+        console.error(`Erreur envoi rappel pour commande ${cmd.id}:`, e.message);
+      }
+    }
+
+    return Response.json({
+      ok: true,
+      commandes_scannees: commandes.length,
+      rappels_envoyes: envois,
+      erreurs,
+    });
+  } catch (error) {
+    console.error('Erreur rappelVoyageurs:', error.message);
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+});

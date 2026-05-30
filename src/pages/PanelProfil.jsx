@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import HistoriqueCommandes from '@/components/profil/HistoriqueCommandes';
 
 const DISTINCTIONS = [
   { id: 'petit_courrier', emoji: '📬', nom: 'Petit Courrier', seuil: 1 },
@@ -106,6 +107,14 @@ export default function PanelProfil() {
           <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.4)', marginTop: 12, textAlign: 'center' }}>
             {missionsLivrees} mission{missionsLivrees !== 1 ? 's' : ''} livrée{missionsLivrees !== 1 ? 's' : ''} au total
           </div>
+        </div>
+
+        {/* Historique des commandes */}
+        <div style={sectionStyle}>
+          <div className="font-special" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.45)', marginBottom: 16 }}>
+            Mes livres — Historique
+          </div>
+          <HistoriqueCommandes userEmail={user?.email} />
         </div>
 
         {/* Déconnexion */}
