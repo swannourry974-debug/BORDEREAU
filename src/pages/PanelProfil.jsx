@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import HistoriqueCommandes from '@/components/profil/HistoriqueCommandes';
+import MesLivres from '@/components/profil/MesLivres';
 
 const DISTINCTIONS = [
   { id: 'petit_courrier', emoji: '📬', nom: 'Petit Courrier', seuil: 1 },
@@ -109,12 +109,12 @@ export default function PanelProfil() {
           </div>
         </div>
 
-        {/* Historique des commandes */}
+        {/* Mes livres */}
         <div style={sectionStyle}>
           <div className="font-special" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.45)', marginBottom: 16 }}>
-            Mes livres — Historique
+            Mes livres
           </div>
-          <HistoriqueCommandes userEmail={user?.email} />
+          <MesLivres userEmail={user?.email} />
         </div>
 
         {/* Déconnexion */}
