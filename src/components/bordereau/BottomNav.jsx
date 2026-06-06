@@ -3,7 +3,7 @@ import React from 'react';
 export default function BottomNav({ role, activePanel, onSwitch }) {
   const navStyle = {
     position: 'fixed',
-    bottom: 1,
+    bottom: '1cm',
     left: '50%',
     transform: 'translateX(-50%)',
     width: '100%',
