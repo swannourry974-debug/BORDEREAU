@@ -38,5 +38,11 @@
       "type": "boolean",
       "default": false
     }
-  }
+  },
+  "required": [
+    "ville_destination",
+    "point_relais_id",
+    "iban",
+    "stripe_account_id"
+  ]
 }
