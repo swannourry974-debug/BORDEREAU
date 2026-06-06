@@ -1,18 +1,19 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-
-const roleLabels = {
-  lecteur: '✦ LECTEUR',
-  voyageur: '✈ VOYAGEUR',
-  relais: '🏪 RELAIS',
-};
+import { useLang } from '@/lib/LangContext';
 
 const ROOT_PANELS = ['/', '/catalogue', '/etagere', '/missions', '/accueil-voyageur', '/stock'];
 
 export default function AppHeader({ role, roleSwitcherOpen, onToggleRoleSwitcher }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const { t } = useLang();
+  const roleLabels = {
+    lecteur: t('role_lecteur'),
+    voyageur: t('role_voyageur'),
+    relais: t('role_relais'),
+  };
   const showBack = !ROOT_PANELS.includes(location.pathname);
 
   return (
@@ -43,7 +44,7 @@ export default function AppHeader({ role, roleSwitcherOpen, onToggleRoleSwitcher
             BORDEREAU
           </div>
           <span className="font-fell" style={{ fontStyle: 'italic', fontSize: 12, color: 'rgba(253,252,240,0.7)', letterSpacing: 2, marginTop: 2, display: 'block', userSelect: 'none' }}>
-            Manifeste des livres voyageurs
+            {t('header_tagline')}
           </span>
           </div>
         </div>

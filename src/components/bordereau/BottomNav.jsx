@@ -1,6 +1,8 @@
 import React from 'react';
+import { useLang } from '@/lib/LangContext';
 
 export default function BottomNav({ role, activePanel, onSwitch }) {
+  const { t } = useLang();
   const navStyle = {
     position: 'fixed',
     bottom: '1cm',
@@ -67,26 +69,26 @@ export default function BottomNav({ role, activePanel, onSwitch }) {
     <nav style={navStyle}>
       {role === 'lecteur' && (
         <>
-          <NavItem panelId="catalogue" icon="🔍" label="Catalogue" />
-          <NavItem panelId="etagere" icon="📚" label="Étagère" />
-          <NavItem panelId="wallet" icon="💳" label="Wallet" />
-          <NavItem panelId="aide" icon="❓" label="Aide" />
+          <NavItem panelId="catalogue" icon="🔍" label={t('nav_catalogue')} />
+          <NavItem panelId="etagere" icon="📚" label={t('nav_etagere')} />
+          <NavItem panelId="wallet" icon="💳" label={t('nav_wallet')} />
+          <NavItem panelId="aide" icon="❓" label={t('nav_aide')} />
         </>
       )}
       {role === 'voyageur' && (
         <>
-          <NavItem panelId="accueil-voyageur" icon="🏠" label="Accueil" />
-          <NavItem panelId="missions" icon="🗺️" label="Missions" />
-          <NavItem panelId="wallet" icon="💳" label="Wallet" />
-          <NavItem panelId="aide" icon="❓" label="Aide" />
+          <NavItem panelId="accueil-voyageur" icon="🏠" label={t('nav_accueil')} />
+          <NavItem panelId="missions" icon="🗺️" label={t('nav_missions')} />
+          <NavItem panelId="wallet" icon="💳" label={t('nav_wallet')} />
+          <NavItem panelId="aide" icon="❓" label={t('nav_aide')} />
         </>
       )}
       {role === 'relais' && (
         <>
-          <NavItem panelId="scanner" icon="⬡" label="Scanner" />
-          <NavItem panelId="stock" icon="📦" label="Stock" />
-          <NavItem panelId="profils" icon="📊" label="Profils" />
-          <NavItem panelId="aide" icon="❓" label="Aide" />
+          <NavItem panelId="scanner" icon="⬡" label={t('nav_scanner')} />
+          <NavItem panelId="stock" icon="📦" label={t('nav_stock')} />
+          <NavItem panelId="profils" icon="📊" label={t('nav_profils')} />
+          <NavItem panelId="aide" icon="❓" label={t('nav_aide')} />
         </>
       )}
       <div
@@ -97,7 +99,7 @@ export default function BottomNav({ role, activePanel, onSwitch }) {
           <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'var(--bordeaux)' }} />
         )}
         <span style={{ fontSize: 22, marginBottom: 3 }}>👤</span>
-        <span style={labelStyle(activePanel === 'profil')}>Profil</span>
+        <span style={labelStyle(activePanel === 'profil')}>{t('nav_profil')}</span>
       </div>
     </nav>
   );

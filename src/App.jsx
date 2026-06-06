@@ -8,6 +8,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import LoadingScreen from '@/components/shared/LoadingScreen';
 import { useState, useEffect } from 'react';
 import { CartProvider } from '@/lib/CartContext';
+import { LangProvider } from '@/lib/LangContext';
 // Add page imports here
 import Bordereau from './pages/Bordereau.jsx';
 import LandingLecteur from './pages/LandingLecteur';
@@ -95,12 +96,14 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
         <CartProvider>
+          <LangProvider>
           {!loadingDone && <LoadingScreen mode="loading" onComplete={() => setLoadingDone(true)} />}
           {loadingDone && isIdle && <LoadingScreen mode="idle" onWake={handleWake} />}
           <Router>
             <AuthenticatedApp />
           </Router>
           <Toaster />
+          </LangProvider>
         </CartProvider>
       </QueryClientProvider>
     </AuthProvider>

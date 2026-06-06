@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import NotationVoyageur from './NotationVoyageur';
+import { useLang } from '@/lib/LangContext';
 
-const STATUT_CONFIG = {
-  en_attente_paiement: { label: 'Paiement en attente', color: '#8B6914', bg: 'rgba(139,105,20,0.1)', emoji: '⏳', dot: '#8B6914' },
-  payee:               { label: 'Payée — préparation', color: '#1a3a5c', bg: 'rgba(26,58,92,0.08)',   emoji: '✅', dot: '#1a3a5c' },
-  en_transit:          { label: 'En transit ✈',         color: '#2a5ca8', bg: 'rgba(42,92,168,0.1)',  emoji: '✈️', dot: '#2a5ca8' },
-  au_relais:           { label: 'Au relais — à retirer', color: '#8B6914', bg: 'rgba(139,105,20,0.14)', emoji: '📦', dot: '#c47f00' },
-  livree:              { label: 'Reçu',                 color: '#2d6a2d', bg: 'rgba(45,106,45,0.1)',  emoji: '🎉', dot: '#2d6a2d' },
-  litige:              { label: 'Litige',               color: '#b41414', bg: 'rgba(180,20,20,0.08)', emoji: '⚠️', dot: '#b41414' },
+const STATUT_META = {
+  en_attente_paiement: { key: 'statut_en_attente_paiement', color: '#8B6914', bg: 'rgba(139,105,20,0.1)', emoji: '⏳', dot: '#8B6914' },
+  payee:               { key: 'statut_payee',               color: '#1a3a5c', bg: 'rgba(26,58,92,0.08)',   emoji: '✅', dot: '#1a3a5c' },
+  en_transit:          { key: 'statut_en_transit',           color: '#2a5ca8', bg: 'rgba(42,92,168,0.1)',  emoji: '✈️', dot: '#2a5ca8' },
+  au_relais:           { key: 'statut_au_relais',            color: '#8B6914', bg: 'rgba(139,105,20,0.14)', emoji: '📦', dot: '#c47f00' },
+  livree:              { key: 'statut_livree',               color: '#2d6a2d', bg: 'rgba(45,106,45,0.1)',  emoji: '🎉', dot: '#2d6a2d' },
+  litige:              { key: 'statut_litige',               color: '#b41414', bg: 'rgba(180,20,20,0.08)', emoji: '⚠️', dot: '#b41414' },
 };
 
 const TIMELINE = ['en_attente_paiement', 'payee', 'en_transit', 'au_relais', 'livree'];
 
 function StatutPill({ statut }) {
-  const cfg = STATUT_CONFIG[statut] || STATUT_CONFIG.en_attente_paiement;
+  const { t } = useLang();
+  const cfg = STATUT_META[statut] || STATUT_META.en_attente_paiement;
   return (
     <div style={{
       display: 'inline-flex', alignItems: 'center', gap: 7,
@@ -24,20 +26,24 @@ function StatutPill({ statut }) {
       fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase',
     }}>
       <span style={{ fontSize: 13 }}>{cfg.emoji}</span>
-      {cfg.label}
+      {t(cfg.key)}
     </div>
   );
 }
 
 function TimelineDots({ statut }) {
+  const { t } = useLang();
   const idx = TIMELINE.indexOf(statut);
   if (idx === -1) return null;
+  const TIMELINE_LABELS = [
+    t('timeline_commande'), t('timeline_paye'), t('timeline_transit'), t('timeline_relais'), t('timeline_recu'),
+  ];
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginTop: 12 }}>
       {TIMELINE.map((s, i) => {
         const done = i < idx;
         const active = i === idx;
-        const cfg = STATUT_CONFIG[s];
+        const cfg = STATUT_META[s];
         return (
           <React.Fragment key={s}>
             <div style={{
@@ -57,7 +63,7 @@ function TimelineDots({ statut }) {
                 marginTop: 4, whiteSpace: 'nowrap',
                 fontWeight: active ? 'bold' : 'normal',
               }}>
-                {['Commandé', 'Payé', 'Transit', 'Relais', 'Reçu'][i]}
+                {TIMELINE_LABELS[i]}
               </div>
             </div>
             {i < TIMELINE.length - 1 && (
@@ -75,8 +81,9 @@ function TimelineDots({ statut }) {
 }
 
 function CommandeCard({ commande }) {
+  const { t } = useLang();
   const [expanded, setExpanded] = useState(false);
-  const cfg = STATUT_CONFIG[commande.statut] || STATUT_CONFIG.en_attente_paiement;
+  const cfg = STATUT_META[commande.statut] || STATUT_META.en_attente_paiement;
 
   return (
     <div style={{
@@ -93,12 +100,12 @@ function CommandeCard({ commande }) {
         </span>
         {commande.statut === 'en_transit' && (
           <span style={{ marginLeft: 'auto', fontFamily: 'Special Elite, monospace', fontSize: 8, color: 'rgba(253,252,240,0.7)', letterSpacing: 1 }}>
-            EN ROUTE →
+            {t('livre_en_route')}
           </span>
         )}
         {commande.statut === 'au_relais' && (
           <span style={{ marginLeft: 'auto', fontFamily: 'Special Elite, monospace', fontSize: 8, color: 'rgba(253,252,240,0.85)', letterSpacing: 1, fontWeight: 'bold' }}>
-            À RETIRER !
+            {t('livre_retirer')}
           </span>
         )}
       </div>
@@ -129,7 +136,7 @@ function CommandeCard({ commande }) {
               </div>
             )}
             <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 8, color: 'rgba(26,16,8,0.3)', marginTop: 2 }}>
-              {expanded ? '▲' : '▼ Détails'}
+              {expanded ? t('livre_fermer') : t('livre_details')}
             </div>
           </div>
         </div>
@@ -164,9 +171,9 @@ function CommandeCard({ commande }) {
           padding: '12px 16px', background: 'rgba(26,16,8,0.02)',
         }}>
           {[
-            ['Date commande', commande.created_date ? new Date(commande.created_date).toLocaleDateString('fr-FR') : null],
-            ['Arrivée au relais', commande.date_arrivee_relais ? new Date(commande.date_arrivee_relais).toLocaleDateString('fr-FR') : null],
-            ['À retirer avant', commande.date_limite_collecte ? new Date(commande.date_limite_collecte).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : null],
+            [t('livre_date_commande'), commande.created_date ? new Date(commande.created_date).toLocaleDateString('fr-FR') : null],
+            [t('livre_arrivee_relais'), commande.date_arrivee_relais ? new Date(commande.date_arrivee_relais).toLocaleDateString('fr-FR') : null],
+            [t('livre_retirer_avant'), commande.date_limite_collecte ? new Date(commande.date_limite_collecte).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : null],
           ].filter(([, v]) => v).map(([label, val]) => (
             <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
               <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 1, color: 'rgba(26,16,8,0.4)', textTransform: 'uppercase' }}>{label}</span>
@@ -181,13 +188,13 @@ function CommandeCard({ commande }) {
               border: `2px dashed ${cfg.color}`, textAlign: 'center',
             }}>
               <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 8, letterSpacing: 2, color: cfg.color, marginBottom: 6, textTransform: 'uppercase' }}>
-                Code de retrait
+                {t('livre_code_retrait')}
               </div>
               <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 32, fontWeight: 700, color: cfg.color, letterSpacing: 8 }}>
                 {commande.code_secret}
               </div>
               <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.45)', marginTop: 4 }}>
-                À présenter au point relais
+                {t('livre_code_desc')}
               </div>
             </div>
           )}
@@ -200,7 +207,7 @@ function CommandeCard({ commande }) {
               fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 1,
               color: '#b41414', textTransform: 'uppercase',
             }}>
-              ⚠️ Pénalité de retard : {commande.penalite_retard.toFixed(2)} €
+              {t('livre_penalite', { n: commande.penalite_retard.toFixed(2) })}
             </div>
           )}
 
@@ -217,6 +224,7 @@ function CommandeCard({ commande }) {
 }
 
 export default function MesLivres({ userEmail }) {
+  const { t } = useLang();
   const [commandes, setCommandes] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -230,7 +238,7 @@ export default function MesLivres({ userEmail }) {
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: 24, fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.4)' }}>
-        Chargement…
+        {t('livre_chargement')}
       </div>
     );
   }
@@ -246,9 +254,9 @@ export default function MesLivres({ userEmail }) {
         background: 'var(--papier)', border: '1.5px dashed rgba(26,16,8,0.18)',
       }}>
         <div style={{ fontSize: 34, marginBottom: 10 }}>📚</div>
-        <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>Aucune commande</div>
+        <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>{t('livre_aucune')}</div>
         <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.45)' }}>
-          Vos livres commandés apparaîtront ici.
+          {t('livre_aucune_desc')}
         </div>
       </div>
     );
@@ -259,9 +267,9 @@ export default function MesLivres({ userEmail }) {
       {/* Stats */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
         {[
-          { val: enCours.length, label: 'En cours', color: '#2a5ca8' },
-          { val: recus.length,   label: 'Reçus',    color: '#2d6a2d' },
-          { val: commandes.length, label: 'Total',  color: 'var(--bordeaux)' },
+          { val: enCours.length, label: t('livre_en_cours_stat'), color: '#2a5ca8' },
+          { val: recus.length,   label: t('livre_recus_stat'),   color: '#2d6a2d' },
+          { val: commandes.length, label: t('livre_total'),      color: 'var(--bordeaux)' },
         ].map(({ val, label, color }) => (
           <div key={label} style={{
             flex: 1, textAlign: 'center', padding: '12px 6px',
@@ -281,7 +289,7 @@ export default function MesLivres({ userEmail }) {
             textTransform: 'uppercase', color: '#2a5ca8',
             display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12,
           }}>
-            En cours d'acheminement
+            {t('livre_en_cours')}
             <span style={{ flex: 1, height: 1, background: 'rgba(42,92,168,0.2)' }} />
           </div>
           {enCours.map(c => <CommandeCard key={c.id} commande={c} />)}
@@ -296,7 +304,7 @@ export default function MesLivres({ userEmail }) {
             textTransform: 'uppercase', color: '#b41414',
             display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, marginTop: enCours.length > 0 ? 20 : 0,
           }}>
-            Litiges
+            {t('livre_litiges')}
             <span style={{ flex: 1, height: 1, background: 'rgba(180,20,20,0.2)' }} />
           </div>
           {litiges.map(c => <CommandeCard key={c.id} commande={c} />)}
@@ -312,7 +320,7 @@ export default function MesLivres({ userEmail }) {
             display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12,
             marginTop: (enCours.length > 0 || litiges.length > 0) ? 20 : 0,
           }}>
-            Livres reçus
+            {t('livre_recus')}
             <span style={{ flex: 1, height: 1, background: 'rgba(45,106,45,0.2)' }} />
           </div>
           {recus.map(c => <CommandeCard key={c.id} commande={c} />)}

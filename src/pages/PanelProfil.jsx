@@ -2,15 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import MesLivres from '@/components/profil/MesLivres';
+import LangSwitcher from '@/components/shared/LangSwitcher';
+import { useLang } from '@/lib/LangContext';
 
 const DISTINCTIONS = [
-  { id: 'petit_courrier', emoji: '📬', nom: 'Petit Courrier', seuil: 1 },
-  { id: 'globe_trotteur', emoji: '🌍', nom: 'Globe-Trotteur', seuil: 10 },
-  { id: 'ambassadeur', emoji: '🎖️', nom: 'Ambassadeur', seuil: 30 },
+  { id: 'petit_courrier', emoji: '📬', key: 'distinction_petit_courrier', seuil: 1 },
+  { id: 'globe_trotteur', emoji: '🌍', key: 'distinction_globe_trotteur', seuil: 10 },
+  { id: 'ambassadeur', emoji: '🎖️', key: 'distinction_ambassadeur', seuil: 30 },
 ];
 
 export default function PanelProfil() {
   const navigate = useNavigate();
+  const { t } = useLang();
   const [user, setUser] = useState(null);
   const [missionsLivrees, setMissionsLivrees] = useState(0);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -64,7 +67,7 @@ export default function PanelProfil() {
         {/* Identité */}
         <div style={sectionStyle}>
           <div className="font-special" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--muted-foreground)', marginBottom: 12 }}>
-            Compte
+            {t('profil_compte')}
           </div>
           <div className="font-playfair" style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>
             {user?.full_name || '—'}
@@ -77,7 +80,7 @@ export default function PanelProfil() {
         {/* Mes Distinctions */}
         <div style={sectionStyle}>
           <div className="font-special" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.45)', marginBottom: 14 }}>
-            Mes Distinctions
+            {t('profil_distinctions')}
           </div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'space-between' }}>
             {DISTINCTIONS.map(d => {
@@ -95,26 +98,31 @@ export default function PanelProfil() {
                 }}>
                   <div style={{ fontSize: 28, marginBottom: 6, userSelect: 'none', WebkitUserSelect: 'none' }}>{d.emoji}</div>
                   <div className="font-special" style={{ fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', color: debloque ? 'var(--bordeaux)' : 'rgba(26,16,8,0.4)', lineHeight: 1.3, userSelect: 'none', WebkitUserSelect: 'none' }}>
-                    {d.nom}
+                    {t(d.key)}
                   </div>
                   <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 10, color: 'rgba(26,16,8,0.35)', marginTop: 4, userSelect: 'none', WebkitUserSelect: 'none' }}>
-                    {debloque ? '✓ Obtenu' : `≥ ${d.seuil} livr.`}
+                    {debloque ? t('distinction_obtenu') : t('distinction_seuil', { n: d.seuil })}
                   </div>
                 </div>
               );
             })}
           </div>
           <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.4)', marginTop: 12, textAlign: 'center' }}>
-            {missionsLivrees} mission{missionsLivrees !== 1 ? 's' : ''} livrée{missionsLivrees !== 1 ? 's' : ''} au total
+            {t(missionsLivrees !== 1 ? 'profil_missions_count_plural' : 'profil_missions_count', { n: missionsLivrees })}
           </div>
         </div>
 
         {/* Mes livres */}
         <div style={sectionStyle}>
           <div className="font-special" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.45)', marginBottom: 16 }}>
-            Mes livres
+            {t('profil_livres')}
           </div>
           <MesLivres userEmail={user?.email} />
+        </div>
+
+        {/* Langue */}
+        <div style={sectionStyle}>
+          <LangSwitcher />
         </div>
 
         {/* Déconnexion */}
@@ -131,7 +139,7 @@ export default function PanelProfil() {
             onMouseEnter={e => e.target.style.background = 'hsl(var(--muted))'}
             onMouseLeave={e => e.target.style.background = 'none'}
           >
-            ✦ Se déconnecter
+            {t('profil_logout')}
           </button>
         </div>
 
@@ -142,7 +150,7 @@ export default function PanelProfil() {
           background: 'rgba(180,20,20,0.03)',
         }}>
           <div className="font-special" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: '#b41414', marginBottom: 12 }}>
-            Zone de danger
+            {t('profil_danger')}
           </div>
 
           {!showDeleteConfirm ? (
