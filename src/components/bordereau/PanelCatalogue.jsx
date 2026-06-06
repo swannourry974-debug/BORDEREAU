@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import WelcomeCard from '@/components/shared/WelcomeCard';
 import SectionTitle from '@/components/shared/SectionTitle';
 import SearchBlock from '@/components/catalogue/SearchBlock';
@@ -14,12 +14,24 @@ import { useOpenLibrary } from '@/hooks/useOpenLibrary';
 import { useCart } from '@/lib/CartContext';
 import { toast } from 'sonner';
 
-const DEFAULT_BOOKS = [
+const DEFAULT_BOOKS_BASE = [
   { id: 1, title: 'Le Petit Prince', author: 'Antoine de Saint-Exupéry', type: 'Poche', price: '8,90 €', availability: '2 voyageurs', coverText: 'LE PETIT\nPRINCE' },
   { id: 2, title: "L'Élégance du hérisson", author: 'Muriel Barbery', type: 'Poche', price: '9,50 €', availability: '1 voyageur', coverText: "L'ÉLÉGANCE\nDU\nHÉRISSON" },
   { id: 3, title: 'Les Misérables', author: 'Victor Hugo', type: 'Broché', price: '28,00 €', availability: 'Collecte', coverText: 'LES\nMISÉRABLES' },
   { id: 4, title: 'Astérix & Obélix T.1', author: 'Goscinny & Uderzo', type: 'BD', price: '11,50 €', availability: '3 voyageurs', coverText: 'ASTÉRIX\nT.1' },
 ];
+
+async function fetchCoverUrl(title, author) {
+  try {
+    const q = encodeURIComponent(`${title} ${author}`);
+    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=1&langRestrict=fr`);
+    const data = await res.json();
+    const thumb = data?.items?.[0]?.volumeInfo?.imageLinks?.thumbnail;
+    return thumb ? thumb.replace('http://', 'https://').replace('&edge=curl', '') : null;
+  } catch {
+    return null;
+  }
+}
 
 export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenCommande, onCloseCommande }) {
   const { results, loading, error, search, reset, searchByISBN } = useOpenLibrary();
@@ -31,7 +43,22 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
   const [selectedBook, setSelectedBook] = useState(null);
   const [orderingBook, setOrderingBook] = useState(null);
   const [panierOpen, setPanierOpen] = useState(false);
-  const [confirmation, setConfirmation] = useState(null); // { commandeId, bookTitle }
+  const [confirmation, setConfirmation] = useState(null);
+  const [defaultBooks, setDefaultBooks] = useState(DEFAULT_BOOKS_BASE);
+
+  // Enrichir les livres par défaut avec les couvertures via Google Books
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(
+      DEFAULT_BOOKS_BASE.map(async (book) => {
+        const coverUrl = await fetchCoverUrl(book.title, book.author);
+        return { ...book, coverUrl };
+      })
+    ).then((enriched) => {
+      if (!cancelled) setDefaultBooks(enriched);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const handleSearch = (query) => {
     if (!query || query.trim().length < 2) {
@@ -123,7 +150,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
     });
   };
 
-  const displayBooks = hasSearched ? results : DEFAULT_BOOKS;
+  const displayBooks = hasSearched ? results : defaultBooks;
 
   const handleRefresh = async () => {
     if (hasSearched) { reset(); setHasSearched(false); }
