@@ -104,10 +104,15 @@ const fr = {
   notation_votre_avis: 'Votre avis :',
   notation_merci: 'Merci pour votre retour !',
 
+  // RoleSwitcher
+  role_switch_lecteur_desc: "Acheter un livre depuis l'étranger",
+  role_switch_voyageur_desc: 'Transporter & gagner des commissions',
+  role_switch_relais_desc: 'Gérer le stock & les dépôts',
+
   // Langue
   langue_fr: '🇫🇷 Français',
   langue_en: '🇬🇧 English',
   langue_es: '🇪🇸 Español',
-};
+  };
 
 export default fr;

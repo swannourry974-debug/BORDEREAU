@@ -1,12 +1,14 @@
 import React from 'react';
+import { useLang } from '@/lib/LangContext';
 
 const roles = [
-  { id: 'lecteur', icon: '📖', label: 'LECTEUR', desc: "Acheter un livre depuis l'étranger" },
-  { id: 'voyageur', icon: '✈️', label: 'VOYAGEUR', desc: 'Transporter & gagner des commissions' },
-  { id: 'relais', icon: '🏪', label: 'POINT RELAIS', desc: 'Gérer le stock & les dépôts' },
+  { id: 'lecteur', icon: '📖', label_key: 'role_lecteur', desc_key: 'role_switch_lecteur_desc' },
+  { id: 'voyageur', icon: '✈️', label_key: 'role_voyageur', desc_key: 'role_switch_voyageur_desc' },
+  { id: 'relais', icon: '🏪', label_key: 'role_relais', desc_key: 'role_switch_relais_desc' },
 ];
 
 export default function RoleSwitcher({ open, onSwitch }) {
+  const { t } = useLang();
   if (!open) return null;
   return (
     <div style={{
@@ -36,8 +38,8 @@ export default function RoleSwitcher({ open, onSwitch }) {
         >
           <span style={{ fontSize: 20, width: 28, textAlign: 'center' }}>{r.icon}</span>
           <div>
-            <div style={{ fontSize: 13, letterSpacing: 1 }}>{r.label}</div>
-            <div style={{ fontSize: 10, color: 'rgba(26,16,8,0.5)', fontStyle: 'italic' }}>{r.desc}</div>
+            <div style={{ fontSize: 13, letterSpacing: 1 }}>{t(r.label_key)}</div>
+            <div style={{ fontSize: 10, color: 'rgba(26,16,8,0.5)', fontStyle: 'italic' }}>{t(r.desc_key)}</div>
           </div>
         </div>
       ))}

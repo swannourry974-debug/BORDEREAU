@@ -104,10 +104,15 @@ const en = {
   notation_votre_avis: 'Your review:',
   notation_merci: 'Thank you for your feedback!',
 
+  // RoleSwitcher
+  role_switch_lecteur_desc: 'Buy a book from abroad',
+  role_switch_voyageur_desc: 'Transport & earn commissions',
+  role_switch_relais_desc: 'Manage stock & deposits',
+
   // Language
   langue_fr: '🇫🇷 Français',
   langue_en: '🇬🇧 English',
   langue_es: '🇪🇸 Español',
-};
+  };
 
 export default en;
