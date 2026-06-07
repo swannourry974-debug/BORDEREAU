@@ -4,23 +4,28 @@ import WalletCard from '@/components/missions/WalletCard';
 import { SectionTitle, PerfoStrip } from '@/components/bordereau/shared';
 import HistoriqueVoyageur from './HistoriqueVoyageur';
 import VoyageurStatsCard from './VoyageurStatsCard';
+import CalendrierVoyageur from './CalendrierVoyageur';
+import GraphiqueGains from './GraphiqueGains';
 
 export default function PanelAccueilVoyageur() {
   const [user, setUser] = useState(null);
   const [wallet, setWallet] = useState(null);
   const [missions, setMissions] = useState([]);
+  const [voyages, setVoyages] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     base44.auth.me().then(async (u) => {
       setUser(u);
       if (!u) { setLoading(false); return; }
-      const [wallets, allMissions] = await Promise.all([
+      const [wallets, allMissions, allVoyages] = await Promise.all([
         base44.entities.VoyageurWallet.filter({ user_email: u.email }),
         base44.entities.MissionVoyageur.filter({ voyageur_email: u.email }),
+        base44.entities.Voyage.filter({ voyageur_email: u.email }),
       ]);
       setWallet(wallets[0] || { solde_disponible: 0, gains_previsionnels: 0, virement_suspendu: false });
       setMissions(allMissions);
+      setVoyages(allVoyages || []);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
@@ -111,6 +116,16 @@ export default function PanelAccueilVoyageur() {
           </div>
         )}
       </div>
+
+      {/* Calendrier */}
+      <PerfoStrip />
+      <SectionTitle>Calendrier des échéances</SectionTitle>
+      <CalendrierVoyageur missions={missions} voyages={voyages} />
+
+      {/* Graphique gains */}
+      <PerfoStrip />
+      <SectionTitle>Évolution des gains</SectionTitle>
+      <GraphiqueGains missions={missions} />
 
       {/* Historique des trajets */}
       <PerfoStrip />
