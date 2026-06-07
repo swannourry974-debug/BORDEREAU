@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import QrScannerModal from '../relais/QrScannerModal';
 import ScanResult from '../relais/ScanResult';
 import ProfilsTableau from '../relais/ProfilsTableau';
+import TableauDeBordRelais from '../relais/TableauDeBordRelais';
+import { base44 } from '@/api/base44Client';
 
 const MOCK_STOCK = [
   { ref: 'BDX-1042', livre: 'Les Misérables', auteur: 'Victor Hugo', type: 'retrait', utilisateur: 'Marie L.', emplacement: 'Étagère A3' },
@@ -19,8 +21,13 @@ const MOCK_BOOKS = [
 export default function PanelStock() {
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
-  const [view, setView] = useState('colis'); // 'colis' ou 'livres'
+  const [view, setView] = useState('tableau'); // 'tableau', 'colis' ou 'livres'
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [userEmail, setUserEmail] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(u => setUserEmail(u?.email)).catch(() => {});
+  }, []);
 
   const handleScan = (text) => {
     setScanning(false);
@@ -61,38 +68,35 @@ export default function PanelStock() {
       </div>
 
       {/* Toggle View */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
-        <button
-          onClick={() => setView('colis')}
-          style={{
-            flex: 1, background: view === 'colis' ? 'var(--bordeaux)' : 'var(--papier)',
-            color: view === 'colis' ? 'var(--creme)' : 'var(--bordeaux)',
-            border: `1.5px solid var(--bordeaux)`, padding: '16px 12px',
-            fontFamily: 'Special Elite, monospace', fontSize: 11,
-            letterSpacing: 3, textTransform: 'uppercase', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            transition: 'all 0.15s'
-          }}
-        >
-          <span style={{ fontSize: 18 }}>📦</span>
-          Gestion colis
-        </button>
-        <button
-          onClick={() => setView('livres')}
-          style={{
-            flex: 1, background: view === 'livres' ? 'var(--bordeaux)' : 'var(--papier)',
-            color: view === 'livres' ? 'var(--creme)' : 'var(--bordeaux)',
-            border: `1.5px solid var(--bordeaux)`, padding: '16px 12px',
-            fontFamily: 'Special Elite, monospace', fontSize: 11,
-            letterSpacing: 3, textTransform: 'uppercase', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            transition: 'all 0.15s'
-          }}
-        >
-          <span style={{ fontSize: 18 }}>📚</span>
-          Livres en transit
-        </button>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
+        {[
+          { key: 'tableau', label: 'Tableau du jour', emoji: '📋' },
+          { key: 'colis',   label: 'Scanner',         emoji: '⬡' },
+          { key: 'livres',  label: 'En transit',      emoji: '📚' },
+        ].map(({ key, label, emoji }) => (
+          <button
+            key={key}
+            onClick={() => setView(key)}
+            style={{
+              flex: 1, background: view === key ? 'var(--bordeaux)' : 'var(--papier)',
+              color: view === key ? 'var(--creme)' : 'var(--bordeaux)',
+              border: `1.5px solid var(--bordeaux)`, padding: '12px 8px',
+              fontFamily: 'Special Elite, monospace', fontSize: 9,
+              letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              transition: 'all 0.15s', minWidth: 80,
+            }}
+          >
+            <span style={{ fontSize: 16 }}>{emoji}</span>
+            {label}
+          </button>
+        ))}
       </div>
+
+      {/* Tableau du jour */}
+      {view === 'tableau' && (
+        <TableauDeBordRelais relaisEmail={userEmail} />
+      )}
 
       {view === 'colis' && (
         <>
