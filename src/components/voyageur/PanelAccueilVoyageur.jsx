@@ -6,6 +6,7 @@ import HistoriqueVoyageur from './HistoriqueVoyageur';
 import VoyageurStatsCard from './VoyageurStatsCard';
 import CalendrierVoyageur from './CalendrierVoyageur';
 import GraphiqueGains from './GraphiqueGains';
+import CalculatriceRevenus from './CalculatriceRevenus';
 
 export default function PanelAccueilVoyageur() {
   const [user, setUser] = useState(null);
@@ -121,6 +122,11 @@ export default function PanelAccueilVoyageur() {
       <PerfoStrip />
       <SectionTitle>Calendrier des échéances</SectionTitle>
       <CalendrierVoyageur missions={missions} voyages={voyages} />
+
+      {/* Calculatrice de revenus */}
+      <PerfoStrip />
+      <SectionTitle>Simuler mes gains</SectionTitle>
+      <CalculatriceRevenus />
 
       {/* Graphique gains */}
       <PerfoStrip />

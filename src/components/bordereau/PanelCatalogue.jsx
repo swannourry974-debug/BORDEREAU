@@ -10,7 +10,7 @@ import BookValidation from '@/components/catalogue/BookValidation';
 import PullToRefresh from '@/components/shared/PullToRefresh';
 import PanierCheckout from '@/components/catalogue/PanierCheckout';
 import ConfirmationBordereau from '@/components/catalogue/ConfirmationBordereau';
-import { useOpenLibrary } from '@/hooks/useOpenLibrary';
+import { useBookSearch } from '@/hooks/useBookSearch';
 import { useCart } from '@/lib/CartContext';
 import { toast } from 'sonner';
 import CityPicker from '@/components/catalogue/CityPicker';
@@ -35,7 +35,7 @@ async function fetchCoverUrl(title, author) {
 }
 
 export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenCommande, onCloseCommande }) {
-  const { results, loading, error, search, reset, searchByISBN } = useOpenLibrary();
+  const { results, loading, error, search, searchDebounced, reset } = useBookSearch();
   const { items } = useCart();
   const [hasSearched, setHasSearched] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -70,7 +70,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
       return;
     }
     setHasSearched(true);
-    search(query);
+    searchDebounced(query, 350);
   };
 
   const handleISBNResult = async (isbn) => {
@@ -141,7 +141,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
     } else {
       // C'est un titre ou auteur → recherche normale
       setHasSearched(true);
-      search(isbn);
+      search(isbn); // pas de debounce ici car déjà soumis manuellement
     }
   };
 

@@ -7,6 +7,7 @@ import PullToRefresh from '../shared/PullToRefresh';
 import ScanValidation from '../missions/ScanValidation';
 import FormulaireVol from '../missions/FormulaireVol';
 import QuotaJauge from '@/components/voyageur/QuotaJauge';
+import FiltreVille from '@/components/missions/FiltreVille';
 import { BADGES_CONFIG, getBadgesDebloques } from '@/lib/badges';
 import { base44 } from '@/api/base44Client';
 import { ZONES, POIDS_FORMAT, getQuotaLivres, getQuotaKg } from '@/lib/tarifsConfig';
@@ -129,6 +130,7 @@ export default function PanelMissions() {
   const [user, setUser] = useState(null);
   const [voyageActif, setVoyageActif] = useState(null);
   const [showFormVol, setShowFormVol] = useState(false);
+  const [filtreVille, setFiltreVille] = useState(null);
 
   // Wallet (simulé)
   const [wallet] = useState({ soldeDisponible: 12.50, gainsPrevisionnels: 5.00, virementSuspendu: false });
@@ -170,10 +172,16 @@ export default function PanelMissions() {
     paysVisites: 2,
   };
 
-  // Filtrer les missions selon la ville d'arrivée du voyage actif
-  const missionsFiltered = voyageActif
-    ? available.filter(m => m.ville.toLowerCase().includes(voyageActif.arrivee_ville.toLowerCase()))
-    : available;
+  // Filtrer les missions : voyage actif ET/OU filtre manuel
+  const missionsFiltered = available.filter(m => {
+    const matchVoyage = voyageActif
+      ? m.ville.toLowerCase().includes(voyageActif.arrivee_ville.toLowerCase())
+      : true;
+    const matchFiltre = filtreVille
+      ? (m.zone_id === filtreVille || m.ville === filtreVille)
+      : true;
+    return matchVoyage && matchFiltre;
+  });
 
   const acceptMission = (id, commission) => {
     const mission = available.find(m => m.id === id);
@@ -203,6 +211,7 @@ export default function PanelMissions() {
 
   const handleRefresh = async () => {
     setAvailable(AVAILABLE_MISSIONS);
+    setFiltreVille(null);
     await new Promise(r => setTimeout(r, 800));
   };
 
@@ -275,6 +284,7 @@ export default function PanelMissions() {
 
       {/* Missions disponibles */}
       <SectionTitle>Missions disponibles</SectionTitle>
+      <FiltreVille filtre={filtreVille} onFiltre={setFiltreVille} missions={available} />
 
       {limitAtteinte && (
         <div style={{
