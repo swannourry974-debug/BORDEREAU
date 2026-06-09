@@ -13,6 +13,7 @@ import ConfirmationBordereau from '@/components/catalogue/ConfirmationBordereau'
 import { useOpenLibrary } from '@/hooks/useOpenLibrary';
 import { useCart } from '@/lib/CartContext';
 import { toast } from 'sonner';
+import CityPicker from '@/components/catalogue/CityPicker';
 
 const DEFAULT_BOOKS_BASE = [
   { id: 1, title: 'Le Petit Prince', author: 'Antoine de Saint-Exupéry', type: 'Poche', price: '8,90 €', availability: '2 voyageurs', coverText: 'LE PETIT\nPRINCE' },
@@ -45,6 +46,8 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
   const [panierOpen, setPanierOpen] = useState(false);
   const [confirmation, setConfirmation] = useState(null);
   const [defaultBooks, setDefaultBooks] = useState(DEFAULT_BOOKS_BASE);
+  const [selectedCity, setSelectedCity] = useState({ label: 'Miami, FL — USA', emoji: '🇺🇸', zone_id: 'international' });
+  const [cityPickerOpen, setCityPickerOpen] = useState(false);
 
   // Enrichir les livres par défaut avec les couvertures via Google Books
   useEffect(() => {
@@ -159,6 +162,15 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
 
   return (
     <>
+      {/* Sélecteur de ville */}
+      {cityPickerOpen && (
+        <CityPicker
+          selected={selectedCity}
+          onSelect={setSelectedCity}
+          onClose={() => setCityPickerOpen(false)}
+        />
+      )}
+
       {/* Scanner plein écran */}
       {scannerOpen && (
         <ISBNScanner
@@ -175,7 +187,14 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
           <WelcomeCard
             eyebrow="Bonjour, Lecteur"
             title="Quels livres vous manquent ce soir ?"
-            subtitle="📍 Livraison vers : Miami, FL · USA"
+            subtitle={
+              <span
+                onClick={() => setCityPickerOpen(true)}
+                style={{ cursor: 'pointer', textDecoration: 'underline dotted', textUnderlineOffset: 3 }}
+              >
+                📍 Livraison vers : {selectedCity.emoji} {selectedCity.label} ›
+              </span>
+            }
           />
 
           <SectionTitle>Rechercher un livre</SectionTitle>
@@ -247,7 +266,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
             />
           )}
 
-          <SectionTitle>{hasSearched ? 'Résultats de recherche' : 'Disponibles pour Miami'}</SectionTitle>
+          <SectionTitle>{hasSearched ? 'Résultats de recherche' : `Disponibles pour ${selectedCity.label.split(',')[0]}`}</SectionTitle>
 
           {loading && (
             <div className="text-center py-8 text-foreground/40 italic font-fell text-[13px]">

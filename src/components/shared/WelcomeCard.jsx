@@ -7,7 +7,9 @@ export default function WelcomeCard({ eyebrow, title, subtitle }) {
       <div className="text-[9px] tracking-[3px] uppercase opacity-70 mb-[6px] font-typewriter">{eyebrow}</div>
       <div className="font-serif text-[20px] font-bold leading-tight" dangerouslySetInnerHTML={{ __html: title }} />
       {subtitle && (
-        <div className="font-fell italic text-[12px] opacity-75 mt-[6px]">{subtitle}</div>
+        <div className="font-fell italic text-[12px] opacity-75 mt-[6px]">
+          {typeof subtitle === 'string' ? subtitle : subtitle}
+        </div>
       )}
     </div>
   );
