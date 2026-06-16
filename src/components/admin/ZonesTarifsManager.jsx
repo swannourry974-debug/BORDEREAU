@@ -203,67 +203,71 @@ export default function ZonesTarifsManager() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', border: '1.5px solid hsl(var(--border))' }}>
                 <thead>
-                  {/* Ligne 1 : groupes */}
                   <tr style={{ background: 'hsl(var(--muted))' }}>
-                    <th rowSpan={2} style={thStyle}>Zone</th>
-                    <th colSpan={3} style={{ ...thStyle, borderLeft: '2px solid #1a3a5c', color: '#1a3a5c', textAlign: 'center' }}>✈️ Express</th>
-                    <th colSpan={3} style={{ ...thStyle, borderLeft: '2px solid #8B6914', color: '#8B6914', textAlign: 'center' }}>📦 Collectif</th>
-                    <th rowSpan={2} style={thStyle}>Devise</th>
-                    <th rowSpan={2} style={thStyle}>Actions</th>
-                  </tr>
-                  {/* Ligne 2 : sous-colonnes */}
-                  <tr style={{ background: 'hsl(var(--muted))' }}>
-                    <th style={{ ...thStyle, borderLeft: '2px solid #1a3a5c' }}>Frais lecteur</th>
+                    <th style={thStyle}>Zone</th>
+                    <th style={thStyle}>Mode</th>
+                    <th style={thStyle}>Frais lecteur</th>
                     <th style={thStyle}>Part voyageur</th>
-                    <th style={thStyle}>Marge nette</th>
-                    <th style={{ ...thStyle, borderLeft: '2px solid #8B6914' }}>Frais lecteur</th>
                     <th style={thStyle}>Part relais</th>
                     <th style={thStyle}>Marge nette</th>
+                    <th style={thStyle}>Devise</th>
+                    <th style={thStyle}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {zones.map((z, i) => {
                     const me = margeExpress(z);
                     const mc = margeCollectif(z);
+                    const rowBg = z.actif ? (i % 2 === 0 ? 'hsl(var(--card))' : 'hsl(var(--background))') : 'hsl(var(--muted))';
+                    const opacity = z.actif ? 1 : 0.5;
                     return (
-                      <tr key={z.id} style={{
-                        background: z.actif ? (i % 2 === 0 ? 'hsl(var(--card))' : 'hsl(var(--background))') : 'hsl(var(--muted))',
-                        opacity: z.actif ? 1 : 0.5,
-                      }}>
-                        <td style={tdStyle}>
-                          <div className="font-special" style={{ fontSize: 13 }}>{z.emoji_drapeau} {z.zone_nom}</div>
-                          <div style={{ fontSize: 9, color: 'hsl(var(--muted-foreground))' }}>{z.pays_nom} · {z.pays_code}</div>
-                        </td>
-                        {/* EXPRESS */}
-                        <td style={{ ...tdStyle, borderLeft: '2px solid rgba(26,58,92,0.2)' }}>
-                          <span className="font-playfair" style={{ fontWeight: 700 }}>{(z.frais_lecteur_express || 0).toFixed(2)} €</span>
-                        </td>
-                        <td style={tdStyle}>
-                          <span style={{ color: '#1a3a5c', fontWeight: 700 }}>{(z.part_voyageur_express || 0).toFixed(2)} €</span>
-                        </td>
-                        <td style={tdStyle}>
-                          <span style={{ color: me > 0 ? '#2d6a2d' : 'var(--bordeaux)', fontWeight: 700 }}>{me.toFixed(2)} €</span>
-                        </td>
-                        {/* COLLECTIF */}
-                        <td style={{ ...tdStyle, borderLeft: '2px solid rgba(139,105,20,0.2)' }}>
-                          <span className="font-playfair" style={{ fontWeight: 700 }}>{(z.frais_lecteur_collectif || 0).toFixed(2)} €</span>
-                        </td>
-                        <td style={tdStyle}>
-                          <span style={{ color: '#8B6914', fontWeight: 700 }}>{(z.part_relais || 0).toFixed(2)} €</span>
-                        </td>
-                        <td style={tdStyle}>
-                          <span style={{ color: mc > 0 ? '#2d6a2d' : 'var(--bordeaux)', fontWeight: 700 }}>{mc.toFixed(2)} €</span>
-                        </td>
-                        <td style={{ ...tdStyle, fontSize: 11, color: 'hsl(var(--muted-foreground))' }}>{z.devise}</td>
-                        <td style={tdStyle}>
-                          <div style={{ display: 'flex', gap: 4 }}>
-                            <button onClick={() => openEdit(z)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15 }} title="Modifier">✏️</button>
-                            <button onClick={() => toggleActif(z)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15 }} title={z.actif ? 'Désactiver' : 'Activer'}>
-                              {z.actif ? '🟢' : '🔴'}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
+                      <React.Fragment key={z.id}>
+                        {/* Ligne EXPRESS */}
+                        <tr style={{ background: rowBg, opacity, borderTop: '2px solid hsl(var(--border))' }}>
+                          <td rowSpan={2} style={{ ...tdStyle, verticalAlign: 'middle', borderRight: '2px solid hsl(var(--border))' }}>
+                            <div className="font-special" style={{ fontSize: 13 }}>{z.emoji_drapeau} {z.zone_nom}</div>
+                            <div style={{ fontSize: 9, color: 'hsl(var(--muted-foreground))' }}>{z.pays_nom} · {z.pays_code}</div>
+                          </td>
+                          <td style={{ ...tdStyle, background: 'rgba(26,58,92,0.06)', whiteSpace: 'nowrap' }}>
+                            <span style={{ color: '#1a3a5c', fontWeight: 700, fontSize: 11, letterSpacing: 1 }}>✈️ EXPRESS</span>
+                          </td>
+                          <td style={tdStyle}>
+                            <span className="font-playfair" style={{ fontWeight: 700 }}>{(z.frais_lecteur_express || 0).toFixed(2)} €</span>
+                          </td>
+                          <td style={tdStyle}>
+                            <span style={{ color: '#1a3a5c', fontWeight: 700 }}>{(z.part_voyageur_express || 0).toFixed(2)} €</span>
+                          </td>
+                          <td style={{ ...tdStyle, color: 'hsl(var(--muted-foreground))' }}>—</td>
+                          <td style={tdStyle}>
+                            <span style={{ color: me > 0 ? '#2d6a2d' : 'var(--bordeaux)', fontWeight: 700 }}>{me.toFixed(2)} €</span>
+                          </td>
+                          <td style={{ ...tdStyle, fontSize: 11, color: 'hsl(var(--muted-foreground))' }} rowSpan={2}>{z.devise}</td>
+                          <td style={tdStyle} rowSpan={2}>
+                            <div style={{ display: 'flex', gap: 4 }}>
+                              <button onClick={() => openEdit(z)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15 }} title="Modifier">✏️</button>
+                              <button onClick={() => toggleActif(z)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15 }} title={z.actif ? 'Désactiver' : 'Activer'}>
+                                {z.actif ? '🟢' : '🔴'}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                        {/* Ligne COLLECTIF */}
+                        <tr style={{ background: rowBg, opacity }}>
+                          <td style={{ ...tdStyle, background: 'rgba(139,105,20,0.06)', whiteSpace: 'nowrap' }}>
+                            <span style={{ color: '#8B6914', fontWeight: 700, fontSize: 11, letterSpacing: 1 }}>📦 COLLECTIF</span>
+                          </td>
+                          <td style={tdStyle}>
+                            <span className="font-playfair" style={{ fontWeight: 700 }}>{(z.frais_lecteur_collectif || 0).toFixed(2)} €</span>
+                          </td>
+                          <td style={{ ...tdStyle, color: 'hsl(var(--muted-foreground))' }}>—</td>
+                          <td style={tdStyle}>
+                            <span style={{ color: '#8B6914', fontWeight: 700 }}>{(z.part_relais || 0).toFixed(2)} €</span>
+                          </td>
+                          <td style={tdStyle}>
+                            <span style={{ color: mc > 0 ? '#2d6a2d' : 'var(--bordeaux)', fontWeight: 700 }}>{mc.toFixed(2)} €</span>
+                          </td>
+                        </tr>
+                      </React.Fragment>
                     );
                   })}
                 </tbody>
