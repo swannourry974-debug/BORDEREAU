@@ -15,6 +15,7 @@ import PanelProfil from './PanelProfil';
 import PanelWalletLecteur from '../components/wallet/PanelWalletLecteur';
 import PanelWalletAdmin from '../components/wallet/PanelWalletAdmin';
 import PanelAide from '../components/aide/PanelAide';
+import AppFooter from '../components/bordereau/AppFooter';
 
 function SidebarItem({ icon, label, active, onClick, badge }) {
   return (
@@ -210,6 +211,11 @@ export default function Bordereau({ initialPanel }) {
             {activePanel === 'aide' && <PanelAide role={role} />}
           </div>
         </main>
+      </div>
+
+      {/* Footer — desktop/tablette uniquement */}
+      <div className="hidden md:block">
+        <AppFooter />
       </div>
 
       {/* Bottom nav — mobile uniquement */}
