@@ -1,23 +1,18 @@
 import React, { useState, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { BtnCoupon } from '../bordereau/shared';
+import ISBNScanner from '../catalogue/ISBNScanner';
 
 // Simule un scan de code-barres ISBN via caméra (input file fallback)
 export default function ScanValidation({ mission, onValidated, onClose }) {
   const [step, setStep] = useState('isbn'); // isbn | ticket | confirming | done
   const [isbn, setIsbn] = useState('');
-  const [isbnManuel, setIsbnManuel] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
   const [ticketFile, setTicketFile] = useState(null);
   const [ticketPreview, setTicketPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const ticketRef = useRef();
-
-  const handleIsbnScan = () => {
-    // Sur mobile, ouvre la caméra via input file avec capture=environment
-    // Ici on simule avec un champ manuel
-    setIsbnManuel(true);
-  };
 
   const handleIsbnSubmit = () => {
     if (!isbn.trim()) { setError('Veuillez saisir ou scanner l\'ISBN'); return; }
@@ -117,24 +112,24 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
             </div>
 
             {/* Bouton scan caméra */}
-            <label style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              border: '2px dashed hsl(var(--border))', padding: '28px 20px', cursor: 'pointer',
-              marginBottom: 16, background: 'var(--papier)', gap: 10,
-            }}>
-              <input
-                type="file"
-                accept="image/*"
-                capture="environment"
-                style={{ display: 'none' }}
-                onChange={(e) => {
-                  // Dans une vraie implémentation, on utiliserait une lib de lecture de code-barres
-                  // Ici on simule que le scan donne un ISBN
-                  const fakeISBN = '978-2-07-036822-8';
-                  setIsbn(fakeISBN);
-                  setIsbnManuel(false);
+            {showScanner && (
+              <ISBNScanner
+                onResult={(detectedIsbn) => {
+                  setIsbn(detectedIsbn);
+                  setShowScanner(false);
                 }}
+                onClose={() => setShowScanner(false)}
               />
+            )}
+
+            <button
+              onClick={() => setShowScanner(true)}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                border: '2px dashed hsl(var(--border))', padding: '28px 20px', cursor: 'pointer',
+                marginBottom: 16, background: 'var(--papier)', gap: 10, width: '100%',
+              }}
+            >
               <span style={{ fontSize: 40 }}>📷</span>
               <span className="font-special" style={{ fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--bordeaux)' }}>
                 Scanner avec la caméra
@@ -142,7 +137,7 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
               <span style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))' }}>
                 Pointez vers le code-barres ISBN du livre
               </span>
-            </label>
+            </button>
 
             <div style={{ textAlign: 'center', color: 'hsl(var(--muted-foreground))', fontSize: 11, marginBottom: 12 }}>— ou saisir manuellement —</div>
 
