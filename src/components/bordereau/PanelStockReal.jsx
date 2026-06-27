@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import ProfilsTableau from '../relais/ProfilsTableau';
+import NotationRelais from '../relais/NotationRelais';
 
 const STATUT_LABELS = {
   payee: { label: 'Payé', color: 'var(--bordeaux)' },
@@ -71,6 +72,7 @@ export default function PanelStock() {
         {[
           { id: 'stock', icon: '📦', label: 'Colis au relais' },
           { id: 'transit', icon: '🚚', label: 'En transit' },
+          { id: 'notation', icon: '★', label: 'Notation' },
           { id: 'profils', icon: '📊', label: 'Profils' },
         ].map(v => (
           <button key={v.id} onClick={() => setView(v.id)} style={{
@@ -180,6 +182,7 @@ export default function PanelStock() {
             </>
           )}
 
+          {view === 'notation' && <NotationRelais commandes={commandes} relaisEmail={user?.email} />}
           {view === 'profils' && <ProfilsTableau />}
         </>
       )}
