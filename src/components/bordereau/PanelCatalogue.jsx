@@ -14,6 +14,7 @@ import { useBookSearch } from '@/hooks/useBookSearch';
 import { useCart } from '@/lib/CartContext';
 import { toast } from 'sonner';
 import CityPicker from '@/components/catalogue/CityPicker';
+import { getZoneById } from '@/lib/tarifsConfig';
 
 const DEFAULT_BOOKS_BASE = [
   { id: 1, title: 'Le Petit Prince', author: 'Antoine de Saint-Exupéry', type: 'Poche', price: '8,90 €', availability: '2 voyageurs', coverText: 'LE PETIT\nPRINCE' },
@@ -242,7 +243,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
               <SectionTitle>Valider la commande</SectionTitle>
               <BookValidation
                 book={scannedBook}
-                zone={null}
+                zone={getZoneById(selectedCity?.zone_id)}
                 onConfirm={handleValidationConfirm}
                 onCancel={() => setScannedBook(null)}
               />
