@@ -83,20 +83,22 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
       try {
         let formatted = null;
 
-        // 1) Essai Google Books (meilleure couverture livres français)
+        // 1) Open Library en priorité (fiable, sans quota, couverture mondiale)
         try {
-          const gbRes = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
-          const gbData = await gbRes.json();
-          const item = gbData?.items?.[0]?.volumeInfo;
-          if (item) {
-            const pages = item.pageCount || null;
+          const olRes = await fetch(
+            `https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`
+          );
+          const olData = await olRes.json();
+          const book = olData[`ISBN:${isbn}`];
+          if (book) {
+            const pages = book.number_of_pages || null;
             formatted = {
               id: isbn,
-              title: item.title,
-              author: item.authors?.[0] || 'Auteur inconnu',
+              title: book.title,
+              author: book.authors?.[0]?.name || 'Auteur inconnu',
               isbn,
               coverId: null,
-              coverUrl: item.imageLinks?.thumbnail?.replace('http://', 'https://') || null,
+              coverUrl: `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`,
               pages,
               type: pages > 400 ? 'Broché' : 'Poche',
               priceVal: pages > 400 ? 24.0 : 9.9,
@@ -104,23 +106,21 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
           }
         } catch {}
 
-        // 2) Fallback Open Library si Google Books n'a rien trouvé
+        // 2) Google Books en fallback (si quota disponible)
         if (!formatted) {
           try {
-            const olRes = await fetch(
-              `https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`
-            );
-            const olData = await olRes.json();
-            const book = olData[`ISBN:${isbn}`];
-            if (book) {
-              const pages = book.number_of_pages || null;
+            const gbRes = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
+            const gbData = await gbRes.json();
+            const item = gbData?.items?.[0]?.volumeInfo;
+            if (item) {
+              const pages = item.pageCount || null;
               formatted = {
                 id: isbn,
-                title: book.title,
-                author: book.authors?.[0]?.name || 'Auteur inconnu',
+                title: item.title,
+                author: item.authors?.[0] || 'Auteur inconnu',
                 isbn,
                 coverId: null,
-                coverUrl: book.cover?.large || book.cover?.medium || null,
+                coverUrl: item.imageLinks?.thumbnail?.replace('http://', 'https://') || null,
                 pages,
                 type: pages > 400 ? 'Broché' : 'Poche',
                 priceVal: pages > 400 ? 24.0 : 9.9,
