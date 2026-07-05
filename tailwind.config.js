@@ -66,9 +66,14 @@ module.exports = {
   				ring: 'hsl(var(--sidebar-ring))'
   			},
   			bordeaux: {
+  					DEFAULT: '#800020',
+  					light: '#a0304a',
+  					dark: '#5a0015',
+  				},
+				cta: {
   					DEFAULT: '#C2410C',
-  					light: '#F97316',
   					dark: '#9A3412',
+  					foreground: '#FDFCF0',
   				},
   				encre: '#1a1008',
   				sepia: '#8A5A1A',

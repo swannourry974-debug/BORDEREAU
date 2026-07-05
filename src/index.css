@@ -31,7 +31,7 @@
     --card-foreground: 25 35% 8%;
     --popover: 42 38% 96%;
     --popover-foreground: 25 35% 8%;
-    --primary: 20 89% 40%;
+    --primary: 345 100% 25%;
     --primary-foreground: 60 33% 97%;
     --secondary: 46 45% 88%;
     --secondary-foreground: 25 35% 8%;
@@ -43,13 +43,16 @@
     --destructive-foreground: 60 33% 97%;
     --border: 46 25% 80%;
     --input: 46 25% 80%;
-    --ring: 20 89% 40%;
+    --ring: 345 100% 25%;
     --radius: 10px;
 
     /* — Palette Bordereau — */
     --creme:         #ECE7DB;  /* fond gris sable */
-    --bordeaux:      #C2410C;  /* orange lumineux contrasté — CTA */
-    --bordeaux-dark: #9A3412;  /* ombre / border orange */
+    --bordeaux:      #800020;  /* identité principale — header, nav, accents */
+    --bordeaux-dark: #5a0015;  /* ombre / border bordeaux */
+    --cta-orange:    #C2410C;  /* orange lumineux réservé aux CTA */
+    --cta-orange-dark:#9A3412; /* hover / ombre CTA */
+    --cta-foreground:#FDFCF0;  /* texte CTA contrasté */
     --encre:         #1a1008;  /* texte principal */
     --sepia:         #8A5A1A;  /* texte secondaire chaud */
     --papier:        rgba(250, 247, 239, 0.88);  /* fond cartes légèrement transparent */
@@ -82,17 +85,17 @@
     --card-foreground: 25 35% 8%;
     --popover: 42 38% 96%;
     --popover-foreground: 25 35% 8%;
-    --primary: 20 89% 40%;
+    --primary: 345 100% 25%;
     --primary-foreground: 60 33% 97%;
     --secondary: 42 28% 86%;
     --secondary-foreground: 25 35% 8%;
     --muted: 42 22% 83%;
     --muted-foreground: 25 20% 38%;
-    --accent: 20 89% 40%;
+    --accent: 345 100% 25%;
     --accent-foreground: 60 33% 97%;
     --border: 38 18% 72%;
     --input: 38 18% 72%;
-    --ring: 20 89% 40%;
+    --ring: 345 100% 25%;
   }
 }
 
@@ -150,6 +153,15 @@ body::after {
 body, body * { font-family: 'Poppins', sans-serif !important; }
 button, input, textarea, select, img, [class*="border"], [style*="border"] { border-radius: 10px !important; }
 button, input, textarea, select { transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease; }
+button[style*="var(--bordeaux)"], button[class*="bg-bordeaux"], button[class*="bg-primary"], a[class*="bg-bordeaux"], a[class*="bg-primary"] {
+  background-color: var(--cta-orange) !important;
+  border-color: var(--cta-orange) !important;
+  color: var(--cta-foreground) !important;
+}
+button[style*="var(--bordeaux)"]:hover, button[class*="bg-bordeaux"]:hover, button[class*="bg-primary"]:hover, a[class*="bg-bordeaux"]:hover, a[class*="bg-primary"]:hover {
+  background-color: var(--cta-orange-dark) !important;
+  border-color: var(--cta-orange-dark) !important;
+}
 .font-special { font-family: 'Poppins', sans-serif; }
 .font-playfair { font-family: 'Poppins', sans-serif; }
 .font-fell { font-family: 'Poppins', sans-serif; }
