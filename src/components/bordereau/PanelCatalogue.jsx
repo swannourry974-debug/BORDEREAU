@@ -92,6 +92,8 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
           const book = olData[`ISBN:${isbn}`];
           if (book) {
             const pages = book.number_of_pages || null;
+            const type = pages > 400 ? 'Broché' : 'Poche';
+            const priceVal = type === 'Broché' ? 24.0 : 9.9;
             formatted = {
               id: isbn,
               title: book.title,
@@ -100,8 +102,9 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
               coverId: null,
               coverUrl: `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`,
               pages,
-              type: pages > 400 ? 'Broché' : 'Poche',
-              priceVal: pages > 400 ? 24.0 : 9.9,
+              type,
+              price: `${priceVal.toFixed(2).replace('.', ',')} €`,
+              priceVal,
             };
           }
         } catch {}
@@ -114,6 +117,8 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
             const item = gbData?.items?.[0]?.volumeInfo;
             if (item) {
               const pages = item.pageCount || null;
+              const type = pages > 400 ? 'Broché' : 'Poche';
+              const priceVal = type === 'Broché' ? 24.0 : 9.9;
               formatted = {
                 id: isbn,
                 title: item.title,
@@ -122,8 +127,9 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
                 coverId: null,
                 coverUrl: item.imageLinks?.thumbnail?.replace('http://', 'https://') || null,
                 pages,
-                type: pages > 400 ? 'Broché' : 'Poche',
-                priceVal: pages > 400 ? 24.0 : 9.9,
+                type,
+                price: `${priceVal.toFixed(2).replace('.', ',')} €`,
+                priceVal,
               };
             }
           } catch {}

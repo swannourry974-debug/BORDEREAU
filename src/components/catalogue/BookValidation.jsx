@@ -98,10 +98,18 @@ export default function BookValidation({ book, zone: zoneProp, onConfirm, onCanc
           <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'var(--sepia)' }}>
             {book?.author}
           </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+            <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', padding: '3px 7px', border: '1px solid var(--encre)' }}>
+              Format : {book?.type || format}
+            </span>
+            <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', padding: '3px 7px', border: '1px solid var(--bordeaux)', color: 'var(--bordeaux)' }}>
+              Prix estimé : {book?.price || (prix ? `${String(prix).replace('.', ',')} €` : '—')}
+            </span>
+          </div>
         </div>
-        {book?.coverId && (
+        {(book?.coverUrl || book?.coverId) && (
           <img
-            src={`https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg`}
+            src={book.coverUrl || `https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg`}
             alt={book.title}
             style={{ width: 52, height: 72, objectFit: 'cover', border: '1px solid hsl(var(--border))', flexShrink: 0 }}
           />
