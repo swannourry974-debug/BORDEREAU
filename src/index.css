@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IM+Fell+English:ital@0;1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -21,17 +21,17 @@
 
 @layer base {
   :root {
-    --background: 60 33% 97%;
+    --background: 42 24% 90%;
     --safe-area-top: env(safe-area-inset-top, 0px);
     --safe-area-bottom: env(safe-area-inset-bottom, 0px);
     --safe-area-left: env(safe-area-inset-left, 0px);
     --safe-area-right: env(safe-area-inset-right, 0px);
     --foreground: 25 35% 8%;
-    --card: 48 40% 93%;
+    --card: 42 38% 96%;
     --card-foreground: 25 35% 8%;
-    --popover: 48 40% 93%;
+    --popover: 42 38% 96%;
     --popover-foreground: 25 35% 8%;
-    --primary: 345 100% 25%;
+    --primary: 20 89% 40%;
     --primary-foreground: 60 33% 97%;
     --secondary: 46 45% 88%;
     --secondary-foreground: 25 35% 8%;
@@ -43,17 +43,17 @@
     --destructive-foreground: 60 33% 97%;
     --border: 46 25% 80%;
     --input: 46 25% 80%;
-    --ring: 345 100% 25%;
-    --radius: 0rem;
+    --ring: 20 89% 40%;
+    --radius: 10px;
 
     /* — Palette Bordereau — */
-    --creme:         #FDFCF0;  /* fond corps / texte sur bordeaux */
-    --bordeaux:      #800020;  /* couleur signature — header, CTA */
-    --bordeaux-dark: #5a0015;  /* ombre / border bordeaux */
+    --creme:         #ECE7DB;  /* fond gris sable */
+    --bordeaux:      #C2410C;  /* orange lumineux contrasté — CTA */
+    --bordeaux-dark: #9A3412;  /* ombre / border orange */
     --encre:         #1a1008;  /* texte principal */
-    --sepia:         #8B6914;  /* texte secondaire doré */
-    --papier:        #F5F0DC;  /* fond cartes */
-    --papier-fonce:  #E8E0C4;  /* fond cartes hover */
+    --sepia:         #8A5A1A;  /* texte secondaire chaud */
+    --papier:        rgba(250, 247, 239, 0.88);  /* fond cartes légèrement transparent */
+    --papier-fonce:  rgba(237, 229, 213, 0.92);  /* fond cartes hover */
   }
 }
 
@@ -63,7 +63,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Special Elite', monospace;
+    font-family: 'Poppins', sans-serif;
     background-color: var(--creme);
     color: var(--encre);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
@@ -73,26 +73,26 @@
   }
 }
 
-/* Dark mode — bordeaux reste identique, seul le fond change */
+/* Mode sombre désactivé visuellement : conserver l'identité gris sable demandée */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: 25 35% 6%;       /* #1a1008 noir encre */
-    --foreground: 40 33% 92%;      /* #F5F0DC crème papier */
-    --card: 25 30% 9%;
-    --card-foreground: 40 33% 92%;
-    --popover: 25 30% 9%;
-    --popover-foreground: 40 33% 92%;
-    --primary: 345 100% 25%;       /* bordeaux — inchangé */
+    --background: 42 24% 90%;
+    --foreground: 25 35% 8%;
+    --card: 42 38% 96%;
+    --card-foreground: 25 35% 8%;
+    --popover: 42 38% 96%;
+    --popover-foreground: 25 35% 8%;
+    --primary: 20 89% 40%;
     --primary-foreground: 60 33% 97%;
-    --secondary: 25 20% 14%;
-    --secondary-foreground: 40 33% 92%;
-    --muted: 25 15% 12%;
-    --muted-foreground: 40 20% 60%;
-    --accent: 345 100% 25%;        /* bordeaux — inchangé */
+    --secondary: 42 28% 86%;
+    --secondary-foreground: 25 35% 8%;
+    --muted: 42 22% 83%;
+    --muted-foreground: 25 20% 38%;
+    --accent: 20 89% 40%;
     --accent-foreground: 60 33% 97%;
-    --border: 25 15% 18%;
-    --input: 25 15% 18%;
-    --ring: 345 100% 25%;
+    --border: 38 18% 72%;
+    --input: 38 18% 72%;
+    --ring: 20 89% 40%;
   }
 }
 
@@ -147,6 +147,9 @@ body::after {
 .animate-pulse-dot { animation: pulse 2s infinite; }
 .animate-pulse-dot-fast { animation: pulse 1.5s infinite; }
 
-.font-special { font-family: 'Special Elite', monospace; }
-.font-playfair { font-family: 'Playfair Display', serif; }
-.font-fell { font-family: 'IM Fell English', serif; }
+body, body * { font-family: 'Poppins', sans-serif !important; }
+button, input, textarea, select, img, [class*="border"], [style*="border"] { border-radius: 10px !important; }
+button, input, textarea, select { transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease; }
+.font-special { font-family: 'Poppins', sans-serif; }
+.font-playfair { font-family: 'Poppins', sans-serif; }
+.font-fell { font-family: 'Poppins', sans-serif; }

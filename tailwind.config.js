@@ -5,10 +5,10 @@ module.exports = {
   theme: {
   	extend: {
   		fontFamily: {
-  			typewriter: ['var(--font-typewriter)'],
-  			serif: ['var(--font-serif)'],
-  			fell: ['var(--font-fell)'],
-  		},
+  			typewriter: ['Poppins', 'sans-serif'],
+  			serif: ['Poppins', 'sans-serif'],
+  			fell: ['Poppins', 'sans-serif'],
+  		}, 
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
@@ -66,17 +66,17 @@ module.exports = {
   				ring: 'hsl(var(--sidebar-ring))'
   			},
   			bordeaux: {
-  					DEFAULT: '#800020',
-  					light: '#a0304a',
-  					dark: '#5a0015',
+  					DEFAULT: '#C2410C',
+  					light: '#F97316',
+  					dark: '#9A3412',
   				},
   				encre: '#1a1008',
-  				sepia: '#8B6914',
+  				sepia: '#8A5A1A',
   				papier: {
-  					DEFAULT: '#F5F0DC',
-  					fonce: '#E8E0C4',
+  					DEFAULT: '#FAF7EF',
+  					fonce: '#EDE5D5',
   				},
-  				creme: '#FDFCF0',
+  				creme: '#ECE7DB',
   		},
   		keyframes: {
   			'accordion-down': {
