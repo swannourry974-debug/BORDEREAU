@@ -14,6 +14,7 @@ import { useBookSearch } from '@/hooks/useBookSearch';
 import { useCart } from '@/lib/CartContext';
 import { toast } from 'sonner';
 import CityPicker from '@/components/catalogue/CityPicker';
+import CountryCityAvailability from '@/components/catalogue/CountryCityAvailability';
 import { getZoneById } from '@/lib/tarifsConfig';
 
 const DEFAULT_BOOKS_BASE = [
@@ -273,7 +274,8 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
             />
           )}
 
-          <SectionTitle>{hasSearched ? 'Résultats de recherche' : `Disponibles pour ${selectedCity.label.split(',')[0]}`}</SectionTitle>
+          <CountryCityAvailability onLocationChange={setSelectedCity} />
+          <SectionTitle>{hasSearched ? 'Résultats de recherche' : 'Livres disponibles'}</SectionTitle>
 
           {loading && (
             <div className="text-center py-8 text-foreground/40 italic font-fell text-[13px]">
