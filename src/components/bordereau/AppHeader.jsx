@@ -41,7 +41,7 @@ export default function AppHeader({ role, roleSwitcherOpen, onToggleRoleSwitcher
           )}
           <div>
           <div className="font-special" style={{ fontSize: 28, color: 'var(--creme)', letterSpacing: 6, textTransform: 'uppercase', userSelect: 'none' }}>
-            BORDEREAU
+            BORDERO
           </div>
           <span className="font-fell" style={{ fontStyle: 'italic', fontSize: 12, color: 'rgba(253,252,240,0.7)', letterSpacing: 2, marginTop: 2, display: 'block', userSelect: 'none' }}>
             {t('header_tagline')}

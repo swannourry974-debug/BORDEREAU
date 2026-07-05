@@ -175,7 +175,7 @@ export default function Bordereau({ initialPanel }) {
           {/* Footer sidebar */}
           <div style={{ marginTop: 'auto', padding: '16px', borderTop: '1px dashed rgba(26,16,8,0.15)' }}>
             <div className="font-special" style={{ fontSize: 9, letterSpacing: 2, color: 'rgba(26,16,8,0.3)', textAlign: 'center', textTransform: 'uppercase' }}>
-              Bordereau v1.0
+              BORDERO v1.0
             </div>
           </div>
         </aside>

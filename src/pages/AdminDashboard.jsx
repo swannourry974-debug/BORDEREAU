@@ -60,7 +60,7 @@ export default function AdminDashboard() {
       }}>
         <div>
           <div className="font-special" style={{ fontSize: 22, color: 'var(--creme)', letterSpacing: 5, textTransform: 'uppercase' }}>
-            BORDEREAU · ADMIN
+            BORDERO · ADMIN
           </div>
           <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 11, color: 'rgba(253,252,240,0.7)', letterSpacing: 2 }}>
             Console de gestion
