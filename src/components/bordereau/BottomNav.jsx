@@ -5,7 +5,7 @@ export default function BottomNav({ role, activePanel, onSwitch }) {
   const { t } = useLang();
   const navStyle = {
     position: 'fixed',
-    bottom: 'calc(1cm - 10px)',
+    bottom: 'calc(1cm - 50px)',
     left: '50%',
     transform: 'translateX(-50%)',
     width: '100%',
