@@ -9,7 +9,7 @@ const PROFILS = [
     color: '#800020',
     role: 'admin',
     desc: 'Accès complet au dashboard admin, gestion des zones, validations.',
-    defaultEmail: 'test.admin@bordereau.app',
+    defaultEmail: 'test.admin@bordero.app',
   },
   {
     id: 'lecteur',
@@ -18,7 +18,7 @@ const PROFILS = [
     color: '#1a3a5c',
     role: 'user',
     desc: 'Recherche de livres, commandes, suivi de livraison, étagère.',
-    defaultEmail: 'test.lecteur@bordereau.app',
+    defaultEmail: 'test.lecteur@bordero.app',
   },
   {
     id: 'voyageur',
@@ -27,7 +27,7 @@ const PROFILS = [
     color: '#8B6914',
     role: 'user',
     desc: 'Tableau de bord voyageur, missions, wallet, déclaration de vol.',
-    defaultEmail: 'test.voyageur@bordereau.app',
+    defaultEmail: 'test.voyageur@bordero.app',
     extra: 'Après invitation, créez un VoyageurWallet et un Voyage pour ce compte.',
   },
   {
@@ -37,7 +37,7 @@ const PROFILS = [
     color: '#2d6a2d',
     role: 'user',
     desc: 'Tableau de bord relais, gestion du stock, scanner de colis.',
-    defaultEmail: 'test.relais@bordereau.app',
+    defaultEmail: 'test.relais@bordero.app',
     extra: 'Après invitation, créez un PointRelais avec gerant_email = cet email.',
   },
 ];

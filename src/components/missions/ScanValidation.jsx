@@ -54,7 +54,7 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
     } else {
       await base44.entities.Commande.create({
         livre_titre: mission.livre || mission.livre_titre,
-        lecteur_email: mission.lecteur_email || 'inconnu@bordereau.com',
+        lecteur_email: mission.lecteur_email || 'inconnu@bordero.com',
         zone_nom: mission.ville_destination || mission.ville || '',
         mode_livraison: 'express',
         code_barre_isbn: isbn,

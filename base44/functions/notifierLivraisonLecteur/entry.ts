@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
 
     await base44.asServiceRole.integrations.Core.SendEmail({
       to: commande.lecteur_email,
-      from_name: 'Bordereau — Livraison Confirmée',
+      from_name: 'Bordero — Livraison Confirmée',
       subject: `🎉 Livraison confirmée — ${commande.livre_titre}`,
       body: `Bonjour,
 
@@ -35,11 +35,11 @@ Votre livre a bien été remis entre vos mains ! Nous espérons que la lecture s
 📅 Remis le : ${dateJour}
 🌍 Destination : ${commande.zone_nom || '—'}
 
-Merci d'avoir fait confiance à Bordereau pour voyager avec vos livres.
+Merci d'avoir fait confiance à Bordero pour voyager avec vos livres.
 
 Si vous êtes satisfait(e) de la livraison, n'oubliez pas de noter votre voyageur directement depuis votre profil — cela les encourage à continuer !
 
-— L'équipe Bordereau`.trim(),
+— L'équipe Bordero`.trim(),
     });
 
     console.log(`Notification livraison envoyée à ${commande.lecteur_email} pour "${commande.livre_titre}"`);

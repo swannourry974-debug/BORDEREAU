@@ -1,11 +1,11 @@
 // ============================================================
-// SYSTÈME DE BADGES BORDEREAU — VOYAGEURS
+// SYSTÈME DE BADGES BORDERO — VOYAGEURS
 // Chaque badge a un id, un emoji, un nom, une description,
 // un seuil de déclenchement et une "rareté" (commune/rare/légendaire)
 // ============================================================
 
 export const BADGES_CONFIG = [
-  // — Badges Bordereau principaux —
+  // — Badges Bordero principaux —
   {
     id: 'petit_courrier',
     emoji: '📬',
@@ -26,7 +26,7 @@ export const BADGES_CONFIG = [
     id: 'ambassadeur',
     emoji: '🎖️',
     nom: 'Ambassadeur',
-    description: '30 missions livrées. Vous portez l\'âme de Bordereau.',
+    description: '30 missions livrées. Vous portez l\'âme de Bordero.',
     rarete: 'legendaire',
     condition: (stats) => stats.livresLivres >= 30,
   },
@@ -105,8 +105,8 @@ export const BADGES_CONFIG = [
   {
     id: 'ambassadeur',
     emoji: '✦',
-    nom: 'Ambassadeur Bordereau',
-    description: '20 missions accomplies. Vous portez l\'âme de Bordereau.',
+    nom: 'Ambassadeur Bordero',
+    description: '20 missions accomplies. Vous portez l\'âme de Bordero.',
     rarete: 'legendaire',
     condition: (stats) => stats.missionsAcceptees >= 20,
   },

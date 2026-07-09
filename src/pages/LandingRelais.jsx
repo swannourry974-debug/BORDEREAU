@@ -19,7 +19,7 @@ export default function LandingRelais() {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div className="font-special" style={{ fontSize: 11, letterSpacing: 5, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 12, opacity: 0.8 }}>
-            BORDEREAU
+            BORDERO
           </div>
           <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.45)', letterSpacing: 2, marginBottom: 28 }}>
             Manifeste des livres voyageurs
@@ -46,14 +46,14 @@ export default function LandingRelais() {
           </div>
 
           <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 14, color: 'rgba(26,16,8,0.6)', lineHeight: 1.7 }}>
-            Devenez un point de retrait pour les livres voyageurs de votre quartier. Gérez les dépôts, retraits et bordereaux depuis votre tableau de bord.
+            Devenez un point de retrait pour les livres voyageurs de votre quartier. Gérez les dépôts, retraits et borderos depuis votre tableau de bord.
           </div>
         </div>
 
         {/* Features */}
         <div style={{ marginBottom: 36 }}>
           {[
-            { icon: '⬡', label: 'Scanner les bordereaux par QR code' },
+            { icon: '⬡', label: 'Scanner les borderos par QR code' },
             { icon: '📦', label: 'Gérer les dépôts & retraits en temps réel' },
             { icon: '🔔', label: 'Signaler un incident ou une anomalie' },
           ].map(({ icon, label }) => (

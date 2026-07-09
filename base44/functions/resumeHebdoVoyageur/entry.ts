@@ -84,13 +84,13 @@ Deno.serve(async (req) => {
           }).join('\n')
         : '  Aucune nouvelle opportunité pour le moment.';
 
-      const sujet = `📬 Votre récapitulatif Bordereau — semaine du ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`;
+      const sujet = `📬 Votre récapitulatif Bordero — semaine du ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`;
 
       const corps = `Bonjour ${prenom},
 
 ═══════════════════════════════════
   RÉCAPITULATIF HEBDOMADAIRE
-  Bordereau — Livraisons Voyageur
+  Bordero — Livraisons Voyageur
 ═══════════════════════════════════
 
 ✦ VOS GAINS
@@ -113,14 +113,14 @@ ${lignesOpportunites}
 Pour accepter une mission, connectez-vous à votre espace voyageur.
 Merci de faire voyager les livres !
 
-L'équipe Bordereau
+L'équipe Bordero
 ═══════════════════════════════════`;
 
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: email,
         subject: sujet,
         body: corps,
-        from_name: 'Bordereau — Livraisons',
+        from_name: 'Bordero — Livraisons',
       });
 
       envoyes++;

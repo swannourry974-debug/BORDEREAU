@@ -37,7 +37,7 @@ export default function PanelScanner() {
         const byQr = await base44.entities.Commande.list('-created_date', 200);
         const found = byQr.find(c => c.qr_code_depot === cmdId || c.stripe_session_id === cmdId || c.id === cmdId);
         if (!found) {
-          setError('Bordereau introuvable. Vérifiez le QR code.');
+          setError('Bordero introuvable. Vérifiez le QR code.');
           setLoading(false);
           return;
         }
@@ -46,7 +46,7 @@ export default function PanelScanner() {
         setCommande(results[0]);
       }
     } catch (e) {
-      setError('Erreur lors de la lecture du bordereau.');
+      setError('Erreur lors de la lecture du bordero.');
     }
     setLoading(false);
   };
@@ -112,7 +112,7 @@ export default function PanelScanner() {
           Point Relais · Action
         </div>
         <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 20, fontWeight: 700, lineHeight: 1.2 }}>
-          Scanner un bordereau
+          Scanner un bordero
         </div>
         <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, opacity: 0.75, marginTop: 6 }}>
           Dépôt ou retrait d'un colis
@@ -201,7 +201,7 @@ export default function PanelScanner() {
       {commande && !actionDone && (
         <div style={{ background: 'var(--papier)', border: '2px solid var(--bordeaux)', padding: 20, marginBottom: 20 }}>
           <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', color: 'rgba(26,16,8,0.45)', marginBottom: 12 }}>
-            Bordereau identifié
+            Bordero identifié
           </div>
           <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
             {commande.livre_titre}
@@ -307,7 +307,7 @@ export default function PanelScanner() {
             <span style={{ flex: 1, height: 1, background: 'repeating-linear-gradient(90deg, var(--bordeaux) 0, var(--bordeaux) 4px, transparent 4px, transparent 8px)' }} />
           </div>
           {[
-            { step: '01', text: 'Demandez le bordereau imprimé au lecteur ou voyageur' },
+            { step: '01', text: 'Demandez le bordero imprimé au lecteur ou voyageur' },
             { step: '02', text: 'Appuyez sur "Lancer le scanner" et pointez la caméra vers le QR code' },
             { step: '03', text: 'Le système identifie automatiquement le colis et l\'action à effectuer' },
             { step: '04', text: 'Confirmez le dépôt ou la remise du livre' },

@@ -36,7 +36,7 @@ export default function VentilationCard({ zone, mode = 'express' }) {
             <>
               <Row label="💼 Part Voyageur" value={data.part_voyageur} color="#1a5276" />
               <Row label="🏪 Part Point Relais" value={data.part_relais} color="#6c3483" />
-              <Row label="⚙️ Part Admin (Bordereau)" value={data.part_admin} color="var(--bordeaux)" />
+              <Row label="⚙️ Part Admin (Bordero)" value={data.part_admin} color="var(--bordeaux)" />
               <TotalRow value={data.prix_client} />
             </>
           ) : (

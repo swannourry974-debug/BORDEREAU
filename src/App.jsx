@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react';
 import { CartProvider } from '@/lib/CartContext';
 import { LangProvider } from '@/lib/LangContext';
 // Add page imports here
-import Bordereau from './pages/Bordereau.jsx';
+import Bordero from './pages/Bordereau.jsx';
 import LandingLecteur from './pages/LandingLecteur';
 import LandingVoyageur from './pages/LandingVoyageur';
 import LandingRelais from './pages/LandingRelais';
@@ -43,17 +43,17 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <Routes>
-      <Route path="/" element={<Bordereau />} />
-      <Route path="/catalogue" element={<Bordereau initialPanel="catalogue" />} />
-      <Route path="/etagere" element={<Bordereau initialPanel="etagere" />} />
-      <Route path="/missions" element={<Bordereau initialPanel="missions" />} />
-      <Route path="/accueil-voyageur" element={<Bordereau initialPanel="accueil-voyageur" />} />
-      <Route path="/stock" element={<Bordereau initialPanel="stock" />} />
-      <Route path="/scanner" element={<Bordereau initialPanel="scanner" />} />
-      <Route path="/profils" element={<Bordereau initialPanel="profils" />} />
-      <Route path="/profil" element={<Bordereau initialPanel="profil" />} />
-      <Route path="/wallet" element={<Bordereau initialPanel="wallet" />} />
-      <Route path="/aide" element={<Bordereau initialPanel="aide" />} />
+      <Route path="/" element={<Bordero />} />
+      <Route path="/catalogue" element={<Bordero initialPanel="catalogue" />} />
+      <Route path="/etagere" element={<Bordero initialPanel="etagere" />} />
+      <Route path="/missions" element={<Bordero initialPanel="missions" />} />
+      <Route path="/accueil-voyageur" element={<Bordero initialPanel="accueil-voyageur" />} />
+      <Route path="/stock" element={<Bordero initialPanel="stock" />} />
+      <Route path="/scanner" element={<Bordero initialPanel="scanner" />} />
+      <Route path="/profils" element={<Bordero initialPanel="profils" />} />
+      <Route path="/profil" element={<Bordero initialPanel="profil" />} />
+      <Route path="/wallet" element={<Bordero initialPanel="wallet" />} />
+      <Route path="/aide" element={<Bordero initialPanel="aide" />} />
       {/* Add your page Route elements here */}
       <Route path="/landing-lecteur" element={<LandingLecteur />} />
       <Route path="/landing-voyageur" element={<LandingVoyageur />} />

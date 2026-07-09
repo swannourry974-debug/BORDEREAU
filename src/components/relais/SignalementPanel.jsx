@@ -47,7 +47,7 @@ export default function SignalementPanel({ data, onBack, onClose }) {
       }}>
         <AlertTriangle size={16} color="#800020" style={{ marginTop: 2, flexShrink: 0 }} />
         <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 11, lineHeight: 1.7, color: 'var(--encre)' }}>
-          Ce signalement sera envoyé à l'équipe Bordereau. Après <strong>2 signalements</strong>, le compte de l'utilisateur sera suspendu pour vérification.
+          Ce signalement sera envoyé à l'équipe Bordero. Après <strong>2 signalements</strong>, le compte de l'utilisateur sera suspendu pour vérification.
         </div>
       </div>
 
@@ -106,7 +106,7 @@ export default function SignalementPanel({ data, onBack, onClose }) {
             Signalement envoyé
           </div>
           <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 11, color: 'rgba(26,16,8,0.5)', lineHeight: 1.8, marginBottom: 28 }}>
-            L'équipe Bordereau a été alertée.<br />Merci de protéger la communauté.
+            L'équipe Bordero a été alertée.<br />Merci de protéger la communauté.
           </div>
           <button onClick={onClose} style={{
             background: 'transparent', border: '1px dashed rgba(26,16,8,0.3)',

@@ -16,7 +16,7 @@ export default function PanierCheckout({ onClose }) {
   const [loading, setLoading] = useState(false);
 
   // Codes de parrainage simulés (à connecter à une entité si nécessaire)
-  const CODES_VALIDES = { 'BIENVENUE': 2, 'AMI10': 1, 'BORDEREAU': 3 };
+  const CODES_VALIDES = { 'BIENVENUE': 2, 'AMI10': 1, 'BORDERO': 3 };
 
   const applyCoupon = () => {
     const code = coupon.trim().toUpperCase();

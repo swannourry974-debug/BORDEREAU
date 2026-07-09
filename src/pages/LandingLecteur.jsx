@@ -20,7 +20,7 @@ export default function LandingLecteur() {
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
           <div className="font-special" style={{ fontSize: 11, letterSpacing: 5, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 12, opacity: 0.8 }}>
-            BORDEREAU
+            BORDERO
           </div>
           <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.45)', letterSpacing: 2, marginBottom: 28 }}>
             Manifeste des livres voyageurs

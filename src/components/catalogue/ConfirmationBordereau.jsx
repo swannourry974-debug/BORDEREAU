@@ -1,7 +1,7 @@
 import React from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
-export default function ConfirmationBordereau({ commandeId, bookTitle, onClose }) {
+export default function ConfirmationBordero({ commandeId, bookTitle, onClose }) {
   return (
     <div style={{
       background: 'var(--papier)', border: '2px solid var(--encre)',

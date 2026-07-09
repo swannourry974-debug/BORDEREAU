@@ -9,7 +9,7 @@ export default function AppHeader() {
       <div className="max-w-[480px] mx-auto px-5 py-[18px] pb-[14px] flex items-center justify-between">
         <div className="leading-none">
           <div className="font-typewriter text-[28px] text-creme tracking-[6px] uppercase">
-            BORDEREAU
+            BORDERO
           </div>
           <span className="font-fell italic text-[11px] text-creme/70 tracking-[2px] mt-[2px] block">
             Manifeste des livres voyageurs

@@ -58,7 +58,7 @@ export default function ScanResult({ data, onConfirm, onClose }) {
         {isDepot ? 'Réception d\'un colis' : 'Remise à l\'usager'}
       </div>
 
-      {/* Fiche bordereau */}
+      {/* Fiche bordero */}
       <div style={{
         background: 'var(--papier)',
         border: '1px solid var(--papier-fonce)',

@@ -38,7 +38,7 @@ export default function PanelScanner() {
           Point Relais · Action
         </div>
         <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 20, fontWeight: 700, lineHeight: 1.2 }}>
-          Scanner un bordereau
+          Scanner un bordero
         </div>
         <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, opacity: 0.75, marginTop: 6 }}>
           Dépôt ou retrait d'un colis
@@ -69,7 +69,7 @@ export default function PanelScanner() {
       </div>
 
       {[
-        { step: '01', text: 'Demandez le bordereau imprimé au lecteur ou voyageur' },
+        { step: '01', text: 'Demandez le bordero imprimé au lecteur ou voyageur' },
         { step: '02', text: 'Appuyez sur "Lancer le scanner" et pointez la caméra vers le QR code' },
         { step: '03', text: 'Le système identifie automatiquement le colis et l\'action à effectuer' },
         { step: '04', text: 'Confirmez le dépôt ou la remise du livre' },

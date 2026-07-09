@@ -4,7 +4,7 @@ const FRAIS_STRIPE_TAUX = 0.029; // 2.9%
 const FRAIS_STRIPE_FIXE = 0.30;  // 0.30€
 
 /**
- * Calcule la marge nette Bordereau selon le mode de livraison.
+ * Calcule la marge nette Bordero selon le mode de livraison.
  * 
  * Payload attendu:
  * {

@@ -55,7 +55,7 @@ Un nouveau livre est en attente de dépôt dans votre point relais.
 
 Veuillez vous préparer à réceptionner ce colis prochainement.
 
-— L'équipe Bordereau
+— L'équipe Bordero
       `.trim();
     } else if (commande.statut === 'au_relais') {
       sujet = `📦 Livre disponible au retrait — ${commande.livre_titre}`;
@@ -71,7 +71,7 @@ ${commande.date_limite_collecte ? `📅 Date limite de retrait : ${commande.date
 
 Merci de prévenir le lecteur si ce n'est pas déjà fait.
 
-— L'équipe Bordereau
+— L'équipe Bordero
       `.trim();
     }
 
@@ -80,7 +80,7 @@ Merci de prévenir le lecteur si ce n'est pas déjà fait.
       to: relaisEmail,
       subject: sujet,
       body: corps,
-      from_name: 'Bordereau',
+      from_name: 'Bordero',
     });
 
     console.log(`Notification envoyée à ${relaisEmail} pour commande ${commande.id} (statut: ${commande.statut})`);

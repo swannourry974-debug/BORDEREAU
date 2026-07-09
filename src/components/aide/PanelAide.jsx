@@ -9,7 +9,7 @@ const CONTENU = {
       { step: '02', titre: 'Choisissez votre forfait', desc: 'Sélectionnez le type de livre (Poche, Broché, BD…) et le mode de livraison.' },
       { step: '03', titre: 'Payez en ligne', desc: 'Le paiement sécurisé est effectué via Stripe. Vous recevez une confirmation.' },
       { step: '04', titre: 'Suivez votre livre', desc: 'Dans l\'Étagère, suivez l\'état en temps réel : payé → en transit → au relais → livré.' },
-      { step: '05', titre: 'Retirez au relais', desc: 'Présentez votre bordereau au point relais pour récupérer votre livre.' },
+      { step: '05', titre: 'Retirez au relais', desc: 'Présentez votre bordero au point relais pour récupérer votre livre.' },
     ],
     faq: [
       { q: 'Combien de temps dure la livraison ?', r: 'En mode Express : 2 à 5 jours selon la destination. En mode Collectif : 7 à 21 jours.' },
@@ -26,7 +26,7 @@ const CONTENU = {
       { step: '02', titre: 'Acceptez des missions', desc: 'Consultez les missions disponibles sur votre trajet et acceptez celles qui vous conviennent (max 10 livres).' },
       { step: '03', titre: 'Achetez les livres', desc: 'Achetez chaque livre en librairie et conservez le ticket de caisse.' },
       { step: '04', titre: 'Validez avec l\'app', desc: 'Scannez le code-barres ISBN du livre et prenez en photo le ticket de caisse.' },
-      { step: '05', titre: 'Déposez au relais', desc: 'À destination, déposez les livres au point relais partenaire. Scannez le bordereau.' },
+      { step: '05', titre: 'Déposez au relais', desc: 'À destination, déposez les livres au point relais partenaire. Scannez le bordero.' },
       { step: '06', titre: 'Recevez votre commission', desc: 'Une fois validé, votre commission est créditée sur votre portefeuille.' },
     ],
     faq: [
@@ -40,16 +40,16 @@ const CONTENU = {
     titre: 'Aide Point Relais',
     emoji: '⬡',
     guide: [
-      { step: '01', titre: 'Réception d\'un colis', desc: 'Quand un voyageur arrive, il scanne son bordereau sur l\'app. Vous validez la réception.' },
+      { step: '01', titre: 'Réception d\'un colis', desc: 'Quand un voyageur arrive, il scanne son bordero sur l\'app. Vous validez la réception.' },
       { step: '02', titre: 'Stockage', desc: 'Rangez le livre à l\'emplacement indiqué et notez la référence.' },
       { step: '03', titre: 'Notification lecteur', desc: 'Le lecteur est automatiquement notifié par email que son livre est disponible.' },
-      { step: '04', titre: 'Remise au lecteur', desc: 'Le lecteur présente son bordereau (QR code). Scannez-le et confirmez la remise.' },
+      { step: '04', titre: 'Remise au lecteur', desc: 'Le lecteur présente son bordero (QR code). Scannez-le et confirmez la remise.' },
       { step: '05', titre: 'Commission', desc: 'Votre commission est versée mensuellement selon le nombre de livres traités.' },
     ],
     faq: [
       { q: 'Comment signaler un problème avec un colis ?', r: 'Utilisez le panneau de signalement dans l\'application ou contactez directement le support.' },
       { q: 'Combien de temps garder un livre non retiré ?', r: 'La date limite est indiquée sur chaque commande. Maximum 30 jours sauf accord.' },
-      { q: 'Comment mettre à jour mes horaires ?', r: 'Contactez le support Bordereau pour mettre à jour vos informations de relais.' },
+      { q: 'Comment mettre à jour mes horaires ?', r: 'Contactez le support Bordero pour mettre à jour vos informations de relais.' },
       { q: 'Comment calculer ma commission ?', r: 'Chaque livre géré vous rapporte une part fixe définie dans les tarifs de votre zone.' },
     ],
   },
@@ -160,7 +160,7 @@ export default function PanelAide({ role = 'lecteur' }) {
           Vous n'avez pas trouvé votre réponse ?
         </div>
         <a
-          href="mailto:support@bordereau.app"
+          href="mailto:support@bordero.app"
           style={{
             fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 2,
             textTransform: 'uppercase', color: 'var(--bordeaux)', textDecoration: 'none',

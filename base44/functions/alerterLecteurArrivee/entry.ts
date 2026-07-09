@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
 
     await base44.asServiceRole.integrations.Core.SendEmail({
       to: commande.lecteur_email,
-      from_name: 'Bordereau — Alerte Arrivée',
+      from_name: 'Bordero — Alerte Arrivée',
       subject: `📦 Votre livre est arrivé ! Récupérez-le sous 48h — ${commande.livre_titre}`,
       body: `Bonjour,
 
@@ -47,9 +47,9 @@ Deno.serve(async (req) => {
 📅 Date limite sans pénalité : ${dateLimite}
 💸 Passé ce délai de 7 jours : 0,50 € de pénalité par jour supplémentaire, reversée directement au commerçant.
 
-Présentez simplement votre email ou le bordereau imprimé au commerçant.
+Présentez simplement votre email ou le bordero imprimé au commerçant.
 
-— L'équipe Bordereau`.trim(),
+— L'équipe Bordero`.trim(),
     });
 
     console.log(`Alerte arrivée envoyée à ${commande.lecteur_email} pour "${commande.livre_titre}"`);

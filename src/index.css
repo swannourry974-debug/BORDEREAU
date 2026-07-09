@@ -5,7 +5,7 @@
 @tailwind utilities;
 
 /* ============================================================
-   BORDEREAU — PALETTE OFFICIELLE (NE PAS MODIFIER)
+   BORDERO — PALETTE OFFICIELLE (NE PAS MODIFIER)
    Ces couleurs sont l'identité visuelle de l'application.
    Toute modification doit être intentionnelle et concertée.
 
@@ -46,7 +46,7 @@
     --ring: 345 100% 25%;
     --radius: 10px;
 
-    /* — Palette Bordereau — */
+    /* — Palette Bordero — */
     --creme:         #ECE7DB;  /* fond gris sable */
     --bordeaux:      #800020;  /* identité principale — header, nav, accents */
     --bordeaux-dark: #5a0015;  /* ombre / border bordeaux */

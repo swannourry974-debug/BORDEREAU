@@ -66,7 +66,7 @@ function SidebarItem({ icon, label, active, onClick, badge }) {
   );
 }
 
-export default function Bordereau({ initialPanel }) {
+export default function Bordero({ initialPanel }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [role, setRole] = useState('lecteur');

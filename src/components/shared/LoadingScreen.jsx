@@ -152,7 +152,7 @@ export default function LoadingScreen({ onComplete, mode = 'loading', onWake }) 
               letterSpacing: '6px',
             }}
           >
-            BORDEREAU
+            BORDERO
           </div>
 
           {/* Dashed line */}

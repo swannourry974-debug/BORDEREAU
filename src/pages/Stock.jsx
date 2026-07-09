@@ -17,7 +17,7 @@ export default function Stock() {
       <WelcomeCard
         eyebrow="Café Lumière · Miami, FL"
         title="Tableau de Bord<br>Point Relais"
-        subtitle="Tiers de confiance certifié BORDEREAU"
+        subtitle="Tiers de confiance certifié BORDERO"
       />
 
       {/* Stock header */}

@@ -4,7 +4,7 @@ const LEVELS = [
   { min: 0,  max: 0,  emoji: '🌱', label: 'Premier vol',      message: 'Acceptez votre première mission pour commencer l\'aventure !' },
   { min: 1,  max: 4,  emoji: '✈️', label: 'Voyageur novice',  message: 'Vous avez franchi le cap ! Continuez, les gains augmentent.' },
   { min: 5,  max: 14, emoji: '🌍', label: 'Globe-Trotteur',   message: 'Votre réputation grandit à chaque valise. Superbe travail !' },
-  { min: 15, max: 29, emoji: '🎖️', label: 'Ambassadeur',      message: 'Vous êtes un pilier de la communauté Bordereau. Respect !' },
+  { min: 15, max: 29, emoji: '🎖️', label: 'Ambassadeur',      message: 'Vous êtes un pilier de la communauté Bordero. Respect !' },
   { min: 30, max: Infinity, emoji: '👑', label: 'Légende', message: 'Une légende vivante des livres voyageurs. Chapeau bas !' },
 ];
 

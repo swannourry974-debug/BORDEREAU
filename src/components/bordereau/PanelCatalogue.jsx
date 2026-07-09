@@ -9,7 +9,7 @@ import ISBNScanner from '@/components/catalogue/ISBNScanner';
 import BookValidation from '@/components/catalogue/BookValidation';
 import PullToRefresh from '@/components/shared/PullToRefresh';
 import PanierCheckout from '@/components/catalogue/PanierCheckout';
-import ConfirmationBordereau from '@/components/catalogue/ConfirmationBordereau';
+import ConfirmationBordero from '@/components/catalogue/ConfirmationBordereau';
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { useCart } from '@/lib/CartContext';
 import { toast } from 'sonner';
@@ -230,7 +230,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
 
           {/* QR Code confirmation après commande */}
           {confirmation && (
-            <ConfirmationBordereau
+            <ConfirmationBordero
               commandeId={confirmation.commandeId}
               bookTitle={confirmation.bookTitle}
               onClose={() => setConfirmation(null)}

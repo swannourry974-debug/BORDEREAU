@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
 
               await base44.asServiceRole.integrations.Core.SendEmail({
                 to: cmd.lecteur_email,
-                from_name: 'Bordereau — Rappel Urgent',
+                from_name: 'Bordero — Rappel Urgent',
                 subject: `⚠️ Pénalité de retard en cours — ${cmd.livre_titre} (${joursRetard}j de retard)`,
                 body: `Bonjour,
 
@@ -67,7 +67,7 @@ Cette pénalité est reversée directement au commerçant pour compenser l'espac
 
 Merci de récupérer votre livre dès que possible.
 
-— L'équipe Bordereau`.trim(),
+— L'équipe Bordero`.trim(),
               });
 
               console.log(`Rappel pénalité envoyé à ${cmd.lecteur_email} — ${joursRetard}j retard — ${penaliteTotale}€`);

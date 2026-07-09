@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
           body: `
 Bonjour,
 
-Vous avez accepté de transporter le livre suivant pour Bordereau :
+Vous avez accepté de transporter le livre suivant pour Bordero :
 
 📚 ${cmd.livre_titre}${cmd.livre_auteur ? ` — ${cmd.livre_auteur}` : ''}
 📍 Destination : ${cmd.zone_nom || '—'}
@@ -64,9 +64,9 @@ Pour rappel, votre commission sera versée dès confirmation de la réception pa
 
 Merci de votre ponctualité !
 
-L'équipe Bordereau
+L'équipe Bordero
           `.trim(),
-          from_name: 'Bordereau · Rappel Livraison',
+          from_name: 'Bordero · Rappel Livraison',
         });
         envois++;
         console.log(`Rappel J-${diffJours} envoyé à ${cmd.voyageur_email} pour "${cmd.livre_titre}"`);

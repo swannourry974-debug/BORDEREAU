@@ -113,7 +113,7 @@ export default function PanelStock() {
           }}
         >
           <span style={{ fontSize: 18 }}>⬡</span>
-          Scanner un bordereau
+          Scanner un bordero
         </button>
         </>
       )}

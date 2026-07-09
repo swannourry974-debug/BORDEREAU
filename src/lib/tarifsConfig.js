@@ -1,5 +1,5 @@
 /**
- * BORDEREAU — CONFIGURATION TARIFAIRE OFFICIELLE
+ * BORDERO — CONFIGURATION TARIFAIRE OFFICIELLE
  * Source unique de vérité pour tous les calculs de l'application.
  */
 

@@ -4,7 +4,7 @@ import Stripe from 'npm:stripe@14.21.0';
 const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY"));
 
 /**
- * BORDEREAU — Tunnel de paiement Stripe (Escrow)
+ * BORDERO — Tunnel de paiement Stripe (Escrow)
  * Architecture tarifaire officielle :
  *   EXPRESS  : Europe 14,99€ | International 24,99€ | Grand Export 49,99€
  *   COLLECTIF: Coût moyen par livre selon malle
