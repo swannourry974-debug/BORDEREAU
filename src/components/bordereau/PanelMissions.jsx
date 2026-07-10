@@ -251,7 +251,7 @@ export default function PanelMissions() {
       updateMissionStatus(mission.id, 'livree');
       return;
     }
-    setScanMission(mission);
+    updateMissionStatus(mission.id, 'en_transit');
   };
 
   const handleRefresh = async () => {
