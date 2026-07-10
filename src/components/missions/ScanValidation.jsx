@@ -76,12 +76,12 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
   return (
     <div style={{
       position: 'fixed', inset: 0, background: 'rgba(26,16,8,0.82)',
-      zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+      zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
     }} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={{
         background: 'var(--creme)', width: '100%', maxWidth: 520,
         borderRadius: '0', borderTop: '3px solid var(--bordeaux)',
-        padding: 24, maxHeight: '90vh', overflowY: 'auto',
+        padding: 24, maxHeight: '90vh', overflowY: 'auto', position: 'relative', zIndex: 1001,
         animation: 'fadeSlideIn 0.3s ease',
       }}>
         {/* Header */}
@@ -110,6 +110,18 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
             <div className="font-special" style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 16, color: 'hsl(var(--muted-foreground))' }}>
               Étape 1 — Scanner le code-barres du livre
             </div>
+
+            <button
+              type="button"
+              onClick={() => onValidated && onValidated()}
+              style={{
+                width: '100%', background: '#1a3a5c', color: 'var(--creme)', border: 'none',
+                padding: '14px 16px', marginBottom: 16, cursor: 'pointer',
+                fontFamily: 'Special Elite, monospace', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
+              }}
+            >
+              ✓ Valider l'achat et passer en transit
+            </button>
 
             {/* Bouton scan caméra */}
             {showScanner && (

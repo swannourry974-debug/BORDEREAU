@@ -83,7 +83,7 @@ function MissionCard({ mission, rang, onAccept, disabled, onScan, onRemove }) {
         {mission.ville}
       </div>
       <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))', marginBottom: 10 }}>
-        {isEngaged ? 'Ticket scanné · Achat confirmé · ENGAGÉE' : mission.date}
+        {isEngaged ? (mission.status === 'livree' ? 'Livraison confirmée · Mission terminée' : mission.status === 'en_transit' ? 'Achat confirmé · En transit' : 'En attente du scan d’achat') : mission.date}
       </div>
       <div style={{ fontSize: 13, color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
         📚 <em>{mission.livre}</em> · {mission.type} · {mission.poids}
@@ -93,14 +93,14 @@ function MissionCard({ mission, rang, onAccept, disabled, onScan, onRemove }) {
       {isEngaged && mission.rang && (
         <div style={{
           display: 'inline-block',
-          background: 'rgba(45,106,45,0.1)',
-          border: '1px solid #2d6a2d',
-          color: '#2d6a2d',
+          background: mission.status === 'livree' ? 'rgba(45,106,45,0.1)' : mission.status === 'en_transit' ? 'rgba(26,58,92,0.1)' : 'rgba(128,0,32,0.08)',
+          border: `1px solid ${mission.status === 'livree' ? '#2d6a2d' : mission.status === 'en_transit' ? '#1a3a5c' : 'var(--bordeaux)'}`,
+          color: mission.status === 'livree' ? '#2d6a2d' : mission.status === 'en_transit' ? '#1a3a5c' : 'var(--bordeaux)',
           fontFamily: 'Special Elite, monospace',
           fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
           padding: '2px 8px', marginBottom: 8,
         }}>
-          Livre n°{mission.rang} · +{mission.commission?.toFixed(2)} € de gratification
+          {mission.status === 'livree' ? 'Livraison confirmée' : mission.status === 'en_transit' ? 'En transit vers relais' : 'Achat à scanner'} · +{mission.commission?.toFixed(2)} €
         </div>
       )}
 
@@ -115,7 +115,13 @@ function MissionCard({ mission, rang, onAccept, disabled, onScan, onRemove }) {
         </div>
 
         {isEngaged ? (
-          <BtnCoupon onClick={() => onScan && onScan(mission)} secondary style={{ borderColor: '#1a3a5c', color: '#1a3a5c' }}>📷 Scanner l'achat</BtnCoupon>
+          mission.status === 'livree' ? (
+            <BtnCoupon disabled secondary style={{ borderColor: '#2d6a2d', color: '#2d6a2d' }}>✓ Livrée</BtnCoupon>
+          ) : mission.status === 'en_transit' ? (
+            <BtnCoupon onClick={() => onScan && onScan(mission, 'livree')} style={{ background: '#2d6a2d' }}>✓ Confirmer livraison</BtnCoupon>
+          ) : (
+            <BtnCoupon onClick={() => onScan && onScan(mission, 'scan')} secondary style={{ borderColor: '#1a3a5c', color: '#1a3a5c' }}>📷 Scanner l'achat</BtnCoupon>
+          )
         ) : (
           <BtnCoupon onClick={handleAccept} disabled={disabled || loading}>
             {loading ? '⟳ ...' : disabled ? '⛔ Valise pleine' : 'Accepter'}
@@ -214,7 +220,7 @@ export default function PanelMissions() {
     const after = getBadgesDebloques(statsAfter);
     const nouveaux = after.filter(id => !before.includes(id));
 
-    setEngagees(prev => [...prev, { ...mission, engaged: true, rang, commission }]);
+    setEngagees(prev => [...prev, { ...mission, engaged: true, status: 'engagee', rang, commission }]);
     setAvailable(prev => prev.filter(m => m.id !== id));
 
     if (nouveaux.length > 0) {
@@ -232,8 +238,20 @@ export default function PanelMissions() {
     );
     setAvailable(prev => prev.some(m => m.id === mission.id)
       ? prev
-      : [{ ...mission, engaged: false, rang: undefined, commission: undefined }, ...prev]
+      : [{ ...mission, engaged: false, status: undefined, rang: undefined, commission: undefined }, ...prev]
     );
+  };
+
+  const updateMissionStatus = (missionId, status) => {
+    setEngagees(prev => prev.map(m => m.id === missionId ? { ...m, status } : m));
+  };
+
+  const openMissionAction = (mission, action) => {
+    if (action === 'livree') {
+      updateMissionStatus(mission.id, 'livree');
+      return;
+    }
+    setScanMission(mission);
   };
 
   const handleRefresh = async () => {
@@ -294,7 +312,10 @@ export default function PanelMissions() {
         <ScanValidation
           mission={scanMission}
           onClose={() => setScanMission(null)}
-          onValidated={() => setScanMission(null)}
+          onValidated={() => {
+            updateMissionStatus(scanMission.id, 'en_transit');
+            setScanMission(null);
+          }}
         />
       )}
 
@@ -303,7 +324,7 @@ export default function PanelMissions() {
         <>
           <SectionTitle>Missions engagées</SectionTitle>
           {engagees.map(m => (
-            <MissionCard key={m.id} mission={m} onAccept={() => {}} disabled={false} onScan={setScanMission} onRemove={removeMission} />
+            <MissionCard key={m.id} mission={m} onAccept={() => {}} disabled={false} onScan={openMissionAction} onRemove={removeMission} />
           ))}
           <PerfoStrip />
         </>
