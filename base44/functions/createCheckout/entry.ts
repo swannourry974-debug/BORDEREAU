@@ -62,7 +62,7 @@ Deno.serve(async (req) => {
     const zoneLabel = { europe: 'Europe', international: 'International', grand_export: 'Grand Export', maghreb: 'Maghreb' }[zoneKey] || zone_nom || 'International';
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      automatic_payment_methods: { enabled: true },
       line_items: [{
         price_data: {
           currency: 'eur',

@@ -195,7 +195,7 @@ export default function PanierCheckout({ onClose }) {
             </div>
 
             <CouponButton onClick={handlePay} disabled={loading} className="w-full py-4 text-center">
-              {loading ? '⟳ Chargement...' : `✦ Valider & Payer ${totalFinal.toFixed(2)} €`}
+              {loading ? '⟳ Chargement...' : `✦ Payer par carte ou PayPal ${totalFinal.toFixed(2)} €`}
             </CouponButton>
           </>
         )}
