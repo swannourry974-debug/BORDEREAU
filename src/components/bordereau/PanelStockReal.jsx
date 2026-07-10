@@ -52,18 +52,18 @@ export default function PanelStock() {
   const updateStockCount = async (nextValue) => {
     const next = Math.max(0, nextValue);
     setStockCount(next);
-    if (relais) {
-      await base44.entities.PointRelais.update(relais.id, { stock_actuel: next });
-      setRelais(prev => prev ? { ...prev, stock_actuel: next } : prev);
+    const res = await base44.functions.invoke('updateRelayInventory', { stock_actuel: next, actif: relayActive });
+    if (res?.data?.relais) {
+      setRelais(res.data.relais);
     }
   };
 
   const toggleRelayActive = async () => {
     const next = !relayActive;
     setRelayActive(next);
-    if (relais) {
-      await base44.entities.PointRelais.update(relais.id, { actif: next });
-      setRelais(prev => prev ? { ...prev, actif: next } : prev);
+    const res = await base44.functions.invoke('updateRelayInventory', { stock_actuel: stockCount, actif: next });
+    if (res?.data?.relais) {
+      setRelais(res.data.relais);
     }
   };
 
@@ -71,11 +71,10 @@ export default function PanelStock() {
     if (!user?.email) return;
     setNotificationStatus('sending');
     try {
-      await base44.integrations.Core.SendEmail({
-        to: user.email,
-        subject: 'Mise à jour du stock relais',
-        body: `Votre stock relais vient d'être mis à jour : ${stockCount} colis enregistrés. Statut du relais : ${relayActive ? 'actif' : 'inactif'}.`,
-      });
+      const res = await base44.functions.invoke('updateRelayInventory', { stock_actuel: stockCount, actif: relayActive, notify: true });
+      if (res?.data?.relais) {
+        setRelais(res.data.relais);
+      }
       setNotificationStatus('sent');
     } catch (e) {
       setNotificationStatus('error');
@@ -114,13 +113,14 @@ export default function PanelStock() {
           Statut & inventaire relais
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-          <button type="button" aria-label={relayActive ? 'Désactiver le relais' : 'Activer le relais'} onClick={toggleRelayActive} style={{
+          <label style={{
             background: relayActive ? '#2d6a2d' : 'var(--bordeaux)', color: 'var(--creme)',
             border: 'none', padding: '12px 10px', cursor: 'pointer', fontFamily: 'Special Elite, monospace',
-            fontSize: 10, letterSpacing: 2, textTransform: 'uppercase',
+            fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>
-            {relayActive ? '✓ Désactiver le relais' : '▶ Activer le relais'}
-          </button>
+            <input type="checkbox" role="switch" aria-label="Activer ou désactiver le relais" checked={relayActive} onChange={toggleRelayActive} />
+            {relayActive ? '✓ Relais actif' : '⏸ Relais inactif'}
+          </label>
           <button type="button" aria-label="Notifier les changements d'inventaire" onClick={notifyInventoryChange} disabled={notificationStatus === 'sending'} style={{
             background: 'var(--encre)', color: 'var(--creme)', border: 'none', padding: '12px 10px',
             cursor: notificationStatus === 'sending' ? 'wait' : 'pointer', fontFamily: 'Special Elite, monospace',
