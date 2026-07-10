@@ -17,6 +17,9 @@ export default function PanelStock() {
   const [loading, setLoading] = useState(true);
   const [relais, setRelais] = useState(null);
   const [user, setUser] = useState(null);
+  const [stockCount, setStockCount] = useState(0);
+  const [relayActive, setRelayActive] = useState(true);
+  const [notificationStatus, setNotificationStatus] = useState('idle');
 
   const load = async () => {
     setLoading(true);
@@ -26,6 +29,7 @@ export default function PanelStock() {
       if (!u) { setLoading(false); return; }
       const r = await base44.entities.PointRelais.filter({ gerant_email: u.email });
       setRelais(r[0] || null);
+      setRelayActive(r[0]?.actif !== false);
 
       // Charger toutes les commandes liées à ce relais
       let cmds = [];
@@ -36,6 +40,7 @@ export default function PanelStock() {
         cmds = await base44.entities.Commande.list('-created_date', 100);
       }
       setCommandes(cmds || []);
+      setStockCount(r[0]?.stock_actuel ?? (cmds || []).filter(c => c.statut === 'au_relais').length);
     } catch (e) {
       console.error(e);
     }
@@ -43,6 +48,39 @@ export default function PanelStock() {
   };
 
   useEffect(() => { load(); }, []);
+
+  const updateStockCount = async (nextValue) => {
+    const next = Math.max(0, nextValue);
+    setStockCount(next);
+    if (relais) {
+      await base44.entities.PointRelais.update(relais.id, { stock_actuel: next });
+      setRelais(prev => prev ? { ...prev, stock_actuel: next } : prev);
+    }
+  };
+
+  const toggleRelayActive = async () => {
+    const next = !relayActive;
+    setRelayActive(next);
+    if (relais) {
+      await base44.entities.PointRelais.update(relais.id, { actif: next });
+      setRelais(prev => prev ? { ...prev, actif: next } : prev);
+    }
+  };
+
+  const notifyInventoryChange = async () => {
+    if (!user?.email) return;
+    setNotificationStatus('sending');
+    try {
+      await base44.integrations.Core.SendEmail({
+        to: user.email,
+        subject: 'Mise à jour du stock relais',
+        body: `Votre stock relais vient d'être mis à jour : ${stockCount} colis enregistrés. Statut du relais : ${relayActive ? 'actif' : 'inactif'}.`,
+      });
+      setNotificationStatus('sent');
+    } catch (e) {
+      setNotificationStatus('error');
+    }
+  };
 
   const auRelais = commandes.filter(c => c.statut === 'au_relais');
   const enTransit = commandes.filter(c => c.statut === 'en_transit');
@@ -63,8 +101,49 @@ export default function PanelStock() {
           Gestion du stock
         </div>
         <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, opacity: 0.75, marginTop: 6 }}>
-          {auRelais.length} colis en attente · {relais ? `Stock : ${relais.stock_actuel ?? 0}` : ''}
+          {auRelais.length} colis en attente · Stock : {stockCount} · Relais {relayActive ? 'actif' : 'inactif'}
         </div>
+      </div>
+
+      {/* Contrôles relais */}
+      <div style={{
+        background: 'var(--papier)', border: '1.5px solid rgba(26,16,8,0.2)',
+        padding: 16, marginBottom: 18, boxShadow: '3px 3px 0 rgba(26,16,8,0.10)',
+      }}>
+        <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.5)', marginBottom: 12 }}>
+          Statut & inventaire relais
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+          <button onClick={toggleRelayActive} style={{
+            background: relayActive ? '#2d6a2d' : 'var(--bordeaux)', color: 'var(--creme)',
+            border: 'none', padding: '12px 10px', cursor: 'pointer', fontFamily: 'Special Elite, monospace',
+            fontSize: 10, letterSpacing: 2, textTransform: 'uppercase',
+          }}>
+            {relayActive ? '✓ Relais actif' : '⏸ Relais inactif'}
+          </button>
+          <button onClick={notifyInventoryChange} disabled={notificationStatus === 'sending'} style={{
+            background: 'var(--encre)', color: 'var(--creme)', border: 'none', padding: '12px 10px',
+            cursor: notificationStatus === 'sending' ? 'wait' : 'pointer', fontFamily: 'Special Elite, monospace',
+            fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', opacity: notificationStatus === 'sending' ? 0.6 : 1,
+          }}>
+            {notificationStatus === 'sending' ? 'Envoi...' : notificationStatus === 'sent' ? '✓ Notifié' : 'Notifier stock'}
+          </button>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <div>
+            <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 24, fontWeight: 700, color: 'var(--bordeaux)' }}>{stockCount}</div>
+            <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.55)' }}>colis enregistrés</div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => updateStockCount(stockCount - 1)} style={{ width: 42, height: 38, border: '1.5px solid var(--bordeaux)', background: 'var(--creme)', color: 'var(--bordeaux)', cursor: 'pointer', fontSize: 20 }}>−</button>
+            <button onClick={() => updateStockCount(stockCount + 1)} style={{ width: 42, height: 38, border: '1.5px solid var(--bordeaux)', background: 'var(--bordeaux)', color: 'var(--creme)', cursor: 'pointer', fontSize: 20 }}>+</button>
+          </div>
+        </div>
+        {notificationStatus === 'error' && (
+          <div style={{ marginTop: 10, fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: '#b41414' }}>
+            Notification impossible pour le moment.
+          </div>
+        )}
       </div>
 
       {/* Toggle */}

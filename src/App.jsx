@@ -49,6 +49,7 @@ const AuthenticatedApp = () => {
       <Route path="/missions" element={<Bordero initialPanel="missions" />} />
       <Route path="/accueil-voyageur" element={<Bordero initialPanel="accueil-voyageur" />} />
       <Route path="/stock" element={<Bordero initialPanel="stock" />} />
+      <Route path="/Stock" element={<Bordero initialPanel="stock" />} />
       <Route path="/scanner" element={<Bordero initialPanel="scanner" />} />
       <Route path="/profils" element={<Bordero initialPanel="profils" />} />
       <Route path="/profil" element={<Bordero initialPanel="profil" />} />
@@ -58,6 +59,8 @@ const AuthenticatedApp = () => {
       <Route path="/landing-lecteur" element={<LandingLecteur />} />
       <Route path="/landing-voyageur" element={<LandingVoyageur />} />
       <Route path="/landing-relais" element={<LandingRelais />} />
+      <Route path="/LandingRelais" element={<LandingRelais />} />
+      <Route path="/PanelProfil" element={<PanelProfil />} />
       <Route path="/admin" element={<AdminDashboard />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
