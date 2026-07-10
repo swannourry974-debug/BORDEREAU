@@ -70,30 +70,6 @@ export const ZONES = {
     quota_kg: 5,
     quota_livres: 10,
   },
-
-  MAGHREB: {
-    id: 'maghreb',
-    label: 'Maghreb',
-    emoji: '🌙',
-    pays: ['DZ', 'TN', 'LY'],
-    express: {
-      prix_client: 24.99,
-      part_voyageur: 10.00,
-      part_relais: 5.00,
-      part_admin: 9.99,
-    },
-    collectif: {
-      prix_malle: 199.00,
-      part_relais: 40.00,
-      part_admin: 159.00,
-      cout_moyen_livre: 4.97,
-    },
-    // Quota plus strict : contrôles locaux
-    quota_kg: 3,       // 3 à 5 kg
-    quota_kg_max: 5,
-    quota_livres: 6,   // 6 à 10 livres
-    quota_livres_max: 10,
-  },
 };
 
 // ─── POIDS PAR FORMAT ────────────────────────────────────────────────────────

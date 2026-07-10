@@ -26,11 +26,6 @@ const VILLES_PAR_ZONE = {
     { label: 'São Paulo, Brésil', emoji: '🇧🇷' },
     { label: 'Mexico, Mexique', emoji: '🇲🇽' },
   ],
-  maghreb: [
-    { label: 'Alger, Algérie', emoji: '🇩🇿' },
-    { label: 'Tunis, Tunisie', emoji: '🇹🇳' },
-    { label: 'Tripoli, Libye', emoji: '🇱🇾' },
-  ],
 };
 
 export default function CityPicker({ selected, onSelect, onClose }) {

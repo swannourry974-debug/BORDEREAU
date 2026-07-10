@@ -6,9 +6,6 @@ const COUNTRY_DATA = {
   Suisse: { emoji: '🇨🇭', zone_id: 'europe', cities: ['Genève', 'Lausanne', 'Zurich', 'Berne', 'Bâle'] },
   Canada: { emoji: '🇨🇦', zone_id: 'international', cities: ['Montréal', 'Québec', 'Toronto', 'Ottawa', 'Vancouver'] },
   'États-Unis': { emoji: '🇺🇸', zone_id: 'international', cities: ['Miami', 'New York', 'Boston', 'Los Angeles', 'Chicago'] },
-  Maroc: { emoji: '🇲🇦', zone_id: 'maghreb', cities: ['Casablanca', 'Rabat', 'Marrakech', 'Fès', 'Tanger'] },
-  Algérie: { emoji: '🇩🇿', zone_id: 'maghreb', cities: ['Alger', 'Oran', 'Constantine', 'Annaba', 'Tlemcen'] },
-  Tunisie: { emoji: '🇹🇳', zone_id: 'maghreb', cities: ['Tunis', 'Sousse', 'Sfax', 'Bizerte', 'Djerba'] },
   Sénégal: { emoji: '🇸🇳', zone_id: 'grand_export', cities: ['Dakar', 'Saint-Louis', 'Thiès', 'Touba', 'Ziguinchor'] },
   'Côte d’Ivoire': { emoji: '🇨🇮', zone_id: 'grand_export', cities: ['Abidjan', 'Yamoussoukro', 'Bouaké', 'San Pedro', 'Daloa'] },
 };
