@@ -34,6 +34,11 @@ export default function PanelAccueilVoyageur() {
   const aValider = missions.filter(m => m.statut === 'acceptee');
   const aDeposer = missions.filter(m => m.statut === 'engagee');
 
+  const retirerMission = async (mission) => {
+    await base44.entities.MissionVoyageur.delete(mission.id);
+    setMissions(prev => prev.filter(m => m.id !== mission.id));
+  };
+
   if (loading) {
     return (
       <div style={{ textAlign: 'center', padding: 40 }}>
@@ -107,8 +112,20 @@ export default function PanelAccueilVoyageur() {
             fontStyle: 'italic',
             fontSize: 13,
             color: 'var(--encre)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
           }}>
-            📚 {m.livre} → {m.ville_destination}
+            <span>📚 {m.livre} → {m.ville_destination}</span>
+            <button
+              type="button"
+              aria-label="Retirer cette mission"
+              title="Retirer cette mission"
+              onClick={() => retirerMission(m)}
+              style={{
+                width: 24, height: 24, border: '1px solid rgba(128,0,32,0.25)',
+                background: 'var(--creme)', color: 'var(--bordeaux)', cursor: 'pointer',
+                fontFamily: 'Special Elite, monospace', fontSize: 16, lineHeight: '20px', flexShrink: 0,
+              }}
+            >×</button>
           </div>
         ))}
         {aValider.length === 0 && (
@@ -175,8 +192,20 @@ export default function PanelAccueilVoyageur() {
             fontStyle: 'italic',
             fontSize: 13,
             color: 'var(--encre)',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
           }}>
-            📚 {m.livre} → {m.ville_destination}
+            <span>📚 {m.livre} → {m.ville_destination}</span>
+            <button
+              type="button"
+              aria-label="Retirer cette mission"
+              title="Retirer cette mission"
+              onClick={() => retirerMission(m)}
+              style={{
+                width: 24, height: 24, border: '1px solid rgba(128,0,32,0.25)',
+                background: 'var(--creme)', color: 'var(--bordeaux)', cursor: 'pointer',
+                fontFamily: 'Special Elite, monospace', fontSize: 16, lineHeight: '20px', flexShrink: 0,
+              }}
+            >×</button>
           </div>
         ))}
         {aDeposer.length === 0 && (
