@@ -114,29 +114,40 @@ export default function PanelStock() {
           Statut & inventaire relais
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-          <button onClick={toggleRelayActive} style={{
+          <button type="button" aria-label={relayActive ? 'Désactiver le relais' : 'Activer le relais'} onClick={toggleRelayActive} style={{
             background: relayActive ? '#2d6a2d' : 'var(--bordeaux)', color: 'var(--creme)',
             border: 'none', padding: '12px 10px', cursor: 'pointer', fontFamily: 'Special Elite, monospace',
             fontSize: 10, letterSpacing: 2, textTransform: 'uppercase',
           }}>
-            {relayActive ? '✓ Relais actif' : '⏸ Relais inactif'}
+            {relayActive ? '✓ Désactiver le relais' : '▶ Activer le relais'}
           </button>
-          <button onClick={notifyInventoryChange} disabled={notificationStatus === 'sending'} style={{
+          <button type="button" aria-label="Notifier les changements d'inventaire" onClick={notifyInventoryChange} disabled={notificationStatus === 'sending'} style={{
             background: 'var(--encre)', color: 'var(--creme)', border: 'none', padding: '12px 10px',
             cursor: notificationStatus === 'sending' ? 'wait' : 'pointer', fontFamily: 'Special Elite, monospace',
             fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', opacity: notificationStatus === 'sending' ? 0.6 : 1,
           }}>
-            {notificationStatus === 'sending' ? 'Envoi...' : notificationStatus === 'sent' ? '✓ Notifié' : 'Notifier stock'}
+            {notificationStatus === 'sending' ? 'Envoi...' : notificationStatus === 'sent' ? '✓ Inventaire notifié' : 'Notifier inventaire'}
           </button>
         </div>
+        <label htmlFor="stock-quantity" style={{ display: 'block', fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.5)', marginBottom: 6 }}>
+          Mettre à jour la quantité de stock
+        </label>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <div>
-            <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 24, fontWeight: 700, color: 'var(--bordeaux)' }}>{stockCount}</div>
-            <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.55)' }}>colis enregistrés</div>
+            <input
+              id="stock-quantity"
+              aria-label="Quantité de stock"
+              type="number"
+              min="0"
+              value={stockCount}
+              onChange={(e) => updateStockCount(Number(e.target.value) || 0)}
+              style={{ width: 96, background: 'var(--creme)', border: '1.5px solid rgba(128,0,32,0.35)', padding: '8px 10px', fontFamily: 'Special Elite, monospace', fontSize: 18, fontWeight: 700, color: 'var(--bordeaux)' }}
+            />
+            <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.55)', marginTop: 4 }}>colis enregistrés</div>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => updateStockCount(stockCount - 1)} style={{ width: 42, height: 38, border: '1.5px solid var(--bordeaux)', background: 'var(--creme)', color: 'var(--bordeaux)', cursor: 'pointer', fontSize: 20 }}>−</button>
-            <button onClick={() => updateStockCount(stockCount + 1)} style={{ width: 42, height: 38, border: '1.5px solid var(--bordeaux)', background: 'var(--bordeaux)', color: 'var(--creme)', cursor: 'pointer', fontSize: 20 }}>+</button>
+            <button type="button" aria-label="Réduire le stock" onClick={() => updateStockCount(stockCount - 1)} style={{ width: 42, height: 38, border: '1.5px solid var(--bordeaux)', background: 'var(--creme)', color: 'var(--bordeaux)', cursor: 'pointer', fontSize: 20 }}>−</button>
+            <button type="button" aria-label="Augmenter le stock" onClick={() => updateStockCount(stockCount + 1)} style={{ width: 42, height: 38, border: '1.5px solid var(--bordeaux)', background: 'var(--bordeaux)', color: 'var(--creme)', cursor: 'pointer', fontSize: 20 }}>+</button>
           </div>
         </div>
         {notificationStatus === 'error' && (

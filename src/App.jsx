@@ -60,7 +60,12 @@ const AuthenticatedApp = () => {
       <Route path="/landing-voyageur" element={<LandingVoyageur />} />
       <Route path="/landing-relais" element={<LandingRelais />} />
       <Route path="/LandingRelais" element={<LandingRelais />} />
+      <Route path="/LandingRelais/" element={<LandingRelais />} />
+      <Route path="/relais" element={<LandingRelais />} />
+      <Route path="/panel-profil" element={<PanelProfil />} />
       <Route path="/PanelProfil" element={<PanelProfil />} />
+      <Route path="/PanelProfil/" element={<PanelProfil />} />
+      <Route path="/panelprofil" element={<PanelProfil />} />
       <Route path="/admin" element={<AdminDashboard />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>

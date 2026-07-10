@@ -85,7 +85,7 @@ export default function Bordero({ initialPanel }) {
     }).catch(() => {});
   }, []);
 
-  const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/missions': 'missions', '/stock': 'stock', '/accueil-voyageur': 'accueil-voyageur', '/scanner': 'scanner', '/profils': 'profils', '/profil': 'profil', '/wallet': 'wallet', '/aide': 'aide' };
+  const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/missions': 'missions', '/stock': 'stock', '/Stock': 'stock', '/accueil-voyageur': 'accueil-voyageur', '/scanner': 'scanner', '/profils': 'profils', '/profil': 'profil', '/PanelProfil': 'profil', '/panel-profil': 'profil', '/wallet': 'wallet', '/aide': 'aide' };
   const activePanel = pathToPanel[location.pathname] || initialPanel || 'catalogue';
 
   const switchRole = (newRole) => {
