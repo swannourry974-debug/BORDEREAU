@@ -30,7 +30,7 @@ const AVAILABLE_MISSIONS = [
   { id: 12, ville: 'BERLIN', date: "Accepte jusqu'au 28 mai", livre: 'Madame Bovary', type: 'Poche', poids: '290g', zone_id: 'europe' },
 ];
 
-function MissionCard({ mission, rang, onAccept, disabled, onScan }) {
+function MissionCard({ mission, rang, onAccept, disabled, onScan, onRemove }) {
   const [loading, setLoading] = useState(false);
   const commission = rang ? getCommission(rang) : null;
 
@@ -62,6 +62,22 @@ function MissionCard({ mission, rang, onAccept, disabled, onScan }) {
         borderStyle: 'solid', borderWidth: '0 32px 32px 0',
         borderColor: `transparent var(--bordeaux) transparent transparent`,
       }} />
+
+      {isEngaged && onRemove && (
+        <button
+          type="button"
+          aria-label="Retirer cette mission"
+          title="Retirer cette mission"
+          onClick={() => onRemove(mission)}
+          style={{
+            position: 'absolute', top: 6, right: 6, zIndex: 3,
+            width: 24, height: 24, border: 'none', borderRadius: '50%',
+            background: 'var(--creme)', color: 'var(--bordeaux)',
+            fontFamily: 'Special Elite, monospace', fontSize: 16, lineHeight: '24px',
+            cursor: 'pointer', boxShadow: '0 1px 4px rgba(26,16,8,0.25)',
+          }}
+        >×</button>
+      )}
 
       <div className="font-special" style={{ fontSize: 18, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 4 }}>
         {mission.ville}
@@ -209,6 +225,17 @@ export default function PanelMissions() {
     }
   };
 
+  const removeMission = (mission) => {
+    setEngagees(prev => prev
+      .filter(m => m.id !== mission.id)
+      .map((m, index) => ({ ...m, rang: index + 1 }))
+    );
+    setAvailable(prev => prev.some(m => m.id === mission.id)
+      ? prev
+      : [{ ...mission, engaged: false, rang: undefined, commission: undefined }, ...prev]
+    );
+  };
+
   const handleRefresh = async () => {
     setAvailable(AVAILABLE_MISSIONS);
     setFiltreVille(null);
@@ -276,7 +303,7 @@ export default function PanelMissions() {
         <>
           <SectionTitle>Missions engagées</SectionTitle>
           {engagees.map(m => (
-            <MissionCard key={m.id} mission={m} onAccept={() => {}} disabled={false} onScan={setScanMission} />
+            <MissionCard key={m.id} mission={m} onAccept={() => {}} disabled={false} onScan={setScanMission} onRemove={removeMission} />
           ))}
           <PerfoStrip />
         </>
