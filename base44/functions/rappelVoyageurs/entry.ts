@@ -5,17 +5,8 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    // Vérification admin ou appel automatisé (pas d'utilisateur connecté)
-    let isAuthorized = false;
-    try {
-      const user = await base44.auth.me();
-      if (user?.role === 'admin') isAuthorized = true;
-    } catch {
-      // Appel depuis une automation (pas d'auth user) → on autorise via service role
-      isAuthorized = true;
-    }
-
-    if (!isAuthorized) {
+    const user = await base44.auth.me().catch(() => null);
+    if (!user || user.role !== 'admin') {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 

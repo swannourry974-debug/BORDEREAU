@@ -11,7 +11,7 @@ export default function CodeSecretValidation({ mission, commande, onValidated, o
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const codeAttendu = commande?.code_secret || mission?.code_secret;
+  const commandeId = commande?.id || mission?.commande_id || mission?.commandeId;
 
   const handleValidate = async () => {
     setError('');
@@ -19,24 +19,21 @@ export default function CodeSecretValidation({ mission, commande, onValidated, o
       setError('Le code doit comporter 3 chiffres.');
       return;
     }
-    if (code !== String(codeAttendu)) {
-      setError('Code incorrect. Vérifiez avec le lecteur.');
+    if (!commandeId) {
+      setError('Commande introuvable pour cette remise.');
       return;
     }
     setLoading(true);
     try {
-      // Marquer la mission comme livrée
-      if (mission?.id) {
-        await base44.entities.MissionVoyageur.update(mission.id, { statut: 'livree' });
-      }
-      // Marquer la commande comme livrée
-      if (commande?.id) {
-        await base44.entities.Commande.update(commande.id, { statut: 'livree' });
-      }
+      await base44.functions.invoke('validerLivraison', {
+        commandeId,
+        missionId: mission?.id,
+        code,
+      });
       setSuccess(true);
       setTimeout(() => onValidated?.(), 1500);
     } catch (e) {
-      setError('Erreur lors de la validation. Réessayez.');
+      setError(e?.response?.data?.error || 'Code incorrect. Vérifiez avec le lecteur.');
     } finally {
       setLoading(false);
     }
