@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Code invalide.' }, { status: 400 });
     }
 
-    const commande = await base44.asServiceRole.entities.Commande.get(commandeId);
+    const commande = await base44.asServiceRole.entities.Commande.get(commandeId).catch(() => null);
     if (!commande) {
       return Response.json({ error: 'Commande introuvable.' }, { status: 404 });
     }
