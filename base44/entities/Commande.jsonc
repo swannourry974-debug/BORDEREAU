@@ -177,9 +177,6 @@
           "data.lecteur_email": "{{user.email}}"
         },
         {
-          "data.voyageur_email": "{{user.email}}"
-        },
-        {
           "data.point_relais_id": "{{user.data.point_relais_id}}"
         },
         {
@@ -193,9 +190,6 @@
       "$or": [
         {
           "created_by_id": "{{user.id}}"
-        },
-        {
-          "data.voyageur_email": "{{user.email}}"
         },
         {
           "data.point_relais_id": "{{user.data.point_relais_id}}"
