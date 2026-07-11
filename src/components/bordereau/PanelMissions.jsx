@@ -174,14 +174,17 @@ export default function PanelMissions() {
   const quotaLivres = getQuotaLivres(zoneVoyage);
   const quotaKg = getQuotaKg(zoneVoyage);
 
+  const missionsActives = engagees.filter(m => m.status !== 'livree');
+  const missionsArchivees = engagees.filter(m => m.status === 'livree');
+
   // Calcul poids total engagé (en grammes)
-  const poidsEngageG = engagees.reduce((sum, m) => {
+  const poidsEngageG = missionsActives.reduce((sum, m) => {
     const poidsStr = m.poids || '200g';
     return sum + parseInt(poidsStr.replace('g', '')) || 200;
   }, 0);
 
-  const livresActifs = engagees.length;
-  const totalCommission = getTotalCommission(engagees, zoneVoyage);
+  const livresActifs = missionsActives.length;
+  const totalCommission = getTotalCommission(missionsActives, zoneVoyage);
   const limitAtteinte = livresActifs >= quotaLivres || poidsEngageG / 1000 >= quotaKg;
 
   // Stats pour les badges (simulées — missionsAcceptees = nb total engagées)
@@ -320,12 +323,48 @@ export default function PanelMissions() {
       )}
 
       {/* Missions engagées */}
-      {engagees.length > 0 && (
+      {missionsActives.length > 0 && (
         <>
           <SectionTitle>Missions engagées</SectionTitle>
-          {engagees.map(m => (
+          {missionsActives.map(m => (
             <MissionCard key={m.id} mission={m} onAccept={() => {}} disabled={false} onScan={openMissionAction} onRemove={removeMission} />
           ))}
+          <PerfoStrip />
+        </>
+      )}
+
+      {/* Archives */}
+      {missionsArchivees.length > 0 && (
+        <>
+          <SectionTitle>Archives des missions terminées</SectionTitle>
+          <div style={{
+            background: 'var(--papier)',
+            border: '1.5px solid rgba(45,106,45,0.25)',
+            padding: 16,
+            marginBottom: 12,
+            boxShadow: '3px 3px 0 rgba(26,16,8,0.08)',
+          }}>
+            {missionsArchivees.map(m => (
+              <div key={m.id} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                padding: '10px 0', borderBottom: '1px dashed rgba(26,16,8,0.12)',
+              }}>
+                <div>
+                  <div className="font-playfair" style={{ fontSize: 14, fontWeight: 700, color: 'var(--encre)' }}>📚 {m.livre}</div>
+                  <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.5)', marginTop: 2 }}>
+                    {m.ville} · Commission {m.commission?.toFixed(2) || '0.00'} €
+                  </div>
+                </div>
+                <div className="font-special" style={{
+                  border: '1px solid #2d6a2d', color: '#2d6a2d',
+                  fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
+                  padding: '4px 8px', flexShrink: 0,
+                }}>
+                  Livrée
+                </div>
+              </div>
+            ))}
+          </div>
           <PerfoStrip />
         </>
       )}
