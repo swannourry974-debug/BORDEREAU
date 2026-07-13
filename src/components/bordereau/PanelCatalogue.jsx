@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import WelcomeCard from '@/components/shared/WelcomeCard';
 import SectionTitle from '@/components/shared/SectionTitle';
 import SearchBlock from '@/components/catalogue/SearchBlock';
+import CatalogueWelcomeStep from '@/components/catalogue/CatalogueWelcomeStep';
+import CatalogueDestinationStep from '@/components/catalogue/CatalogueDestinationStep';
+import CatalogueSearchIntro from '@/components/catalogue/CatalogueSearchIntro';
+import CatalogueStepDots from '@/components/catalogue/CatalogueStepDots';
 import BookCard from '@/components/catalogue/BookCard';
 import AddToCartForm from '@/components/catalogue/AddToCartForm';
-import BookOrders from '@/components/catalogue/BookOrders';
 import ISBNScanner from '@/components/catalogue/ISBNScanner';
 import BookValidation from '@/components/catalogue/BookValidation';
 import PullToRefresh from '@/components/shared/PullToRefresh';
@@ -13,8 +15,6 @@ import ConfirmationBordero from '@/components/catalogue/ConfirmationBordereau';
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { useCart } from '@/lib/CartContext';
 import { toast } from 'sonner';
-import CityPicker from '@/components/catalogue/CityPicker';
-import CountryCityAvailability from '@/components/catalogue/CountryCityAvailability';
 import { getZoneById } from '@/lib/tarifsConfig';
 
 const DEFAULT_BOOKS_BASE = [
@@ -43,13 +43,14 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scannedBook, setScannedBook] = useState(null);
   const [isbnLoading, setIsbnLoading] = useState(false);
-  const [selectedBook, setSelectedBook] = useState(null);
   const [orderingBook, setOrderingBook] = useState(null);
   const [panierOpen, setPanierOpen] = useState(false);
   const [confirmation, setConfirmation] = useState(null);
   const [defaultBooks, setDefaultBooks] = useState(DEFAULT_BOOKS_BASE);
   const [selectedCity, setSelectedCity] = useState({ label: 'Miami, FL — USA', emoji: '🇺🇸', zone_id: 'international' });
-  const [cityPickerOpen, setCityPickerOpen] = useState(false);
+  const [selectedRelay, setSelectedRelay] = useState({ name: 'Librairie Little Havana', city: 'Miami, FL — USA' });
+  const [deliveryMode, setDeliveryMode] = useState('express');
+  const [catalogueStep, setCatalogueStep] = useState(1);
 
   // Enrichir les livres par défaut avec les couvertures via Google Books
   useEffect(() => {
@@ -162,6 +163,13 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
   };
 
   const displayBooks = hasSearched ? results : defaultBooks;
+  const deliveryPrice = deliveryMode === 'collecte' ? 6.90 : 8.90;
+
+  const handleDestinationConfirm = ({ city, relay }) => {
+    setSelectedCity(city);
+    setSelectedRelay(relay);
+    setCatalogueStep(3);
+  };
 
   const handleRefresh = async () => {
     if (hasSearched) { reset(); setHasSearched(false); }
@@ -170,15 +178,6 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
 
   return (
     <>
-      {/* Sélecteur de ville */}
-      {cityPickerOpen && (
-        <CityPicker
-          selected={selectedCity}
-          onSelect={setSelectedCity}
-          onClose={() => setCityPickerOpen(false)}
-        />
-      )}
-
       {/* Scanner plein écran */}
       {scannerOpen && (
         <ISBNScanner
@@ -192,21 +191,37 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
 
       <PullToRefresh onRefresh={handleRefresh}>
         <div>
-          <WelcomeCard
-            eyebrow="Bonjour, Lecteur"
-            title="Quels livres vous manquent ce soir ?"
-            subtitle={
-              <span
-                onClick={() => setCityPickerOpen(true)}
-                style={{ cursor: 'pointer', textDecoration: 'underline dotted', textUnderlineOffset: 3 }}
-              >
-                📍 Livraison vers : {selectedCity.emoji} {selectedCity.label} ›
-              </span>
-            }
-          />
+          <CatalogueStepDots step={catalogueStep} />
 
-          <SectionTitle>Rechercher un livre</SectionTitle>
-          <SearchBlock onSearch={handleSearch} onScanOpen={() => setScannerOpen(true)} />
+          {catalogueStep === 1 && (
+            <CatalogueWelcomeStep
+              deliveryMode={deliveryMode}
+              onSelectMode={setDeliveryMode}
+              onNext={() => setCatalogueStep(2)}
+            />
+          )}
+
+          {catalogueStep === 2 && (
+            <CatalogueDestinationStep
+              selectedCity={selectedCity}
+              selectedRelay={selectedRelay}
+              onConfirm={handleDestinationConfirm}
+              onBack={() => setCatalogueStep(1)}
+            />
+          )}
+
+          {catalogueStep === 3 && (
+            <>
+              <CatalogueSearchIntro
+                deliveryMode={deliveryMode}
+                selectedCity={selectedCity}
+                selectedRelay={selectedRelay}
+                onChangeMode={() => setCatalogueStep(1)}
+                onChangeDestination={() => setCatalogueStep(2)}
+              />
+
+              <SectionTitle>Rechercher un livre</SectionTitle>
+              <SearchBlock onSearch={handleSearch} onScanOpen={() => setScannerOpen(true)} />
 
           {/* Bouton panier flottant */}
           {items.length > 0 && (
@@ -257,26 +272,18 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
             </>
           )}
 
-          {/* Commandes des autres pour ce livre */}
-          {!scannedBook && selectedBook && !orderingBook && (
-            <BookOrders
-              book={selectedBook}
-              onOrder={() => { setOrderingBook(selectedBook); setSelectedBook(null); }}
-              onClose={() => setSelectedBook(null)}
-            />
-          )}
-
           {/* Formulaire ajout au panier */}
           {!scannedBook && (
             <AddToCartForm
               book={orderingBook}
               selectedCity={selectedCity}
+              selectedRelay={selectedRelay}
+              initialTransit={deliveryMode}
               onClose={() => setOrderingBook(null)}
             />
           )}
 
-          <CountryCityAvailability onLocationChange={setSelectedCity} />
-          <SectionTitle>{hasSearched ? 'Résultats de recherche' : 'Livres disponibles'}</SectionTitle>
+              <SectionTitle>{hasSearched ? 'Résultats de recherche' : 'Livres disponibles'}</SectionTitle>
 
           {loading && (
             <div className="text-center py-8 text-foreground/40 italic font-fell text-[13px]">
@@ -289,13 +296,16 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
           )}
 
           {!loading && !scannedBook && (
-            <div className="pl-7">
+            <div className="pl-0 sm:pl-7">
               {displayBooks.map((book, i) => (
                 <BookCard
                   key={book.id}
                   book={book}
                   index={i}
-                  onClick={() => { setSelectedBook(book); setOrderingBook(null); }}
+                  destination={selectedCity?.label}
+                  deliveryPrice={deliveryPrice}
+                  showSavings
+                  onClick={() => setOrderingBook(book)}
                 />
               ))}
               {hasSearched && !loading && displayBooks.length === 0 && (
@@ -304,6 +314,8 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
                 </div>
               )}
             </div>
+          )}
+            </>
           )}
         </div>
       </PullToRefresh>

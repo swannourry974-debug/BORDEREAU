@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SectionTitle from '@/components/shared/SectionTitle';
 import CouponButton from '@/components/shared/CouponButton';
@@ -15,20 +15,25 @@ const FORFAITS_MAP = {
   L: { express: 19.90, collecte: 14.90 },
 };
 
-export default function AddToCartForm({ book, selectedCity, onClose }) {
+export default function AddToCartForm({ book, selectedCity, selectedRelay, initialTransit = 'express', onClose }) {
   const { addItem, items } = useCart();
   const [forfait, setForfait] = useState('S');
-  const [transit, setTransit] = useState('express');
+  const [transit, setTransit] = useState(initialTransit);
   const [adresse, setAdresse] = useState('');
 
+  useEffect(() => {
+    if (book) setTransit(initialTransit);
+  }, [book?.id, initialTransit]);
+
   const prixVal = FORFAITS_MAP[forfait]?.[transit] ?? 8.90;
-  const destinationLabel = adresse || selectedCity?.label || 'Miami, FL — USA';
+  const relayLabel = selectedRelay?.name ? `${selectedRelay.name}, ${selectedCity?.label || ''}` : '';
+  const destinationLabel = adresse || relayLabel || selectedCity?.label || 'Miami, FL — USA';
   const comparative = getComparativeSavings(destinationLabel, prixVal);
 
   const handleForfaitSelect = (f) => setForfait(f.id);
 
   const handleAddToCart = () => {
-    addItem({ book, forfait, transit, adresse: destinationLabel, selectedCity, prixVal, comparative });
+    addItem({ book, forfait, transit, adresse: destinationLabel, selectedCity, selectedRelay, prixVal, comparative });
     toast.success(`"${book.title}" ajouté au panier !`, {
       description: `Forfait ${forfait} · ${transit === 'express' ? 'Express' : 'Collectif'} · économie estimée ${comparative.savings.toFixed(0)} €`,
     });
@@ -72,7 +77,7 @@ export default function AddToCartForm({ book, selectedCity, onClose }) {
                 type="text"
                 value={adresse}
                 onChange={e => setAdresse(e.target.value)}
-                placeholder="Point relais Miami..."
+                placeholder={selectedRelay?.name || 'Point relais Miami...'}
                 className="w-full bg-creme border border-foreground/35 px-3 py-[9px] font-typewriter text-[13px] text-foreground outline-none focus:border-bordeaux"
               />
             </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import BookSavingsBadge from '@/components/catalogue/BookSavingsBadge';
 
 const COVER_COLORS = [
   'bg-gradient-to-br from-bordeaux to-bordeaux-dark',
@@ -8,7 +9,7 @@ const COVER_COLORS = [
   'bg-gradient-to-br from-[#7a4a1a] to-[#4a2a08]',
 ];
 
-export default function BookCard({ book, index, onClick }) {
+export default function BookCard({ book, index, onClick, destination, deliveryPrice = 8.90, showSavings = false }) {
   const coverClass = COVER_COLORS[index % COVER_COLORS.length];
 
   return (
@@ -38,8 +39,13 @@ export default function BookCard({ book, index, onClick }) {
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <div className="font-serif text-[15px] font-bold leading-tight mb-[3px]" style={{ color: '#000000' }}>{book.title}</div>
-          <div className="font-fell italic text-[12px] text-foreground/60 mb-2">{book.author}</div>
+          <div className="font-serif text-[15px] font-bold leading-tight mb-[3px] break-words" style={{ color: '#000000' }}>{book.title}</div>
+          <div className="font-fell italic text-[12px] text-foreground/60 mb-1">{book.author}</div>
+          {(book.isbn || book.pages) && (
+            <div className="font-typewriter text-[9px] tracking-[1px] text-foreground/40 mb-2">
+              {book.isbn ? `ISBN ${book.isbn}` : ''}{book.isbn && book.pages ? ' · ' : ''}{book.pages ? `${book.pages} pages` : ''}
+            </div>
+          )}
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[9px] tracking-[1.5px] uppercase px-[7px] py-[2px] border border-encre">
               {book.type}
@@ -47,9 +53,13 @@ export default function BookCard({ book, index, onClick }) {
             <span className="text-[11px] tracking-[1.5px] uppercase px-[9px] py-[2px] border border-bordeaux text-bordeaux bg-bordeaux/5 font-bold">
               {book.price}
             </span>
-            <span className="text-[9px] tracking-[1.5px] uppercase px-[7px] py-[2px] border border-[#2d6a2d] text-[#2d6a2d] bg-[#2d6a2d]/5">
-              {book.availability}
-            </span>
+            {showSavings ? (
+              <BookSavingsBadge destination={destination} price={deliveryPrice} />
+            ) : (
+              <span className="text-[9px] tracking-[1.5px] uppercase px-[7px] py-[2px] border border-[#2d6a2d] text-[#2d6a2d] bg-[#2d6a2d]/5">
+                {book.availability}
+              </span>
+            )}
           </div>
         </div>
       </div>
