@@ -6,6 +6,7 @@ import ForfaitGrid from './ForfaitGrid';
 import TransitOptions from './TransitOptions';
 import JaugeBlock from './JaugeBlock';
 import { useCart } from '@/lib/CartContext';
+import { getComparativeSavings } from '@/lib/comparativeRates';
 import { toast } from 'sonner';
 
 const FORFAITS_MAP = {
@@ -14,20 +15,22 @@ const FORFAITS_MAP = {
   L: { express: 19.90, collecte: 14.90 },
 };
 
-export default function AddToCartForm({ book, onClose }) {
+export default function AddToCartForm({ book, selectedCity, onClose }) {
   const { addItem, items } = useCart();
   const [forfait, setForfait] = useState('S');
   const [transit, setTransit] = useState('express');
   const [adresse, setAdresse] = useState('');
 
   const prixVal = FORFAITS_MAP[forfait]?.[transit] ?? 8.90;
+  const destinationLabel = adresse || selectedCity?.label || 'Miami, FL — USA';
+  const comparative = getComparativeSavings(destinationLabel, prixVal);
 
   const handleForfaitSelect = (f) => setForfait(f.id);
 
   const handleAddToCart = () => {
-    addItem({ book, forfait, transit, adresse, prixVal });
+    addItem({ book, forfait, transit, adresse: destinationLabel, selectedCity, prixVal, comparative });
     toast.success(`"${book.title}" ajouté au panier !`, {
-      description: `Forfait ${forfait} · ${transit === 'express' ? 'Express' : 'Collectif'} · ${prixVal.toFixed(2)} €`,
+      description: `Forfait ${forfait} · ${transit === 'express' ? 'Express' : 'Collectif'} · économie estimée ${comparative.savings.toFixed(0)} €`,
     });
     onClose();
   };
@@ -81,6 +84,16 @@ export default function AddToCartForm({ book, onClose }) {
                 <div className="text-[9px] text-foreground/40 mt-[2px] italic font-fell">Libéré à la réception</div>
               </div>
               <div className="font-serif text-[28px] font-bold text-bordeaux">{prixVal.toFixed(2)} €</div>
+            </div>
+
+            <div className="mt-3 bg-[#fff7ed] border border-[#C2410C]/40 px-3 py-2 text-[11px] text-encre">
+              <div className="font-typewriter uppercase tracking-[1.5px] text-[#C2410C] mb-1">Gain comparatif</div>
+              <div className="font-fell italic leading-relaxed">
+                Économie estimée de <strong>{comparative.savings.toFixed(0)} €</strong> vs la solution classique la moins chère pour {comparative.destination}.
+              </div>
+              <div className="font-typewriter text-[9px] text-foreground/45 mt-1">
+                Référence lot 20 kg : Colissimo {comparative.colissimo.toFixed(2)} €, DHL dès {comparative.dhlMin} €, fret dès {comparative.fretMin} €.
+              </div>
             </div>
 
             <div className="mt-4 flex gap-[10px]">

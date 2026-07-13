@@ -4,6 +4,7 @@ import ZoneSelector from '@/components/catalogue/ZoneSelector';
 import VentilationCard from '@/components/catalogue/VentilationCard';
 import { base44 } from '@/api/base44Client';
 import { ZONES, POIDS_FORMAT, genererCodeSecret, getQuotaKg } from '@/lib/tarifsConfig';
+import { getComparativeSavings } from '@/lib/comparativeRates';
 
 const POIDS = POIDS_FORMAT;
 const SEUIL_ALERTE_PAGES = 400;
@@ -47,6 +48,7 @@ export default function BookValidation({ book, zone: zoneProp, onConfirm, onCanc
   const poids = POIDS[format] || 200;
   const prixNum = parseFloat(String(prix).replace(',', '.')) || 0;
   const total = (prixNum + fraisService).toFixed(2);
+  const comparative = zone ? getComparativeSavings(zone.label, fraisService) : null;
 
   const handleConfirm = async () => {
     if (!zone) {
@@ -72,6 +74,9 @@ export default function BookValidation({ book, zone: zoneProp, onConfirm, onCanc
         zone_id: zone.id,
         notes: `Prix achat: ${prixNum}€ · Format: ${format} · Poids: ~${poids}g · Condition: ${condition} · Code: ${codeSecret}`,
         prix_livre_neuf: prixNum,
+        frais_port_ref: comparative?.bestAlternative || 0,
+        frais_bordereau: fraisService,
+        economie_realisee: comparative?.savings || 0,
         code_secret: codeSecret,
       });
       // Stocker l'ID dans qr_code_depot pour que le scanner relais puisse retrouver la commande
@@ -244,6 +249,17 @@ export default function BookValidation({ book, zone: zoneProp, onConfirm, onCanc
           * Prix unique du livre neuf (obligatoire pour le calcul)
         </div>
       </div>
+
+      {comparative && (
+        <div style={{ background: 'rgba(45,106,45,0.08)', border: '1.5px solid rgba(45,106,45,0.35)', padding: '10px 12px', marginBottom: 16 }}>
+          <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: '#2d6a2d', marginBottom: 4 }}>
+            Gain comparatif
+          </div>
+          <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: 'var(--encre)', lineHeight: 1.6 }}>
+            Économie estimée de <strong>{comparative.savings.toFixed(0)} €</strong> vs la solution classique la moins chère ({comparative.bestAlternative.toFixed(2)} €).
+          </div>
+        </div>
+      )}
 
       {/* Total dynamique */}
       <div style={{ borderTop: '1.5px dashed rgba(26,16,8,0.2)', paddingTop: 14, marginBottom: 16 }}>

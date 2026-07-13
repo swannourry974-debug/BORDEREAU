@@ -270,6 +270,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
           {!scannedBook && (
             <AddToCartForm
               book={orderingBook}
+              selectedCity={selectedCity}
               onClose={() => setOrderingBook(null)}
             />
           )}

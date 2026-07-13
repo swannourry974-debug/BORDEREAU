@@ -31,30 +31,52 @@ function genererCodeSecret() {
   return String(Math.floor(100 + Math.random() * 900));
 }
 
+const COMPARATIVE_RATES = {
+  conakry: { destination: 'Conakry', colissimo: 256.89, dhlMin: 380, fretMin: 250 },
+  new_york: { destination: 'New York', colissimo: 256.89, dhlMin: 220, fretMin: 300 },
+  quebec: { destination: 'Québec', colissimo: 256.89, dhlMin: 240, fretMin: 320 },
+  miami: { destination: 'Miami', colissimo: 256.89, dhlMin: 220, fretMin: 300 },
+  cape_town: { destination: 'Cape Town', colissimo: 256.89, dhlMin: 390, fretMin: 350 },
+};
+
+function normalizeDestination(value = '') {
+  return value.toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
+function getComparativeRate(destination = '') {
+  const value = normalizeDestination(destination);
+  if (value.includes('conakry') || value.includes('guinee') || value.includes('guinea')) return COMPARATIVE_RATES.conakry;
+  if (value.includes('new york') || value.includes('nyc')) return COMPARATIVE_RATES.new_york;
+  if (value.includes('quebec') || value.includes('canada')) return COMPARATIVE_RATES.quebec;
+  if (value.includes('cape town') || value.includes('capetown') || value.includes('afrique du sud') || value.includes('south africa')) return COMPARATIVE_RATES.cape_town;
+  if (value.includes('miami') || value.includes('usa') || value.includes('fl')) return COMPARATIVE_RATES.miami;
+  return COMPARATIVE_RATES.miami;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Non autorisé' }, { status: 401 });
 
-    const { book, zone_id, zone_nom, mode_livraison, adresse, prix_livre } = await req.json();
+    const { book, zone_id, zone_nom, mode_livraison, transit, adresse, prix_livre } = await req.json();
 
     // Résoudre la zone
     const zoneKey = (zone_id || zone_nom || 'international').toLowerCase().replace(' ', '_');
     const tarif = TARIFS[zoneKey] || TARIFS.international;
     const ventilation = VENTILATION_EXPRESS[zoneKey] || VENTILATION_EXPRESS.international;
 
-    const isExpress = mode_livraison !== 'collectif';
+    const modeLivraison = mode_livraison || transit || 'express';
+    const isExpress = modeLivraison !== 'collectif' && modeLivraison !== 'collecte';
     const totalCents = isExpress ? tarif.express : tarif.collectif;
     const totalEuros = totalCents / 100;
 
     // Générer le code secret de validation (remise physique)
     const codeSecret = genererCodeSecret();
 
-    // Calcul économies vs UPS (frais de référence estimés)
-    const fraisPortRef = isExpress
-      ? { europe: 18.50, international: 35.00, grand_export: 65.00, maghreb: 32.00 }[zoneKey] || 35.00
-      : 0;
+    // Calcul économies vs solutions classiques selon la grille comparative 20 kg
+    const comparative = getComparativeRate(`${zone_nom || ''} ${adresse || ''}`);
+    const fraisPortRef = Math.min(comparative.colissimo, comparative.dhlMin, comparative.fretMin);
     const economiRealisee = Math.max(0, fraisPortRef - totalEuros);
 
     // Description dynamique
@@ -94,6 +116,10 @@ Deno.serve(async (req) => {
         part_admin: isExpress ? String(ventilation.part_admin) : String(totalEuros),
         frais_port_ref: String(fraisPortRef),
         economie_realisee: String(economiRealisee),
+        destination_comparative: comparative.destination,
+        ref_colissimo: String(comparative.colissimo),
+        ref_dhl_express: String(comparative.dhlMin),
+        ref_fret_maritime: String(comparative.fretMin),
       },
     });
 

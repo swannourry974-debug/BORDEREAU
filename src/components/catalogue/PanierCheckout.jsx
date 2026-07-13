@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/lib/CartContext';
 import CouponButton from '@/components/shared/CouponButton';
 import { base44 } from '@/api/base44Client';
+import { getComparativeSavings } from '@/lib/comparativeRates';
 import { toast } from 'sonner';
 
 const FORFAITS_STRIPE = { S: 'poche', M: 'broche', L: 'bd' };
@@ -30,6 +31,10 @@ export default function PanierCheckout({ onClose }) {
   };
 
   const totalFinal = Math.max(0, total - couponDiscount);
+  const economieTotale = items.reduce((sum, item) => {
+    const comparative = item.comparative || getComparativeSavings(item.adresse, item.prixVal);
+    return sum + comparative.savings;
+  }, 0);
 
   const handlePay = async () => {
     if (items.length === 0) return;
@@ -48,7 +53,10 @@ export default function PanierCheckout({ onClose }) {
       forfait: FORFAITS_STRIPE[first.forfait] || 'poche',
       transit: TRANSIT_STRIPE[first.transit] || 'express',
       adresse: first.adresse || '',
-      zone_nom: '',
+      zone_id: first.selectedCity?.zone_id || '',
+      zone_nom: first.selectedCity?.label || first.adresse || '',
+      mode_livraison: first.transit === 'collecte' ? 'collectif' : 'express',
+      prix_livre: first.book?.priceVal || 0,
     });
     setLoading(false);
 
@@ -111,6 +119,9 @@ export default function PanierCheckout({ onClose }) {
                       </span>
                     )}
                   </div>
+                  <div style={{ marginTop: 8, background: 'rgba(194,65,12,0.08)', border: '1px solid rgba(194,65,12,0.28)', padding: '6px 8px', fontSize: 11, color: 'var(--encre)' }}>
+                    <strong style={{ color: 'var(--cta-orange)' }}>+{(item.comparative || getComparativeSavings(item.adresse, item.prixVal)).savings.toFixed(0)} € économisés</strong> vs {(item.comparative || getComparativeSavings(item.adresse, item.prixVal)).destination} · meilleure alternative {(item.comparative || getComparativeSavings(item.adresse, item.prixVal)).bestAlternative.toFixed(2)} €
+                  </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <div style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: 16, color: 'var(--bordeaux)' }}>
@@ -128,6 +139,18 @@ export default function PanierCheckout({ onClose }) {
 
             {/* Séparateur */}
             <div style={{ height: 1, background: 'repeating-linear-gradient(90deg, rgba(26,16,8,0.15) 0, rgba(26,16,8,0.15) 4px, transparent 4px, transparent 8px)', margin: '16px 0' }} />
+
+            <div style={{ background: 'rgba(45,106,45,0.08)', border: '1.5px solid rgba(45,106,45,0.35)', padding: '12px 14px', marginBottom: 16 }}>
+              <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: '#2d6a2d', marginBottom: 4 }}>
+                Gain comparatif total
+              </div>
+              <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 22, fontWeight: 700, color: '#2d6a2d' }}>
+                {economieTotale.toFixed(0)} € économisés
+              </div>
+              <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.55)', marginTop: 3 }}>
+                Comparaison basée sur votre grille 20 kg : Colissimo, DHL Express et fret maritime.
+              </div>
+            </div>
 
             {/* Code de parrainage */}
             <div style={{ marginBottom: 16 }}>
