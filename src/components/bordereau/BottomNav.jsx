@@ -5,16 +5,16 @@ export default function BottomNav({ role, activePanel, onSwitch }) {
   const { t } = useLang();
   const navStyle = {
     position: 'fixed',
-    bottom: 'calc(1cm - 50px)',
-    left: '50%',
-    transform: 'translateX(-50%)',
+    bottom: 0,
+    left: 0,
+    right: 0,
     width: '100%',
-    maxWidth: 480,
     background: 'hsl(var(--background))',
     borderTop: '2px solid hsl(var(--border))',
     display: 'flex',
     zIndex: 100,
     paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+    boxShadow: '0 -6px 18px rgba(26,16,8,0.12)',
   };
 
   const itemStyle = (active) => ({
@@ -22,7 +22,7 @@ export default function BottomNav({ role, activePanel, onSwitch }) {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    padding: '10px 4px',
+    padding: '9px 2px 8px',
     cursor: 'pointer',
     position: 'relative',
     transition: 'all 0.2s',
@@ -33,8 +33,8 @@ export default function BottomNav({ role, activePanel, onSwitch }) {
   });
 
   const labelStyle = (active) => ({
-    fontSize: 10,
-    letterSpacing: 1.5,
+    fontSize: 9,
+    letterSpacing: 0.6,
     textTransform: 'uppercase',
     color: active ? 'var(--bordeaux)' : 'hsl(var(--muted-foreground))',
     fontWeight: active ? 'bold' : 'normal',

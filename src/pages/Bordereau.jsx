@@ -182,8 +182,7 @@ export default function Bordero({ initialPanel }) {
 
         {/* Contenu principal */}
         <main
-          className="md:flex-1 md:min-w-0 md:pb-10"
-          style={{ padding: '20px 24px calc(100px + env(safe-area-inset-bottom, 0px))' }}
+          className="w-full min-w-0 px-3 pt-4 pb-[calc(92px_+_env(safe-area-inset-bottom,0px))] sm:px-5 md:flex-1 md:min-w-0 md:px-6 md:pt-5 md:pb-10"
         >
           {/* Date mobile uniquement */}
           <div className="md:hidden font-fell" style={{ textAlign: 'center', padding: '8px 0 4px', fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.4)', letterSpacing: 2 }}>
@@ -191,7 +190,7 @@ export default function Bordero({ initialPanel }) {
           </div>
 
           {/* Wrapper qui centre le contenu sur grands écrans */}
-          <div style={{ maxWidth: 640, margin: '0 auto' }}>
+          <div className="w-full max-w-[640px] mx-auto overflow-visible">
             {activePanel === 'catalogue' && (
               <PanelCatalogue
                 commandeOpen={commandeOpen}
