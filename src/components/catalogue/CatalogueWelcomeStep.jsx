@@ -11,7 +11,7 @@ export default function CatalogueWelcomeStep({ deliveryMode, onSelectMode, onNex
     <div className="bg-papier border-[1.5px] border-encre p-5 shadow-[3px_3px_0_rgba(26,16,8,0.18)]">
       <div className="font-typewriter text-[9px] tracking-[3px] uppercase text-bordeaux mb-3">Bonjour lecteur</div>
       <h1 className="font-serif text-[26px] leading-tight font-bold text-encre mb-5">
-        Bonjour lecteur, quel livre vous manque ce soir ?
+        Bonjour lecteur, quel livre vous manque t'il ce soir ?
       </h1>
       <div className="space-y-3 mb-5">
         {MODES.map(mode => {
