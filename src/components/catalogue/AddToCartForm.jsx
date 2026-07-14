@@ -15,7 +15,7 @@ const FORFAITS_MAP = {
   L: { express: 19.90, collecte: 14.90 },
 };
 
-export default function AddToCartForm({ book, selectedCity, selectedRelay, initialTransit = 'express', onClose }) {
+export default function AddToCartForm({ book, selectedCity, selectedRelay, initialTransit = 'express', onItemAdded, onClose }) {
   const { addItem, items } = useCart();
   const [forfait, setForfait] = useState('S');
   const [transit, setTransit] = useState(initialTransit);
@@ -38,6 +38,7 @@ export default function AddToCartForm({ book, selectedCity, selectedRelay, initi
       description: `Forfait ${forfait} · ${transit === 'express' ? 'Express' : 'Collectif'} · économie estimée ${comparative.savings.toFixed(0)} €`,
     });
     onClose();
+    onItemAdded?.();
   };
 
   return (

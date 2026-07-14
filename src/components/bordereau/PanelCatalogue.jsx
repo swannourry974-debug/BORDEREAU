@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import SectionTitle from '@/components/shared/SectionTitle';
 import SearchBlock from '@/components/catalogue/SearchBlock';
 import CatalogueWelcomeStep from '@/components/catalogue/CatalogueWelcomeStep';
-import CatalogueDestinationStep from '@/components/catalogue/CatalogueDestinationStep';
 import CatalogueSearchIntro from '@/components/catalogue/CatalogueSearchIntro';
+import CatalogueOrderStep from '@/components/catalogue/CatalogueOrderStep';
 import CatalogueStepDots from '@/components/catalogue/CatalogueStepDots';
 import BookCard from '@/components/catalogue/BookCard';
 import AddToCartForm from '@/components/catalogue/AddToCartForm';
@@ -165,10 +165,10 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
   const displayBooks = hasSearched ? results : defaultBooks;
   const deliveryPrice = deliveryMode === 'collecte' ? 6.90 : 8.90;
 
-  const handleDestinationConfirm = ({ city, relay }) => {
+  const handleWelcomeConfirm = ({ city, relay }) => {
     setSelectedCity(city);
     setSelectedRelay(relay);
-    setCatalogueStep(3);
+    setCatalogueStep(2);
   };
 
   const handleRefresh = async () => {
@@ -197,27 +197,20 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
             <CatalogueWelcomeStep
               deliveryMode={deliveryMode}
               onSelectMode={setDeliveryMode}
-              onNext={() => setCatalogueStep(2)}
+              selectedCity={selectedCity}
+              selectedRelay={selectedRelay}
+              onNext={handleWelcomeConfirm}
             />
           )}
 
           {catalogueStep === 2 && (
-            <CatalogueDestinationStep
-              selectedCity={selectedCity}
-              selectedRelay={selectedRelay}
-              onConfirm={handleDestinationConfirm}
-              onBack={() => setCatalogueStep(1)}
-            />
-          )}
-
-          {catalogueStep === 3 && (
             <>
               <CatalogueSearchIntro
                 deliveryMode={deliveryMode}
                 selectedCity={selectedCity}
                 selectedRelay={selectedRelay}
                 onChangeMode={() => setCatalogueStep(1)}
-                onChangeDestination={() => setCatalogueStep(2)}
+                onChangeDestination={() => setCatalogueStep(1)}
               />
 
               <SectionTitle>Rechercher un livre</SectionTitle>
@@ -226,7 +219,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
           {/* Bouton panier flottant */}
           {items.length > 0 && (
             <button
-              onClick={() => setPanierOpen(true)}
+              onClick={() => setCatalogueStep(3)}
               style={{
                 position: 'sticky', top: 12, zIndex: 50, width: '100%',
                 background: 'var(--bordeaux)', color: 'var(--creme)',
@@ -236,7 +229,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
                 marginBottom: 14, boxShadow: '3px 3px 0 rgba(90,0,21,0.5)',
               }}
             >
-              <span>🛒 Mon panier — {items.length} livre{items.length !== 1 ? 's' : ''}</span>
+              <span>🛒 Voir résumé — {items.length} livre{items.length !== 1 ? 's' : ''}</span>
               <span style={{ fontFamily: 'Playfair Display, serif', fontSize: 15, fontWeight: 700 }}>
                 {items.reduce((s, i) => s + i.prixVal, 0).toFixed(2)} € →
               </span>
@@ -279,6 +272,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
               selectedCity={selectedCity}
               selectedRelay={selectedRelay}
               initialTransit={deliveryMode}
+              onItemAdded={() => setCatalogueStep(3)}
               onClose={() => setOrderingBook(null)}
             />
           )}
@@ -316,6 +310,16 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
             </div>
           )}
             </>
+          )}
+
+          {catalogueStep === 3 && (
+            <CatalogueOrderStep
+              selectedCity={selectedCity}
+              selectedRelay={selectedRelay}
+              deliveryMode={deliveryMode}
+              onBack={() => setCatalogueStep(2)}
+              onPay={() => setPanierOpen(true)}
+            />
           )}
         </div>
       </PullToRefresh>
