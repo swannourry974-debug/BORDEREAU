@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { requireAdmin } from '../../shared/adminAuth.ts';
 
 /**
  * Déclenché par automation Entity sur Commande quand statut passe à "livree".
@@ -7,6 +8,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const auth = await requireAdmin(base44);
+    if (auth.response) return auth.response;
+
     const payload = await req.json();
     const commande = payload.data;
 

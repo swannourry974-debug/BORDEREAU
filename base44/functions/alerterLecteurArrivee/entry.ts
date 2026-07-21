@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { requireAdmin } from '../../shared/adminAuth.ts';
 
 /**
  * Fonction appelée dès qu'un livre passe au statut "au_relais".
@@ -8,6 +9,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const auth = await requireAdmin(base44);
+    if (auth.response) return auth.response;
+
     const payload = await req.json();
     const commande = payload.data;
 
