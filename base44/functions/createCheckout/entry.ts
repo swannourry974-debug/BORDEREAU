@@ -28,7 +28,9 @@ const VENTILATION_EXPRESS = {
 };
 
 function genererCodeSecret() {
-  return String(Math.floor(100 + Math.random() * 900));
+  const bytes = new Uint32Array(1);
+  crypto.getRandomValues(bytes);
+  return String(100 + (bytes[0] % 900));
 }
 
 const COMPARATIVE_RATES = {
@@ -61,27 +63,50 @@ Deno.serve(async (req) => {
 
     const { book, zone_id, zone_nom, mode_livraison, transit, adresse, prix_livre } = await req.json();
 
-    // Résoudre la zone
-    const zoneKey = (zone_id || zone_nom || 'international').toLowerCase().replace(' ', '_');
-    const tarif = TARIFS[zoneKey] || TARIFS.international;
-    const ventilation = VENTILATION_EXPRESS[zoneKey] || VENTILATION_EXPRESS.international;
+    const modeInput = String(mode_livraison || transit || 'express').toLowerCase();
+    if (!['express', 'collectif', 'collecte'].includes(modeInput)) {
+      return Response.json({ error: 'Mode de livraison invalide' }, { status: 400 });
+    }
 
-    const modeLivraison = mode_livraison || transit || 'express';
-    const isExpress = modeLivraison !== 'collectif' && modeLivraison !== 'collecte';
-    const totalCents = isExpress ? tarif.express : tarif.collectif;
-    const totalEuros = totalCents / 100;
+    const zones = await base44.asServiceRole.entities.ZonesTarifs.filter({ actif: true }, '-updated_date', 200);
+    const normalize = (value = '') => normalizeDestination(value).replace(/[^a-z0-9]+/g, ' ').trim();
+    const requested = normalize(`${zone_nom || ''} ${adresse || ''}`);
+    const zone = zones.find(z => z.id === zone_id)
+      || zones.find(z => normalize(z.zone_nom) && requested.includes(normalize(z.zone_nom)))
+      || zones.find(z => normalize(z.pays_nom) && requested.includes(normalize(z.pays_nom)))
+      || zones.find(z => normalize(z.pays_code) && requested.includes(normalize(z.pays_code)));
 
-    // Générer le code secret de validation (remise physique)
+    if (!zone) {
+      return Response.json({ error: 'Zone tarifaire invalide' }, { status: 400 });
+    }
+    const adresseNorm = normalize(adresse);
+    const zoneNomNorm = normalize(zone.zone_nom);
+    if (adresseNorm && zoneNomNorm && !adresseNorm.includes(zoneNomNorm) && !zoneNomNorm.includes(adresseNorm)) {
+      return Response.json({ error: 'Adresse incohérente avec la zone tarifaire' }, { status: 400 });
+    }
+
+    const isExpress = modeInput === 'express';
+    const totalEuros = isExpress ? Number(zone.frais_lecteur_express) : Number(zone.frais_lecteur_collectif);
+    if (!Number.isFinite(totalEuros) || totalEuros <= 0) {
+      return Response.json({ error: 'Tarif indisponible pour cette zone' }, { status: 400 });
+    }
+    const totalCents = Math.round(totalEuros * 100);
+
+    // Générer le code secret de validation (remise physique), conservé uniquement côté serveur/Stripe.
     const codeSecret = genererCodeSecret();
 
     // Calcul économies vs solutions classiques selon la grille comparative 20 kg
-    const comparative = getComparativeRate(`${zone_nom || ''} ${adresse || ''}`);
+    const comparative = getComparativeRate(`${zone.zone_nom || ''} ${zone.pays_nom || ''} ${adresse || ''}`);
     const fraisPortRef = Math.min(comparative.colissimo, comparative.dhlMin, comparative.fretMin);
     const economiRealisee = Math.max(0, fraisPortRef - totalEuros);
 
     // Description dynamique
     const modeLabel = isExpress ? 'Express (Voyageur)' : 'Collectif (Malle)';
-    const zoneLabel = { europe: 'Europe', international: 'International', grand_export: 'Grand Export', maghreb: 'Maghreb' }[zoneKey] || zone_nom || 'International';
+    const zoneKey = zone.id;
+    const zoneLabel = zone.zone_nom || zone_nom || 'International';
+    const partVoyageur = isExpress ? Number(zone.part_voyageur_express || 0) : 0;
+    const partRelais = isExpress ? Number(zone.part_relais || 0) : 0;
+    const partAdmin = Math.max(0, totalEuros - partVoyageur - partRelais);
 
     const session = await stripe.checkout.sessions.create({
       automatic_payment_methods: { enabled: true },
@@ -111,9 +136,9 @@ Deno.serve(async (req) => {
         prix_livre: String(prix_livre || 0),
         code_secret: codeSecret,
         // Ventilation express
-        part_voyageur: isExpress ? String(ventilation.part_voyageur) : '0',
-        part_relais: isExpress ? String(ventilation.part_relais) : '0',
-        part_admin: isExpress ? String(ventilation.part_admin) : String(totalEuros),
+        part_voyageur: String(partVoyageur),
+        part_relais: String(partRelais),
+        part_admin: String(partAdmin),
         frais_port_ref: String(fraisPortRef),
         economie_realisee: String(economiRealisee),
         destination_comparative: comparative.destination,
@@ -123,11 +148,10 @@ Deno.serve(async (req) => {
       },
     });
 
-    console.log(`[createCheckout] Session créée: ${session.id} | Zone: ${zoneKey} | Mode: ${modeLabel} | Total: ${totalEuros}€ | Code: ${codeSecret}`);
+    console.log(`[createCheckout] Session créée: ${session.id} | Zone: ${zoneLabel} | Mode: ${modeLabel} | Total: ${totalEuros}€`);
 
     return Response.json({
       url: session.url,
-      code_secret: codeSecret, // retourné pour créer la Commande côté frontend
       total_euros: totalEuros,
       zone_id: zoneKey,
     });
