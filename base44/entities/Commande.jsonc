@@ -52,6 +52,32 @@
     "stripe_session_id": {
       "type": "string"
     },
+    "suivi_facturation_mode": {
+      "type": "string",
+      "enum": [
+        "email",
+        "application"
+      ],
+      "default": "application",
+      "description": "Choix utilisateur pour recevoir le suivi et la facture"
+    },
+    "suivi_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Indique si le suivi de commande est activ\u00e9"
+    },
+    "facture_reference": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence de facture affich\u00e9e au lecteur"
+    },
+    "facture_emise_le": {
+      "type": "string",
+      "description": "Date ISO de g\u00e9n\u00e9ration de la facture"
+    },
+    "facture_url": {
+      "type": "string",
+      "description": "URL de facture si une facture externe est g\u00e9n\u00e9r\u00e9e"
+    },
     "statut": {
       "type": "string",
       "enum": [

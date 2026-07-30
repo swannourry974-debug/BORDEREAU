@@ -92,7 +92,7 @@ export function PerfoStrip() {
   );
 }
 
-export function EtagereItem({ statusClass, dotClass, title, sub, stampColor, stampLabel, stampSub, icon }) {
+export function EtagereItem({ statusClass, dotClass, title, sub, stampColor, stampLabel, stampSub, icon, onClick }) {
   const borderColors = {
     enVol: '#1a3a5c',
     auRelais: '#8B6914',
@@ -108,7 +108,7 @@ export function EtagereItem({ statusClass, dotClass, title, sub, stampColor, sta
   const borderColor = borderColors[statusClass] || borderColors.default;
 
   return (
-    <div className="animate-fade-slide" style={{
+    <div className="animate-fade-slide" role={onClick ? 'button' : undefined} tabIndex={onClick ? 0 : undefined} onClick={onClick} onKeyDown={(e) => { if (onClick && (e.key === 'Enter' || e.key === ' ')) onClick(); }} style={{
       background: 'var(--papier)',
       border: '1px solid hsl(var(--border))',
       borderLeft: `4px solid ${borderColor}`,
@@ -117,6 +117,7 @@ export function EtagereItem({ statusClass, dotClass, title, sub, stampColor, sta
       display: 'flex',
       alignItems: 'center',
       gap: 12,
+      cursor: onClick ? 'pointer' : 'default',
     }}>
       {icon ? (
         <span style={{ fontSize: 20 }}>{icon}</span>

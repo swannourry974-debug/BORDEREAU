@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Non autorisé' }, { status: 401 });
 
-    const { book, zone_id, zone_nom, mode_livraison, transit, adresse, prix_livre } = await req.json();
+    const { book, zone_id, zone_nom, mode_livraison, transit, adresse, prix_livre, suivi_facturation_mode } = await req.json();
 
     const modeInput = String(mode_livraison || transit || 'express').toLowerCase();
     if (!['express', 'collectif', 'collecte'].includes(modeInput)) {
@@ -132,6 +132,9 @@ Deno.serve(async (req) => {
         zone_id: zoneKey,
         zone_nom: zoneLabel,
         mode_livraison: isExpress ? 'express' : 'collectif',
+        suivi_facturation_mode: suivi_facturation_mode === 'email' ? 'email' : 'application',
+        suivi_active: 'true',
+        facture_reference: `BORD-${new Date().getFullYear()}-${codeSecret}`,
         adresse: adresse || '',
         prix_livre: String(prix_livre || 0),
         code_secret: codeSecret,

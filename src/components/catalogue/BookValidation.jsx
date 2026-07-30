@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import CouponButton from '@/components/shared/CouponButton';
 import ZoneSelector from '@/components/catalogue/ZoneSelector';
 import VentilationCard from '@/components/catalogue/VentilationCard';
+import SuiviFacturationChoice from '@/components/catalogue/SuiviFacturationChoice';
 import { base44 } from '@/api/base44Client';
 import { ZONES, POIDS_FORMAT, genererCodeSecret, getQuotaKg } from '@/lib/tarifsConfig';
 import { getComparativeSavings } from '@/lib/comparativeRates';
@@ -31,6 +32,7 @@ export default function BookValidation({ book, zone: zoneProp, onConfirm, onCanc
   const [prix, setPrix] = useState(book?.priceVal || '');
   const [condition, setCondition] = useState('neuf');
   const [modeLivraison, setModeLivraison] = useState('express');
+  const [suiviMode, setSuiviMode] = useState('application');
   const [loading, setLoading] = useState(false);
 
   // Zone : utiliser la prop si fournie, sinon demander à l'utilisateur
@@ -62,7 +64,9 @@ export default function BookValidation({ book, zone: zoneProp, onConfirm, onCanc
     setLoading(true);
     try {
       const codeSecret = genererCodeSecret();
+      const user = await base44.auth.me().catch(() => null);
       const commande = await base44.entities.Commande.create({
+        lecteur_email: user?.email || '',
         livre_titre: book.title,
         livre_auteur: book.author,
         livre_type: format,
@@ -70,6 +74,10 @@ export default function BookValidation({ book, zone: zoneProp, onConfirm, onCanc
         mode_livraison: modeLivraison,
         montant_paye: parseFloat(total),
         statut: 'en_attente_paiement',
+        suivi_facturation_mode: suiviMode,
+        suivi_active: true,
+        facture_reference: `BORD-${new Date().getFullYear()}-${codeSecret}`,
+        facture_emise_le: new Date().toISOString(),
         zone_nom: zone.label,
         zone_id: zone.id,
         notes: `Prix achat: ${prixNum}€ · Format: ${format} · Poids: ~${poids}g · Condition: ${condition} · Code: ${codeSecret}`,
@@ -81,7 +89,7 @@ export default function BookValidation({ book, zone: zoneProp, onConfirm, onCanc
       });
       // Stocker l'ID dans qr_code_depot pour que le scanner relais puisse retrouver la commande
       await base44.entities.Commande.update(commande.id, { qr_code_depot: commande.id });
-      onConfirm({ book, format, prix: prixNum, total, poids, zone, modeLivraison, codeSecret, commandeId: commande.id });
+      onConfirm({ book, format, prix: prixNum, total, poids, zone, modeLivraison, suiviMode, codeSecret, commandeId: commande.id });
     } catch (e) {
       alert('Erreur lors de la commande. Réessayez.');
     } finally {
@@ -260,6 +268,8 @@ export default function BookValidation({ book, zone: zoneProp, onConfirm, onCanc
           </div>
         </div>
       )}
+
+      <SuiviFacturationChoice value={suiviMode} onChange={setSuiviMode} />
 
       {/* Total dynamique */}
       <div style={{ borderTop: '1.5px dashed rgba(26,16,8,0.2)', paddingTop: 14, marginBottom: 16 }}>

@@ -154,11 +154,11 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
     }
   };
 
-  const handleValidationConfirm = ({ book, total, commandeId }) => {
+  const handleValidationConfirm = ({ book, total, commandeId, suiviMode }) => {
     setScannedBook(null);
     setConfirmation({ commandeId, bookTitle: book.title });
     toast.success(`"${book.title}" ajouté à votre liste !`, {
-      description: `Total séquestre : ${total} €`,
+      description: `Total : ${total} € · facture et suivi activés (${suiviMode === 'email' ? 'e-mail' : 'application'})`,
     });
   };
 

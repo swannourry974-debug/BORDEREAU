@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { WelcomeCard, SectionTitle, PerfoStrip, EtagereItem } from './shared';
+import CommandeFactureModal from '@/components/etagere/CommandeFactureModal';
 
 const STATUT_CONFIG = {
   en_attente_paiement: { statusClass: 'default', dotClass: 'paye', stampLabel: 'EN ATTENTE', stampColor: 'var(--sepia)', label: 'Paiement en attente' },
-  payee:               { statusClass: 'default', dotClass: 'paye', stampLabel: 'PAYÉ', stampColor: 'var(--bordeaux)', label: 'Payé' },
-  en_transit:          { statusClass: 'enVol',   dotClass: 'enVol', stampLabel: 'EN TRANSIT', stampColor: '#1a3a5c', label: 'En transit' },
-  au_relais:           { statusClass: 'auRelais',dotClass: 'auRelais', stampLabel: 'AU RELAIS', stampColor: '#8B6914', label: 'Au relais' },
-  livree:              { statusClass: 'recu',    dotClass: 'recu',  stampLabel: 'REÇU ✓', stampColor: '#2d6a2d', label: 'Livré' },
+  payee:               { statusClass: 'default', dotClass: 'paye', stampLabel: 'PRÉPARATION', stampColor: 'var(--bordeaux)', label: 'En préparation' },
+  en_transit:          { statusClass: 'enVol',   dotClass: 'enVol', stampLabel: 'EXPÉDIÉ', stampColor: '#1a3a5c', label: 'Expédié / En cours d’acheminement' },
+  au_relais:           { statusClass: 'auRelais',dotClass: 'auRelais', stampLabel: 'DISPONIBLE', stampColor: '#8B6914', label: 'Disponible en point relais' },
+  livree:              { statusClass: 'recu',    dotClass: 'recu',  stampLabel: 'LIVRÉ ✓', stampColor: '#2d6a2d', label: 'Livré' },
   litige:              { statusClass: 'default', dotClass: 'paye', stampLabel: 'LITIGE', stampColor: '#b41414', label: 'Litige' },
 };
 
 export default function PanelEtagere() {
   const [user, setUser] = useState(null);
   const [commandes, setCommandes] = useState([]);
+  const [selectedCommande, setSelectedCommande] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,6 +52,7 @@ export default function PanelEtagere() {
 
   return (
     <div>
+      {selectedCommande && <CommandeFactureModal commande={selectedCommande} onClose={() => setSelectedCommande(null)} />}
       <WelcomeCard
         eyebrow="Votre bibliothèque en transit"
         title="Étagère Virtuelle"
@@ -84,6 +87,7 @@ export default function PanelEtagere() {
                     stampColor={item.stampColor}
                     stampLabel={item.stampLabel}
                     stampSub={item.stampSub}
+                    onClick={() => setSelectedCommande(c)}
                   />
                 );
               })}
@@ -106,6 +110,7 @@ export default function PanelEtagere() {
                     stampColor={item.stampColor}
                     stampLabel={item.stampLabel}
                     stampSub={item.stampSub}
+                    onClick={() => setSelectedCommande(c)}
                   />
                 );
               })}

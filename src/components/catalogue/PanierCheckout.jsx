@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/lib/CartContext';
 import CouponButton from '@/components/shared/CouponButton';
+import SuiviFacturationChoice from '@/components/catalogue/SuiviFacturationChoice';
 import { base44 } from '@/api/base44Client';
 import { getComparativeSavings } from '@/lib/comparativeRates';
 import { toast } from 'sonner';
@@ -14,6 +15,7 @@ export default function PanierCheckout({ onClose }) {
   const [coupon, setCoupon] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
   const [couponDiscount, setCouponDiscount] = useState(0);
+  const [suiviMode, setSuiviMode] = useState('application');
   const [loading, setLoading] = useState(false);
 
   // Codes de parrainage simulés (à connecter à une entité si nécessaire)
@@ -56,11 +58,31 @@ export default function PanierCheckout({ onClose }) {
       zone_id: first.selectedCity?.zone_id || '',
       zone_nom: first.selectedCity?.label || first.adresse || '',
       mode_livraison: first.transit === 'collecte' ? 'collectif' : 'express',
+      suivi_facturation_mode: suiviMode,
       prix_livre: first.book?.priceVal || 0,
     });
     setLoading(false);
 
     if (res?.data?.url) {
+      const user = await base44.auth.me().catch(() => null);
+      const codeSecret = String(Math.floor(100 + Math.random() * 900));
+      await base44.entities.Commande.create({
+        lecteur_email: user?.email || '',
+        livre_titre: first.book?.title || 'Livre',
+        livre_auteur: first.book?.author || '',
+        livre_type: FORFAITS_STRIPE[first.forfait] === 'broche' ? 'Broché' : FORFAITS_STRIPE[first.forfait] === 'bd' ? 'BD' : 'Poche',
+        zone_id: first.selectedCity?.zone_id || 'international',
+        zone_nom: first.selectedCity?.label || first.adresse || 'International',
+        mode_livraison: first.transit === 'collecte' ? 'collectif' : 'express',
+        montant_paye: totalFinal,
+        statut: 'en_attente_paiement',
+        suivi_facturation_mode: suiviMode,
+        suivi_active: true,
+        facture_reference: `BORD-${new Date().getFullYear()}-${codeSecret}`,
+        facture_emise_le: new Date().toISOString(),
+        code_secret: codeSecret,
+      });
+      toast.success('Commande confirmée : facture et suivi activés.');
       clearCart();
       window.location.href = res.data.url;
     } else {
@@ -151,6 +173,8 @@ export default function PanierCheckout({ onClose }) {
                 Comparaison basée sur votre grille 20 kg : Colissimo, DHL Express et fret maritime.
               </div>
             </div>
+
+            <SuiviFacturationChoice value={suiviMode} onChange={setSuiviMode} />
 
             {/* Code de parrainage */}
             <div style={{ marginBottom: 16 }}>
