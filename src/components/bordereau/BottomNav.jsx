@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLang } from '@/lib/LangContext';
 
-export default function BottomNav({ role, activePanel, onSwitch }) {
+export default function BottomNav({ role, relaisValidated = true, activePanel, onSwitch }) {
   const { t } = useLang();
   const navStyle = {
     position: 'fixed',
@@ -83,13 +83,16 @@ export default function BottomNav({ role, activePanel, onSwitch }) {
           <NavItem panelId="aide" icon="❓" label={t('nav_aide')} />
         </>
       )}
-      {role === 'relais' && (
+      {role === 'relais' && relaisValidated && (
         <>
           <NavItem panelId="scanner" icon="⬡" label={t('nav_scanner')} />
           <NavItem panelId="stock" icon="📦" label={t('nav_stock')} />
           <NavItem panelId="profils" icon="📊" label={t('nav_profils')} />
           <NavItem panelId="aide" icon="❓" label={t('nav_aide')} />
         </>
+      )}
+      {role === 'relais' && !relaisValidated && (
+        <NavItem panelId="aide" icon="❓" label={t('nav_aide')} />
       )}
       <div
         style={{ ...itemStyle(activePanel === 'profil'), borderRight: 'none' }}

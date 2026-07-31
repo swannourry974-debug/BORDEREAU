@@ -12,6 +12,7 @@ import PanelStock from '../components/bordereau/PanelStockReal';
 import PanelAccueilVoyageur from '../components/voyageur/PanelAccueilVoyageur';
 import PanelScanner from '../components/relais/PanelScannerReal';
 import PanelProfils from '../components/relais/PanelProfils';
+import RelaisAccessNotice from '../components/relais/RelaisAccessNotice';
 import PanelProfil from './PanelProfil';
 import PanelWalletLecteur from '../components/wallet/PanelWalletLecteur';
 import PanelWalletAdmin from '../components/wallet/PanelWalletAdmin';
@@ -77,18 +78,11 @@ export default function Bordero({ initialPanel }) {
   const [commandeOpen, setCommandeOpen] = useState(false);
   const [commandeBook, setCommandeBook] = useState(null);
 
-  const RELAIS_EMAILS = ['nourryswanny@gmail.com'];
-
   useEffect(() => {
     base44.auth.me().then(user => {
       setCurrentUser(user);
       if (['lecteur', 'voyageur', 'relais'].includes(user?.role)) {
         setRole(user.role);
-      }
-      if (user && RELAIS_EMAILS.includes(user.email)) {
-        setRole('relais');
-        navigate('/scanner');
-        return;
       }
       const promptKey = `bordero_role_prompt_seen_${user?.email || 'guest'}`;
       if (user && !localStorage.getItem(promptKey)) {
@@ -99,6 +93,7 @@ export default function Bordero({ initialPanel }) {
 
   const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/missions': 'missions', '/stock': 'stock', '/Stock': 'stock', '/accueil-voyageur': 'accueil-voyageur', '/scanner': 'scanner', '/profils': 'profils', '/profil': 'profil', '/PanelProfil': 'profil', '/panel-profil': 'profil', '/wallet': 'wallet', '/aide': 'aide' };
   const activePanel = pathToPanel[location.pathname] || initialPanel || 'catalogue';
+  const isRelaisValidated = currentUser?.role === 'admin' || (currentUser?.relais_valide === true && currentUser?.relais_validation_status === 'valide');
 
   const markRolePromptSeen = () => {
     const promptKey = `bordero_role_prompt_seen_${currentUser?.email || 'guest'}`;
@@ -112,13 +107,20 @@ export default function Bordero({ initialPanel }) {
     setRolePromptOpen(false);
     setCommandeOpen(false);
     if (currentUser) {
-      base44.auth.updateMe({ role: newRole }).then(updatedUser => {
-        setCurrentUser(updatedUser || { ...currentUser, role: newRole });
+      const updates = newRole === 'relais'
+        ? {
+            role: newRole,
+            relais_valide: currentUser.relais_valide === true,
+            relais_validation_status: currentUser.relais_valide === true ? 'valide' : 'en_attente',
+          }
+        : { role: newRole };
+      base44.auth.updateMe(updates).then(updatedUser => {
+        setCurrentUser(updatedUser || { ...currentUser, ...updates });
       }).catch(() => {});
       const promptKey = `bordero_role_prompt_seen_${currentUser.email || 'guest'}`;
       localStorage.setItem(promptKey, 'true');
     }
-    const defaults = { lecteur: '/catalogue', voyageur: '/accueil-voyageur', relais: '/stock' };
+    const defaults = { lecteur: '/catalogue', voyageur: '/accueil-voyageur', relais: isRelaisValidated ? '/stock' : '/profil' };
     navigate(defaults[newRole]);
   };
 
@@ -194,7 +196,7 @@ export default function Bordero({ initialPanel }) {
                 <SidebarItem icon="❓" label="Aide" panelId="aide" active={activePanel === 'aide'} onClick={() => switchPanel('aide')} />
               </>
             )}
-            {role === 'relais' && (
+            {role === 'relais' && isRelaisValidated && (
               <>
                 <SidebarItem icon="⬡" label="Scanner" panelId="scanner" active={activePanel === 'scanner'} onClick={() => switchPanel('scanner')} />
                 <SidebarItem icon="📦" label="Stock" panelId="stock" active={activePanel === 'stock'} onClick={() => switchPanel('stock')} />
@@ -235,9 +237,12 @@ export default function Bordero({ initialPanel }) {
             {activePanel === 'etagere' && <PanelEtagere />}
             {activePanel === 'accueil-voyageur' && <PanelAccueilVoyageur />}
             {activePanel === 'missions' && <PanelMissions />}
-            {activePanel === 'stock' && <PanelStock />}
-            {activePanel === 'scanner' && <PanelScanner />}
-            {activePanel === 'profils' && <PanelProfils />}
+            {['stock', 'scanner', 'profils'].includes(activePanel) && !isRelaisValidated && (
+              <RelaisAccessNotice status={currentUser?.relais_validation_status} onBack={() => navigate('/profil')} />
+            )}
+            {activePanel === 'stock' && isRelaisValidated && <PanelStock />}
+            {activePanel === 'scanner' && isRelaisValidated && <PanelScanner />}
+            {activePanel === 'profils' && isRelaisValidated && <PanelProfils />}
             {activePanel === 'profil' && <PanelProfil />}
             {activePanel === 'wallet' && (role === 'lecteur' ? <PanelWalletLecteur /> : role === 'voyageur' ? <PanelAccueilVoyageur /> : <PanelWalletAdmin />)}
             {activePanel === 'aide' && <PanelAide role={role} />}
@@ -254,6 +259,7 @@ export default function Bordero({ initialPanel }) {
       <div className="md:hidden">
         <BottomNav
           role={role}
+          relaisValidated={isRelaisValidated}
           activePanel={activePanel}
           onSwitch={switchPanel}
         />

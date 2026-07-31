@@ -20,8 +20,8 @@ const roles = [
     id: 'relais',
     icon: '🏪',
     title: 'Point relais',
-    description: 'Vous réceptionnez les colis, scannez les dépôts et organisez les retraits des lecteurs.',
-    benefit: 'Idéal pour gérer le stock local.',
+    description: 'Vous demandez l’accès Point Relais. Le scanner, le stock et les profils seront ouverts après validation administrateur.',
+    benefit: 'Accès soumis à validation admin.',
   },
 ];
 
@@ -64,7 +64,7 @@ export default function RoleOnboardingPrompt({ open, currentRole, onSelect, onCl
             Choisir plus tard
           </CouponButton>
           <p className="text-[11px] text-encre/45 italic text-center sm:text-right">
-            Ce choix personnalise seulement votre navigation.
+            Le rôle Point Relais reste bloqué tant qu’un administrateur ne l’a pas validé.
           </p>
         </div>
       </div>

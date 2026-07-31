@@ -7,12 +7,14 @@ import ValidationLivraisons from '@/components/admin/ValidationLivraisons';
 import SuiviAcheminement from '@/components/admin/SuiviAcheminement';
 import RapportAnalytique from '@/components/admin/RapportAnalytique';
 import ComptesTest from '@/components/admin/ComptesTest';
+import ValidationPointsRelais from '@/components/admin/ValidationPointsRelais';
 
 const TABS = [
   { id: 'stats', label: '📊 Tableau de bord', icon: '📊' },
   { id: 'rapport', label: '🔬 Rapport Analytique', icon: '🔬' },
   { id: 'suivi', label: '🗺️ Suivi Acheminement', icon: '🗺️' },
   { id: 'validations', label: '✅ Validations', icon: '✅' },
+  { id: 'relais', label: '🏪 Points relais', icon: '🏪' },
   { id: 'zones', label: '🌍 Zones & Tarifs', icon: '🌍' },
   { id: 'marges', label: '🧮 Simulateur de marges', icon: '🧮' },
   { id: 'comptes', label: '👥 Comptes de test', icon: '👥' },
@@ -107,6 +109,7 @@ export default function AdminDashboard() {
         {activeTab === 'rapport' && <RapportAnalytique />}
         {activeTab === 'suivi' && <SuiviAcheminement />}
         {activeTab === 'validations' && <ValidationLivraisons />}
+        {activeTab === 'relais' && <ValidationPointsRelais />}
         {activeTab === 'zones' && <ZonesTarifsManager />}
         {activeTab === 'marges' && <MargeSimulateur />}
         {activeTab === 'comptes' && <ComptesTest />}
