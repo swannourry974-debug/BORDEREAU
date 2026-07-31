@@ -13,13 +13,37 @@
       "default": "lecteur",
       "description": "R\u00f4le de l'utilisateur dans l'application"
     },
+    "relais_valide": {
+      "type": "boolean",
+      "default": false,
+      "description": "Indique si l'administrateur a valid\u00e9 l'acc\u00e8s Point Relais"
+    },
+    "relais_validation_status": {
+      "type": "string",
+      "enum": [
+        "aucune",
+        "en_attente",
+        "valide",
+        "rejete"
+      ],
+      "default": "aucune",
+      "description": "Statut de validation administrateur pour le r\u00f4le Point Relais"
+    },
+    "relais_validation_notes": {
+      "type": "string",
+      "description": "Notes administrateur li\u00e9es \u00e0 la validation relais"
+    },
+    "relais_valide_le": {
+      "type": "string",
+      "description": "Date ISO de validation du r\u00f4le Point Relais"
+    },
     "ville_destination": {
       "type": "string",
       "description": "Ville de destination pr\u00e9f\u00e9r\u00e9e (pour lecteurs)"
     },
     "point_relais_id": {
       "type": "string",
-      "description": "Point relais associ\u00e9 (pour g\u00e9rants de relais)"
+      "description": "Point relais associ\u00e9 (pour g\u00e9rants de relais valid\u00e9s)"
     },
     "iban": {
       "type": "string",
@@ -38,11 +62,5 @@
       "type": "boolean",
       "default": false
     }
-  },
-  "required": [
-    "ville_destination",
-    "point_relais_id",
-    "iban",
-    "stripe_account_id"
-  ]
+  }
 }
