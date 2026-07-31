@@ -24,6 +24,16 @@
       "type": "string",
       "description": "Email du g\u00e9rant (compte relais)"
     },
+    "validation_admin": {
+      "type": "string",
+      "enum": [
+        "en_attente",
+        "valide",
+        "rejete"
+      ],
+      "default": "en_attente",
+      "description": "Validation administrateur obligatoire avant acc\u00e8s relais"
+    },
     "telephone": {
       "type": "string"
     },
@@ -38,7 +48,7 @@
     },
     "actif": {
       "type": "boolean",
-      "default": true
+      "default": false
     },
     "note_moyenne": {
       "type": "number",
@@ -59,7 +69,17 @@
     "read": {
       "$or": [
         {
-          "data.gerant_email": "{{user.email}}"
+          "$and": [
+            {
+              "data.gerant_email": "{{user.email}}"
+            },
+            {
+              "data.actif": true
+            },
+            {
+              "data.validation_admin": "valide"
+            }
+          ]
         },
         {
           "user_condition": {
@@ -69,16 +89,9 @@
       ]
     },
     "update": {
-      "$or": [
-        {
-          "data.gerant_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     },
     "delete": {
       "user_condition": {
