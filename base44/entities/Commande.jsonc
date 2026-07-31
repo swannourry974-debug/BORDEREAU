@@ -203,7 +203,21 @@
           "data.lecteur_email": "{{user.email}}"
         },
         {
-          "data.point_relais_id": "{{user.data.point_relais_id}}"
+          "$and": [
+            {
+              "data.point_relais_id": "{{user.data.point_relais_id}}"
+            },
+            {
+              "data.point_relais_id": {
+                "$exists": true
+              }
+            },
+            {
+              "data.point_relais_id": {
+                "$ne": ""
+              }
+            }
+          ]
         },
         {
           "user_condition": {
@@ -218,7 +232,16 @@
           "created_by_id": "{{user.id}}"
         },
         {
-          "data.point_relais_id": "{{user.data.point_relais_id}}"
+          "$and": [
+            {
+              "data.point_relais_id": "{{user.data.point_relais_id}}"
+            },
+            {
+              "data.point_relais_id": {
+                "$ne": ""
+              }
+            }
+          ]
         },
         {
           "user_condition": {
@@ -230,8 +253,14 @@
     "delete": {
       "$or": [
         {
-          "created_by_id": "{{user.id}}",
-          "data.statut": "en_attente_paiement"
+          "$and": [
+            {
+              "created_by_id": "{{user.id}}"
+            },
+            {
+              "data.statut": "en_attente_paiement"
+            }
+          ]
         },
         {
           "user_condition": {
