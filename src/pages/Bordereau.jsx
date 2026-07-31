@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import AppHeader from '../components/bordereau/AppHeader';
 import RoleSwitcher from '../components/bordereau/RoleSwitcher';
+import RoleOnboardingPrompt from '../components/bordereau/RoleOnboardingPrompt';
 import BottomNav from '../components/bordereau/BottomNav';
 import PanelCatalogue from '../components/bordereau/PanelCatalogue';
 import PanelEtagere from '../components/bordereau/PanelEtagere.jsx';
@@ -70,7 +71,9 @@ export default function Bordero({ initialPanel }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [role, setRole] = useState('lecteur');
+  const [currentUser, setCurrentUser] = useState(null);
   const [roleSwitcherOpen, setRoleSwitcherOpen] = useState(false);
+  const [rolePromptOpen, setRolePromptOpen] = useState(false);
   const [commandeOpen, setCommandeOpen] = useState(false);
   const [commandeBook, setCommandeBook] = useState(null);
 
@@ -78,9 +81,18 @@ export default function Bordero({ initialPanel }) {
 
   useEffect(() => {
     base44.auth.me().then(user => {
+      setCurrentUser(user);
+      if (['lecteur', 'voyageur', 'relais'].includes(user?.role)) {
+        setRole(user.role);
+      }
       if (user && RELAIS_EMAILS.includes(user.email)) {
         setRole('relais');
         navigate('/scanner');
+        return;
+      }
+      const promptKey = `bordero_role_prompt_seen_${user?.email || 'guest'}`;
+      if (user && !localStorage.getItem(promptKey)) {
+        setRolePromptOpen(true);
       }
     }).catch(() => {});
   }, []);
@@ -88,10 +100,24 @@ export default function Bordero({ initialPanel }) {
   const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/missions': 'missions', '/stock': 'stock', '/Stock': 'stock', '/accueil-voyageur': 'accueil-voyageur', '/scanner': 'scanner', '/profils': 'profils', '/profil': 'profil', '/PanelProfil': 'profil', '/panel-profil': 'profil', '/wallet': 'wallet', '/aide': 'aide' };
   const activePanel = pathToPanel[location.pathname] || initialPanel || 'catalogue';
 
+  const markRolePromptSeen = () => {
+    const promptKey = `bordero_role_prompt_seen_${currentUser?.email || 'guest'}`;
+    localStorage.setItem(promptKey, 'true');
+    setRolePromptOpen(false);
+  };
+
   const switchRole = (newRole) => {
     setRole(newRole);
     setRoleSwitcherOpen(false);
+    setRolePromptOpen(false);
     setCommandeOpen(false);
+    if (currentUser) {
+      base44.auth.updateMe({ role: newRole }).then(updatedUser => {
+        setCurrentUser(updatedUser || { ...currentUser, role: newRole });
+      }).catch(() => {});
+      const promptKey = `bordero_role_prompt_seen_${currentUser.email || 'guest'}`;
+      localStorage.setItem(promptKey, 'true');
+    }
     const defaults = { lecteur: '/catalogue', voyageur: '/accueil-voyageur', relais: '/stock' };
     navigate(defaults[newRole]);
   };
@@ -122,6 +148,13 @@ export default function Bordero({ initialPanel }) {
       <RoleSwitcher
         open={roleSwitcherOpen}
         onSwitch={switchRole}
+      />
+
+      <RoleOnboardingPrompt
+        open={rolePromptOpen}
+        currentRole={role}
+        onSelect={switchRole}
+        onClose={markRolePromptSeen}
       />
 
       {/* Layout responsive : sidebar sur tablette/desktop, bottom nav sur mobile */}
