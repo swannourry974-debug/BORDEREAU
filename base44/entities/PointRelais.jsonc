@@ -71,9 +71,6 @@
         {
           "$and": [
             {
-              "data.gerant_email": "{{user.email}}"
-            },
-            {
               "data.actif": true
             },
             {
