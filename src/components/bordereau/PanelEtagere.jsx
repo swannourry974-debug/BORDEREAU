@@ -22,7 +22,14 @@ export default function PanelEtagere() {
     base44.auth.me().then(async (u) => {
       setUser(u);
       if (!u) { setLoading(false); return; }
-      const data = await base44.entities.Commande.filter({ lecteur_email: u.email }, '-created_date', 50);
+      const data = await base44.entities.Commande.filter({
+        $or: [
+          { lecteur_email: u.email },
+          { voyageur_email: u.email },
+          { created_by_id: u.id },
+          { created_by: u.email },
+        ],
+      }, '-created_date', 50);
       setCommandes(data || []);
       setLoading(false);
     }).catch(() => setLoading(false));
