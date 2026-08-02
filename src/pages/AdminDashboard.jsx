@@ -1,29 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import ZonesTarifsManager from '@/components/admin/ZonesTarifsManager';
-import MargeSimulateur from '@/components/admin/MargeSimulateur';
-import AdminStats from '@/components/admin/AdminStats';
-import ValidationLivraisons from '@/components/admin/ValidationLivraisons';
-import SuiviAcheminement from '@/components/admin/SuiviAcheminement';
-import RapportAnalytique from '@/components/admin/RapportAnalytique';
-import ComptesTest from '@/components/admin/ComptesTest';
-import ValidationPointsRelais from '@/components/admin/ValidationPointsRelais';
-import AgentBordeurNotifications from '@/components/admin/AgentBordeurNotifications';
+import AdminActivityApp from '@/components/admin/AdminActivityApp';
+import AdminAchatsVilles from '@/components/admin/AdminAchatsVilles';
+import AdminLivraisonsEtats from '@/components/admin/AdminLivraisonsEtats';
+import AdminLitiges from '@/components/admin/AdminLitiges';
+import AdminReseauRelais from '@/components/admin/AdminReseauRelais';
 
 const TABS = [
-  { id: 'agent', label: '🔔 Agent Bordeur', icon: '🔔' },
-  { id: 'stats', label: '📊 Tableau de bord', icon: '📊' },
-  { id: 'rapport', label: '🔬 Rapport Analytique', icon: '🔬' },
-  { id: 'suivi', label: '🗺️ Suivi Acheminement', icon: '🗺️' },
-  { id: 'validations', label: '✅ Validations', icon: '✅' },
-  { id: 'relais', label: '🏪 Points relais', icon: '🏪' },
-  { id: 'zones', label: '🌍 Zones & Tarifs', icon: '🌍' },
-  { id: 'marges', label: '🧮 Simulateur de marges', icon: '🧮' },
-  { id: 'comptes', label: '👥 Comptes de test', icon: '👥' },
+  { id: 'activite', label: "Activité de l'appli" },
+  { id: 'villes', label: 'Achats par villes' },
+  { id: 'livraisons', label: 'Livraisons & États' },
+  { id: 'litiges', label: 'Tableau litiges' },
+  { id: 'relais', label: 'Réseau Points Relais' },
 ];
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState('stats');
+  const [activeTab, setActiveTab] = useState('activite');
   const [user, setUser] = useState(null);
   const [authorized, setAuthorized] = useState(null);
 
@@ -54,9 +46,7 @@ export default function AdminDashboard() {
   }
 
   const isAgentBordeur = user?.role === 'admin_secondaire';
-  const visibleTabs = isAgentBordeur
-    ? TABS.filter(tab => ['agent', 'stats', 'rapport', 'suivi', 'validations'].includes(tab.id))
-    : TABS;
+  const visibleTabs = TABS;
   const openOfficialLogin = () => base44.auth.logout('/admin');
 
   return (
@@ -106,7 +96,7 @@ export default function AdminDashboard() {
               background: 'transparent',
               borderBottom: activeTab === tab.id ? '3px solid var(--bordeaux)' : '3px solid transparent',
               color: activeTab === tab.id ? 'var(--bordeaux)' : 'hsl(var(--muted-foreground))',
-              fontSize: 12, letterSpacing: 2, textTransform: 'uppercase',
+              fontSize: 12, letterSpacing: 1.5, textTransform: 'uppercase',
               whiteSpace: 'nowrap', transition: 'all 0.2s',
             }}
           >
@@ -117,15 +107,11 @@ export default function AdminDashboard() {
 
       {/* Content */}
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
-        {activeTab === 'agent' && <AgentBordeurNotifications />}
-        {activeTab === 'stats' && <AdminStats />}
-        {activeTab === 'rapport' && <RapportAnalytique />}
-        {activeTab === 'suivi' && <SuiviAcheminement readOnly={isAgentBordeur} />}
-        {activeTab === 'validations' && <ValidationLivraisons readOnly={isAgentBordeur} />}
-        {activeTab === 'relais' && !isAgentBordeur && <ValidationPointsRelais />}
-        {activeTab === 'zones' && !isAgentBordeur && <ZonesTarifsManager />}
-        {activeTab === 'marges' && !isAgentBordeur && <MargeSimulateur />}
-        {activeTab === 'comptes' && !isAgentBordeur && <ComptesTest />}
+        {activeTab === 'activite' && <AdminActivityApp />}
+        {activeTab === 'villes' && <AdminAchatsVilles />}
+        {activeTab === 'livraisons' && <AdminLivraisonsEtats />}
+        {activeTab === 'litiges' && <AdminLitiges />}
+        {activeTab === 'relais' && <AdminReseauRelais />}
       </div>
     </div>
   );
