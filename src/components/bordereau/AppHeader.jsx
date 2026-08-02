@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
 import { useLang } from '@/lib/LangContext';
 
 const ROOT_PANELS = ['/', '/catalogue', '/etagere', '/missions', '/accueil-voyageur', '/stock'];
@@ -15,6 +16,7 @@ export default function AppHeader({ role, roleSwitcherOpen, onToggleRoleSwitcher
     relais: t('role_relais'),
   };
   const showBack = !ROOT_PANELS.includes(location.pathname);
+  const openOfficialLogin = () => base44.auth.logout(window.location.pathname);
 
   return (
     <header className="px-3 sm:px-5" style={{
@@ -38,7 +40,11 @@ export default function AppHeader({ role, roleSwitcherOpen, onToggleRoleSwitcher
             </button>
           )}
           <div className="min-w-0">
-          <div className="font-special text-[20px] sm:text-[28px]" style={{ color: 'var(--creme)', letterSpacing: 'clamp(3px, 1.4vw, 6px)', textTransform: 'uppercase', userSelect: 'none' }}>
+          <div
+            onDoubleClick={openOfficialLogin}
+            className="font-special text-[20px] sm:text-[28px]"
+            style={{ color: 'var(--creme)', letterSpacing: 'clamp(3px, 1.4vw, 6px)', textTransform: 'uppercase', userSelect: 'none', cursor: 'default' }}
+          >
             BORDERO
           </div>
           <span className="font-fell hidden sm:block truncate" style={{ fontStyle: 'italic', fontSize: 11, color: 'rgba(253,252,240,0.7)', letterSpacing: 1.5, marginTop: 2, userSelect: 'none', maxWidth: 180 }}>

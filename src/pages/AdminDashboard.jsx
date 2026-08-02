@@ -57,6 +57,7 @@ export default function AdminDashboard() {
   const visibleTabs = isAgentBordeur
     ? TABS.filter(tab => ['agent', 'stats', 'rapport', 'suivi', 'validations'].includes(tab.id))
     : TABS;
+  const openOfficialLogin = () => base44.auth.logout('/admin');
 
   return (
     <div style={{ minHeight: '100vh', background: 'hsl(var(--background))', color: 'hsl(var(--foreground))' }}>
@@ -68,7 +69,11 @@ export default function AdminDashboard() {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between'
       }}>
         <div>
-          <div className="font-special" style={{ fontSize: 22, color: 'var(--creme)', letterSpacing: 5, textTransform: 'uppercase' }}>
+          <div
+            onDoubleClick={openOfficialLogin}
+            className="font-special"
+            style={{ fontSize: 22, color: 'var(--creme)', letterSpacing: 5, textTransform: 'uppercase', cursor: 'default', userSelect: 'none' }}
+          >
             BORDERO · {isAgentBordeur ? 'AGENT BORDEUR' : 'ADMIN'}
           </div>
           <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 11, color: 'rgba(253,252,240,0.7)', letterSpacing: 2 }}>
