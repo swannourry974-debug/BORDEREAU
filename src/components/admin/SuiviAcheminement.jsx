@@ -53,7 +53,7 @@ const STATUT_LABELS = {
 };
 
 // ─── Sous-composant Timeline ─────────────────────────────────────────────────
-function Timeline({ commande, mission, onUpdate }) {
+function Timeline({ commande, mission, onUpdate, readOnly = false }) {
   const isExpress = commande.mode_livraison === 'express';
   const currentIdx = isExpress
     ? getExpressEtapeIndex(mission, commande.statut)
@@ -113,7 +113,9 @@ function Timeline({ commande, mission, onUpdate }) {
             ? <span>✈ Express · Statut voyageur : <strong style={{ color: '#1a5276' }}>{mission.statut}</strong> — <em style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic' }}>mis à jour par le voyageur</em></span>
             : <span>✈ Express · <em style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', color: '#b41414' }}>Aucun voyageur assigné</em></span>
         ) : (
-          nextStatut
+          readOnly
+            ? <span style={{ color: 'hsl(var(--muted-foreground))' }}>Lecture seule · action réservée à l’administrateur principal</span>
+            : nextStatut
             ? <button
                 onClick={handleAdvance}
                 style={{
@@ -135,7 +137,7 @@ function Timeline({ commande, mission, onUpdate }) {
 }
 
 // ─── Composant principal ─────────────────────────────────────────────────────
-export default function SuiviAcheminement() {
+export default function SuiviAcheminement({ readOnly = false }) {
   const [commandes, setCommandes] = useState([]);
   const [missions, setMissions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -306,7 +308,7 @@ export default function SuiviAcheminement() {
                         </div>
                       )}
                     </div>
-                    <Timeline commande={cmd} mission={isExpress ? mission : null} onUpdate={load} />
+                    <Timeline commande={cmd} mission={isExpress ? mission : null} onUpdate={load} readOnly={readOnly} />
                   </div>
                 )}
               </div>

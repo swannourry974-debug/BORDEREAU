@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 
-export default function ValidationLivraisons() {
+export default function ValidationLivraisons({ readOnly = false }) {
   const [commandes, setCommandes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(null);
@@ -18,6 +18,7 @@ export default function ValidationLivraisons() {
   useEffect(() => { load(); }, []);
 
   const handleValidate = async (commande, decision) => {
+    if (readOnly) return;
     setProcessing(commande.id);
 
     await base44.entities.Commande.update(commande.id, {
@@ -158,7 +159,7 @@ export default function ValidationLivraisons() {
                 )}
 
                 {/* Zone décision admin */}
-                {isPending && (
+                {isPending && !readOnly && (
                   <div>
                     <div style={{ marginBottom: 12 }}>
                       <label style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', display: 'block', marginBottom: 6 }}>
@@ -207,6 +208,16 @@ export default function ValidationLivraisons() {
                         ❌ Rejeter
                       </button>
                     </div>
+                  </div>
+                )}
+
+                {isPending && readOnly && (
+                  <div style={{
+                    background: 'rgba(139,105,20,0.08)',
+                    border: '1px dashed #8B6914',
+                    padding: '10px 14px', fontSize: 12, color: '#8B6914',
+                  }}>
+                    Lecture seule · validation réservée à l’administrateur principal.
                   </div>
                 )}
 
