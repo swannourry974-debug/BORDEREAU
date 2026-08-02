@@ -1,13 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { X } from 'lucide-react';
 
 export default function QrScannerModal({ onScan, onClose }) {
   const scannerRef = useRef(null);
+  const fileScannerRef = useRef(null);
+  const fileInputRef = useRef(null);
   const startedRef = useRef(false);
   const [error, setError] = useState(null);
   const [manualMode, setManualMode] = useState(false);
   const [manualId, setManualId] = useState('');
+  const [photoLoading, setPhotoLoading] = useState(false);
 
   useEffect(() => {
     const scannerId = 'qr-reader';
@@ -39,6 +42,9 @@ export default function QrScannerModal({ onScan, onClose }) {
         scannerRef.current.stop().catch(() => {});
         startedRef.current = false;
       }
+      if (fileScannerRef.current) {
+        fileScannerRef.current.clear?.();
+      }
     };
   }, []);
 
@@ -55,12 +61,53 @@ export default function QrScannerModal({ onScan, onClose }) {
     if (manualId.trim()) onScan(manualId.trim());
   };
 
+  const handlePhotoUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setPhotoLoading(true);
+    setError(null);
+    if (scannerRef.current && startedRef.current) {
+      await scannerRef.current.stop().catch(() => {});
+      startedRef.current = false;
+    }
+    if (!fileScannerRef.current) {
+      fileScannerRef.current = new Html5Qrcode('qr-file-reader', {
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.QR_CODE,
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.UPC_A,
+        ],
+        verbose: false,
+      });
+    }
+    try {
+      const decodedText = await fileScannerRef.current.scanFile(file, false);
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+      onScan(decodedText);
+    } catch {
+      setError('Aucun QR code ou ISBN détecté sur cette photo. Essayez une image plus nette ou utilisez la saisie manuelle.');
+      setManualMode(true);
+    } finally {
+      setPhotoLoading(false);
+      if (event.target) event.target.value = '';
+    }
+  };
+
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 100,
       background: 'rgba(26,16,8,0.95)',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
     }}>
+      <div id="qr-file-reader" style={{ position: 'absolute', left: -9999, top: -9999, width: 1, height: 1, overflow: 'hidden' }} />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handlePhotoUpload}
+        style={{ display: 'none' }}
+      />
       <div style={{ width: '100%', maxWidth: 420, padding: '0 20px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
           <div>
@@ -104,14 +151,22 @@ export default function QrScannerModal({ onScan, onClose }) {
                 boxSizing: 'border-box', marginBottom: 12,
               }}
             />
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <button onClick={handleManualSubmit} disabled={!manualId.trim()} style={{
-                flex: 1, background: '#800020', color: '#FDFCF0', border: 'none',
+                flex: '1 1 120px', background: '#800020', color: '#FDFCF0', border: 'none',
                 fontFamily: 'Special Elite, monospace', fontSize: 11, letterSpacing: 2,
                 padding: '11px 0', cursor: manualId.trim() ? 'pointer' : 'not-allowed',
                 textTransform: 'uppercase', opacity: manualId.trim() ? 1 : 0.5,
               }}>
                 Valider
+              </button>
+              <button onClick={() => fileInputRef.current?.click()} disabled={photoLoading} style={{
+                flex: '1 1 130px', background: 'transparent', color: 'rgba(253,252,240,0.75)',
+                border: '1px dashed rgba(253,252,240,0.3)', fontFamily: 'Special Elite, monospace',
+                fontSize: 10, letterSpacing: 1, padding: '11px 14px', cursor: photoLoading ? 'wait' : 'pointer',
+                textTransform: 'uppercase', opacity: photoLoading ? 0.6 : 1,
+              }}>
+                {photoLoading ? 'Analyse…' : '🖼️ Photo ISBN'}
               </button>
               {!error && (
                 <button onClick={() => setManualMode(false)} style={{
@@ -145,15 +200,25 @@ export default function QrScannerModal({ onScan, onClose }) {
         {!error && !manualMode && (
           <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
             <div style={{ color: 'rgba(253,252,240,0.5)', fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, textAlign: 'center', letterSpacing: 1 }}>
-              Pointez la caméra vers le QR code du colis
+              Pointez la caméra vers le QR code du colis ou importez une photo d’ISBN.
             </div>
-            <button onClick={() => setManualMode(true)} style={{
-              background: 'transparent', border: '1px dashed rgba(253,252,240,0.3)',
-              color: 'rgba(253,252,240,0.6)', fontFamily: 'Special Elite, monospace',
-              fontSize: 10, letterSpacing: 2, padding: '7px 16px', cursor: 'pointer', textTransform: 'uppercase',
-            }}>
-              ✏️ Saisie manuelle
-            </button>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <button onClick={() => fileInputRef.current?.click()} disabled={photoLoading} style={{
+                background: '#800020', border: '1px solid #800020', color: '#FDFCF0',
+                fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 2,
+                padding: '7px 16px', cursor: photoLoading ? 'wait' : 'pointer', textTransform: 'uppercase',
+                opacity: photoLoading ? 0.65 : 1,
+              }}>
+                {photoLoading ? 'Analyse…' : '🖼️ Importer photo ISBN'}
+              </button>
+              <button onClick={() => setManualMode(true)} style={{
+                background: 'transparent', border: '1px dashed rgba(253,252,240,0.3)',
+                color: 'rgba(253,252,240,0.6)', fontFamily: 'Special Elite, monospace',
+                fontSize: 10, letterSpacing: 2, padding: '7px 16px', cursor: 'pointer', textTransform: 'uppercase',
+              }}>
+                ✏️ Saisie manuelle
+              </button>
+            </div>
           </div>
         )}
       </div>

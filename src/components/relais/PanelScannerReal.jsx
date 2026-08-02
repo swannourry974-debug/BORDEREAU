@@ -29,15 +29,19 @@ export default function PanelScanner() {
     setActionDone(false);
     setLoading(true);
     try {
-      // Le QR code contient l'ID de la commande
+      // Le QR code contient l'ID de la commande ; une photo peut aussi fournir l'ISBN.
       const cmdId = text.trim();
+      const cleanIsbn = cmdId.replace(/[^0-9X]/gi, '');
       const results = await base44.entities.Commande.filter({ id: cmdId });
       if (!results || results.length === 0) {
         // Essayer par stripe_session_id ou qr_code_depot
         const byQr = await base44.entities.Commande.list('-created_date', 200);
-        const found = byQr.find(c => c.qr_code_depot === cmdId || c.stripe_session_id === cmdId || c.id === cmdId);
+        const found = byQr.find(c => {
+          const orderIsbn = String(c.code_barre_isbn || '').replace(/[^0-9X]/gi, '');
+          return c.qr_code_depot === cmdId || c.stripe_session_id === cmdId || c.id === cmdId || (cleanIsbn && orderIsbn === cleanIsbn);
+        });
         if (!found) {
-          setError('Bordero introuvable. Vérifiez le QR code.');
+          setError('Bordero introuvable. Vérifiez le QR code ou l’ISBN scanné.');
           setLoading(false);
           return;
         }
