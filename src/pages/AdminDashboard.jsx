@@ -8,8 +8,10 @@ import SuiviAcheminement from '@/components/admin/SuiviAcheminement';
 import RapportAnalytique from '@/components/admin/RapportAnalytique';
 import ComptesTest from '@/components/admin/ComptesTest';
 import ValidationPointsRelais from '@/components/admin/ValidationPointsRelais';
+import AgentBordeurNotifications from '@/components/admin/AgentBordeurNotifications';
 
 const TABS = [
+  { id: 'agent', label: '🔔 Agent Bordeur', icon: '🔔' },
   { id: 'stats', label: '📊 Tableau de bord', icon: '📊' },
   { id: 'rapport', label: '🔬 Rapport Analytique', icon: '🔬' },
   { id: 'suivi', label: '🗺️ Suivi Acheminement', icon: '🗺️' },
@@ -28,7 +30,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     base44.auth.me().then(u => {
       setUser(u);
-      setAuthorized(u?.role === 'admin');
+      setAuthorized(u?.role === 'admin' || u?.role === 'admin_secondaire');
     }).catch(() => setAuthorized(false));
   }, []);
 
@@ -51,6 +53,11 @@ export default function AdminDashboard() {
     );
   }
 
+  const isAgentBordeur = user?.role === 'admin_secondaire';
+  const visibleTabs = isAgentBordeur
+    ? TABS.filter(tab => ['agent', 'stats', 'rapport', 'suivi', 'validations'].includes(tab.id))
+    : TABS;
+
   return (
     <div style={{ minHeight: '100vh', background: 'hsl(var(--background))', color: 'hsl(var(--foreground))' }}>
       {/* Header */}
@@ -62,10 +69,10 @@ export default function AdminDashboard() {
       }}>
         <div>
           <div className="font-special" style={{ fontSize: 22, color: 'var(--creme)', letterSpacing: 5, textTransform: 'uppercase' }}>
-            BORDERO · ADMIN
+            BORDERO · {isAgentBordeur ? 'AGENT BORDEUR' : 'ADMIN'}
           </div>
           <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 11, color: 'rgba(253,252,240,0.7)', letterSpacing: 2 }}>
-            Console de gestion
+            {isAgentBordeur ? 'Supervision lecture seule — sans validation Point Relais' : 'Console de gestion'}
           </div>
         </div>
         <a href="/" className="font-special" style={{
@@ -84,7 +91,7 @@ export default function AdminDashboard() {
         display: 'flex', background: 'hsl(var(--card))',
         overflowX: 'auto',
       }}>
-        {TABS.map(tab => (
+        {visibleTabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
@@ -105,14 +112,15 @@ export default function AdminDashboard() {
 
       {/* Content */}
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: 24 }}>
+        {activeTab === 'agent' && <AgentBordeurNotifications />}
         {activeTab === 'stats' && <AdminStats />}
         {activeTab === 'rapport' && <RapportAnalytique />}
-        {activeTab === 'suivi' && <SuiviAcheminement />}
-        {activeTab === 'validations' && <ValidationLivraisons />}
-        {activeTab === 'relais' && <ValidationPointsRelais />}
-        {activeTab === 'zones' && <ZonesTarifsManager />}
-        {activeTab === 'marges' && <MargeSimulateur />}
-        {activeTab === 'comptes' && <ComptesTest />}
+        {activeTab === 'suivi' && <SuiviAcheminement readOnly={isAgentBordeur} />}
+        {activeTab === 'validations' && <ValidationLivraisons readOnly={isAgentBordeur} />}
+        {activeTab === 'relais' && !isAgentBordeur && <ValidationPointsRelais />}
+        {activeTab === 'zones' && !isAgentBordeur && <ZonesTarifsManager />}
+        {activeTab === 'marges' && !isAgentBordeur && <MargeSimulateur />}
+        {activeTab === 'comptes' && !isAgentBordeur && <ComptesTest />}
       </div>
     </div>
   );

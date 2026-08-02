@@ -8,7 +8,8 @@
         "lecteur",
         "voyageur",
         "relais",
-        "admin"
+        "admin",
+        "admin_secondaire"
       ],
       "default": "lecteur",
       "description": "R\u00f4le de l'utilisateur dans l'application"
