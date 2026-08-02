@@ -188,6 +188,9 @@
           "created_by_id": "{{user.id}}"
         },
         {
+          "data.lecteur_email": "{{user.email}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -200,7 +203,13 @@
           "created_by_id": "{{user.id}}"
         },
         {
+          "created_by": "{{user.email}}"
+        },
+        {
           "data.lecteur_email": "{{user.email}}"
+        },
+        {
+          "data.voyageur_email": "{{user.email}}"
         },
         {
           "$and": [
@@ -230,6 +239,12 @@
       "$or": [
         {
           "created_by_id": "{{user.id}}"
+        },
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.voyageur_email": "{{user.email}}"
         },
         {
           "$and": [
