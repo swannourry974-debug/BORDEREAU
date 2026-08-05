@@ -10,7 +10,7 @@ import { useState, useEffect } from 'react';
 import { CartProvider } from '@/lib/CartContext';
 import { LangProvider } from '@/lib/LangContext';
 // Add page imports here
-import Bordero from './pages/Bordereau.jsx';
+import Bordero from './pages/Bordero.jsx';
 import LandingLecteur from './pages/LandingLecteur';
 import LandingVoyageur from './pages/LandingVoyageur';
 import LandingRelais from './pages/LandingRelais';
