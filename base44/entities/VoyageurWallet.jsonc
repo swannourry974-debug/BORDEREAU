@@ -29,6 +29,33 @@
     "trajet_actif": {
       "type": "string",
       "description": "Ex: Paris \u2192 Miami \u00b7 28 Avril 2026"
+    },
+    "demande_virement_methode": {
+      "type": "string",
+      "enum": [
+        "paypal",
+        "stripe"
+      ],
+      "description": "M\u00e9thode demand\u00e9e pour r\u00e9clamer les gains"
+    },
+    "demande_virement_statut": {
+      "type": "string",
+      "enum": [
+        "aucune",
+        "en_attente",
+        "traitee",
+        "rejetee"
+      ],
+      "default": "aucune",
+      "description": "Statut de la demande de paiement voyageur"
+    },
+    "demande_virement_montant": {
+      "type": "number",
+      "description": "Montant r\u00e9clam\u00e9 par le voyageur"
+    },
+    "demande_virement_le": {
+      "type": "string",
+      "description": "Date ISO de la demande de paiement"
     }
   },
   "required": [

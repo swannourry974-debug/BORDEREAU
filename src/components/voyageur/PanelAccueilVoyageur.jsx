@@ -7,6 +7,7 @@ import VoyageurStatsCard from './VoyageurStatsCard';
 import CalendrierVoyageur from './CalendrierVoyageur';
 import GraphiqueGains from './GraphiqueGains';
 import CalculatriceRevenus from './CalculatriceRevenus';
+import PayoutRequestButtons from './PayoutRequestButtons';
 
 export default function PanelAccueilVoyageur() {
   const [user, setUser] = useState(null);
@@ -71,6 +72,7 @@ export default function PanelAccueilVoyageur() {
         gainsPrevisionnels={wallet?.gains_previsionnels ?? 0}
         virementSuspendu={wallet?.virement_suspendu ?? false}
       />
+      <PayoutRequestButtons user={user} wallet={wallet} onUpdated={setWallet} />
 
       <PerfoStrip />
 
