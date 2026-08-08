@@ -16,7 +16,7 @@ const PROFILS = [
     label: 'Lecteur',
     icon: '📖',
     color: '#1a3a5c',
-    role: 'user',
+    role: 'lecteur',
     desc: 'Recherche de livres, commandes, suivi de livraison, étagère.',
     defaultEmail: 'test.lecteur@bordero.app',
   },
@@ -25,20 +25,20 @@ const PROFILS = [
     label: 'Voyageur',
     icon: '✈️',
     color: '#8B6914',
-    role: 'user',
+    role: 'voyageur',
     desc: 'Tableau de bord voyageur, missions, wallet, déclaration de vol.',
     defaultEmail: 'test.voyageur@bordero.app',
-    extra: 'Après invitation, créez un VoyageurWallet et un Voyage pour ce compte.',
+    extra: 'Le bouton de liaison crée automatiquement son wallet et un vol de test.',
   },
   {
     id: 'relais',
     label: 'Point Relais',
     icon: '🏪',
     color: '#2d6a2d',
-    role: 'user',
+    role: 'relais',
     desc: 'Tableau de bord relais, gestion du stock, scanner de colis.',
     defaultEmail: 'test.relais@bordero.app',
-    extra: 'Après invitation, créez un PointRelais avec gerant_email = cet email.',
+    extra: 'Le bouton de liaison crée automatiquement le Point Relais validé.',
   },
 ];
 
@@ -55,7 +55,7 @@ export default function ComptesTest() {
     setLoading(l => ({ ...l, [profil.id]: true }));
     setStatuts(s => ({ ...s, [profil.id]: null }));
     try {
-      await base44.users.inviteUser(email, profil.role);
+      await base44.users.inviteUser(email, profil.role === 'admin' ? 'admin' : 'user');
       setStatuts(s => ({ ...s, [profil.id]: { ok: true, msg: `Invitation envoyée à ${email}` } }));
     } catch (e) {
       setStatuts(s => ({ ...s, [profil.id]: { ok: false, msg: e?.message || 'Erreur lors de l\'invitation' } }));
@@ -63,9 +63,66 @@ export default function ComptesTest() {
     setLoading(l => ({ ...l, [profil.id]: false }));
   };
 
+  const lierAuSysteme = async (profil) => {
+    const email = emails[profil.id]?.trim();
+    if (!email) return;
+    const loadingKey = `link_${profil.id}`;
+    setLoading(l => ({ ...l, [loadingKey]: true }));
+    setStatuts(s => ({ ...s, [profil.id]: null }));
+    try {
+      const users = await base44.entities.User.filter({ email });
+      const user = users[0];
+      if (!user) {
+        setStatuts(s => ({ ...s, [profil.id]: { ok: false, msg: 'Compte introuvable : ouvrez d’abord le lien d’invitation.' } }));
+        setLoading(l => ({ ...l, [loadingKey]: false }));
+        return;
+      }
+
+      const updates = { role: profil.role };
+
+      if (profil.id === 'voyageur') {
+        const wallets = await base44.entities.VoyageurWallet.filter({ user_email: email });
+        if (wallets.length === 0) {
+          await base44.entities.VoyageurWallet.create({ user_email: email, solde_disponible: 35, gains_previsionnels: 18, livres_actifs: 2, trajet_actif: 'Paris → New York · Test' });
+        }
+        const voyages = await base44.entities.Voyage.filter({ voyageur_email: email });
+        if (voyages.length === 0) {
+          await base44.entities.Voyage.create({ voyageur_email: email, depart_ville: 'Paris', arrivee_ville: 'New York', date_vol: '2026-09-15', actif: true });
+        }
+      }
+
+      if (profil.id === 'relais') {
+        let relais = (await base44.entities.PointRelais.filter({ gerant_email: email }))[0];
+        if (!relais) {
+          relais = await base44.entities.PointRelais.create({ nom: 'Point Relais Test', adresse: 'Adresse test', ville: 'New York', pays_code: 'US', gerant_email: email, validation_admin: 'valide', actif: true, stock_actuel: 0, horaires: 'Lun-Sam 9h-19h' });
+        }
+        updates.relais_valide = true;
+        updates.relais_validation_status = 'valide';
+        updates.relais_valide_le = new Date().toISOString();
+        updates.point_relais_id = relais.id;
+        updates.relais_nom_boutique = relais.nom;
+        updates.relais_adresse = relais.adresse;
+        updates.relais_ville = relais.ville;
+        updates.relais_horaires = relais.horaires;
+      }
+
+      await base44.entities.User.update(user.id, updates);
+      setStatuts(s => ({ ...s, [profil.id]: { ok: true, msg: `${email} est lié au rôle ${profil.label}` } }));
+    } catch (e) {
+      setStatuts(s => ({ ...s, [profil.id]: { ok: false, msg: e?.message || 'Impossible de lier ce compte.' } }));
+    }
+    setLoading(l => ({ ...l, [loadingKey]: false }));
+  };
+
   const inviterTous = async () => {
     for (const profil of PROFILS) {
       await inviter(profil);
+    }
+  };
+
+  const lierTous = async () => {
+    for (const profil of PROFILS) {
+      await lierAuSysteme(profil);
     }
   };
 
@@ -91,6 +148,7 @@ export default function ComptesTest() {
         {PROFILS.map(profil => {
           const statut = statuts[profil.id];
           const isLoading = loading[profil.id];
+          const isLinking = loading[`link_${profil.id}`];
           return (
             <div key={profil.id} style={{
               background: 'hsl(var(--card))', border: '1.5px solid hsl(var(--border))',
@@ -145,9 +203,25 @@ export default function ComptesTest() {
                   fontFamily: 'Special Elite, monospace', fontSize: 10,
                   letterSpacing: 2, textTransform: 'uppercase',
                   transition: 'opacity 0.2s',
+                  marginBottom: 8,
                 }}
               >
                 {isLoading ? 'Envoi…' : `✉️ Inviter le ${profil.label}`}
+              </button>
+
+              <button
+                onClick={() => lierAuSysteme(profil)}
+                disabled={isLinking}
+                style={{
+                  width: '100%', padding: '10px 0',
+                  background: isLinking ? 'hsl(var(--muted))' : 'var(--cta-orange)',
+                  color: 'var(--cta-foreground)', border: 'none', cursor: isLinking ? 'not-allowed' : 'pointer',
+                  fontFamily: 'Special Elite, monospace', fontSize: 10,
+                  letterSpacing: 2, textTransform: 'uppercase',
+                  transition: 'opacity 0.2s',
+                }}
+              >
+                {isLinking ? 'Liaison…' : '🔗 Lier à l’application'}
               </button>
 
               {statut && (
@@ -177,9 +251,23 @@ export default function ComptesTest() {
             fontFamily: 'Special Elite, monospace', fontSize: 11,
             letterSpacing: 3, textTransform: 'uppercase',
             boxShadow: '3px 3px 0 var(--bordeaux-dark)',
+            marginRight: 10,
           }}
         >
           ✉️ Inviter les 4 comptes d'un coup
+        </button>
+        <button
+          onClick={lierTous}
+          style={{
+            padding: '12px 32px',
+            background: 'var(--cta-orange)', color: 'var(--cta-foreground)',
+            border: 'none', cursor: 'pointer',
+            fontFamily: 'Special Elite, monospace', fontSize: 11,
+            letterSpacing: 3, textTransform: 'uppercase',
+            boxShadow: '3px 3px 0 var(--cta-orange-dark)',
+          }}
+        >
+          🔗 Lier les 4 comptes
         </button>
       </div>
     </div>
