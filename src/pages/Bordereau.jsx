@@ -111,7 +111,7 @@ export default function Bordero({ initialPanel }) {
         ? {
             role: newRole,
             relais_valide: currentUser.relais_valide === true,
-            relais_validation_status: currentUser.relais_valide === true ? 'valide' : 'en_attente',
+            relais_validation_status: currentUser.relais_valide === true ? 'valide' : (currentUser.relais_validation_status || 'aucune'),
           }
         : { role: newRole };
       base44.auth.updateMe(updates).then(updatedUser => {

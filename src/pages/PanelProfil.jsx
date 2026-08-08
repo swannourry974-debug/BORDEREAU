@@ -19,10 +19,21 @@ export default function PanelProfil() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [confirmText, setConfirmText] = useState('');
+  const [relaisForm, setRelaisForm] = useState({ nom: '', adresse: '', ville: '', horaires: '' });
+  const [relaisSaving, setRelaisSaving] = useState(false);
+  const [relaisMessage, setRelaisMessage] = useState('');
 
   useEffect(() => {
     base44.auth.me().then(async (u) => {
       setUser(u);
+      if (u) {
+        setRelaisForm({
+          nom: u.relais_nom_boutique || '',
+          adresse: u.relais_adresse || '',
+          ville: u.relais_ville || '',
+          horaires: u.relais_horaires || '',
+        });
+      }
       if (!u) return;
       const livrees = await base44.entities.MissionVoyageur.filter({ voyageur_email: u.email, statut: 'livree' });
       setMissionsLivrees(livrees.length);
@@ -53,6 +64,31 @@ export default function PanelProfil() {
     }
   };
 
+  const handleRelaisSubmit = async (e) => {
+    e.preventDefault();
+    setRelaisSaving(true);
+    setRelaisMessage('');
+    const updates = {
+      relais_nom_boutique: relaisForm.nom.trim(),
+      relais_adresse: relaisForm.adresse.trim(),
+      relais_ville: relaisForm.ville.trim(),
+      relais_horaires: relaisForm.horaires.trim(),
+      relais_valide: false,
+      relais_validation_status: 'en_attente',
+    };
+    try {
+      const updated = await base44.auth.updateMe(updates);
+      setUser(updated || { ...user, ...updates });
+      setRelaisMessage('Demande envoyée : un administrateur va vérifier votre point relais.');
+    } catch (e) {
+      setRelaisMessage('Impossible d’envoyer la demande pour le moment.');
+    }
+    setRelaisSaving(false);
+  };
+
+  const relaisFormComplete = relaisForm.nom.trim() && relaisForm.adresse.trim() && relaisForm.ville.trim() && relaisForm.horaires.trim();
+  const showRelaisRegistration = user?.role === 'relais' && user?.relais_validation_status !== 'valide';
+
   const sectionStyle = {
     background: 'var(--papier)',
     border: '1.5px solid rgba(26,16,8,0.25)',
@@ -76,6 +112,56 @@ export default function PanelProfil() {
             {user?.email || '—'}
           </div>
         </div>
+
+        {showRelaisRegistration && (
+          <div style={sectionStyle}>
+            <div className="font-special" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 10 }}>
+              Inscription Point Relais
+            </div>
+            <div className="font-fell" style={{ fontSize: 12, fontStyle: 'italic', color: 'var(--muted-foreground)', marginBottom: 14, lineHeight: 1.6 }}>
+              Renseignez les informations de votre boutique pour envoyer votre demande de validation.
+            </div>
+            <form onSubmit={handleRelaisSubmit} style={{ display: 'grid', gap: 10 }}>
+              {[
+                ['nom', 'Nom de la boutique'],
+                ['adresse', 'Adresse complète'],
+                ['ville', 'Ville'],
+                ['horaires', 'Horaires d’ouverture'],
+              ].map(([field, label]) => (
+                <input
+                  key={field}
+                  required
+                  className="font-special"
+                  placeholder={label}
+                  value={relaisForm[field]}
+                  onChange={e => setRelaisForm(prev => ({ ...prev, [field]: e.target.value }))}
+                  style={{
+                    width: '100%', background: 'var(--creme)', border: '1px solid rgba(26,16,8,0.22)',
+                    padding: '11px 12px', fontSize: 12, color: 'var(--encre)', outline: 'none', boxSizing: 'border-box',
+                  }}
+                />
+              ))}
+              <button
+                type="submit"
+                disabled={!relaisFormComplete || relaisSaving}
+                className="font-special"
+                style={{
+                  width: '100%', background: relaisFormComplete ? 'var(--cta-orange)' : 'rgba(26,16,8,0.18)',
+                  color: relaisFormComplete ? 'var(--cta-foreground)' : 'rgba(26,16,8,0.45)', border: 'none',
+                  padding: '12px 16px', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
+                  cursor: relaisFormComplete && !relaisSaving ? 'pointer' : 'not-allowed',
+                }}
+              >
+                {relaisSaving ? 'Envoi…' : 'Envoyer ma demande relais'}
+              </button>
+              {relaisMessage && (
+                <div className="font-fell" style={{ fontSize: 12, fontStyle: 'italic', color: 'var(--bordeaux)', lineHeight: 1.5 }}>
+                  {relaisMessage}
+                </div>
+              )}
+            </form>
+          </div>
+        )}
 
         {/* Mes Distinctions */}
         <div style={sectionStyle}>

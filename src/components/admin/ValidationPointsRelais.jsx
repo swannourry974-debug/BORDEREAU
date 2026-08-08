@@ -8,7 +8,7 @@ export default function ValidationPointsRelais() {
   const load = async () => {
     setLoading(true);
     const allUsers = await base44.entities.User.list('-updated_date', 200);
-    setUsers(allUsers.filter(u => u.role === 'relais' || u.relais_validation_status === 'en_attente'));
+    setUsers(allUsers.filter(u => u.relais_validation_status === 'en_attente'));
     setLoading(false);
   };
 
@@ -18,8 +18,10 @@ export default function ValidationPointsRelais() {
     let relais = (await base44.entities.PointRelais.filter({ gerant_email: user.email }, '-created_date', 1))[0];
     if (!relais) {
       relais = await base44.entities.PointRelais.create({
-        nom: user.full_name ? `Relais ${user.full_name}` : 'Relais Bordero',
-        ville: user.ville_destination || 'À configurer',
+        nom: user.relais_nom_boutique || (user.full_name ? `Relais ${user.full_name}` : 'Relais Bordero'),
+        adresse: user.relais_adresse || '',
+        ville: user.relais_ville || user.ville_destination || 'À configurer',
+        horaires: user.relais_horaires || '',
         pays_code: 'FR',
         gerant_email: user.email,
         actif: true,
@@ -27,7 +29,14 @@ export default function ValidationPointsRelais() {
         stock_actuel: 0,
       });
     } else {
-      relais = await base44.entities.PointRelais.update(relais.id, { actif: true, validation_admin: 'valide' });
+      relais = await base44.entities.PointRelais.update(relais.id, {
+        nom: user.relais_nom_boutique || relais.nom,
+        adresse: user.relais_adresse || relais.adresse,
+        ville: user.relais_ville || relais.ville,
+        horaires: user.relais_horaires || relais.horaires,
+        actif: true,
+        validation_admin: 'valide',
+      });
     }
     await base44.entities.User.update(user.id, {
       role: 'relais',
@@ -67,6 +76,9 @@ export default function ValidationPointsRelais() {
           <div>
             <div className="font-bold text-encre">{user.full_name || 'Utilisateur'}</div>
             <div className="text-[12px] text-encre/55">{user.email}</div>
+            <div className="text-[12px] text-encre/70 mt-2">{user.relais_nom_boutique || 'Boutique non renseignée'} · {user.relais_ville || 'Ville non renseignée'}</div>
+            <div className="text-[11px] text-encre/55">{user.relais_adresse || 'Adresse non renseignée'}</div>
+            <div className="text-[11px] text-encre/55">Horaires : {user.relais_horaires || 'non renseignés'}</div>
             <div className="text-[10px] tracking-[1.5px] uppercase text-bordeaux mt-2">Statut : {user.relais_validation_status || 'en_attente'}</div>
           </div>
           <div className="flex gap-2">

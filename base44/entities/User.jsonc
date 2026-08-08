@@ -38,6 +38,22 @@
       "type": "string",
       "description": "Date ISO de validation du r\u00f4le Point Relais"
     },
+    "relais_nom_boutique": {
+      "type": "string",
+      "description": "Nom de la boutique candidate Point Relais"
+    },
+    "relais_adresse": {
+      "type": "string",
+      "description": "Adresse compl\u00e8te de la boutique candidate Point Relais"
+    },
+    "relais_ville": {
+      "type": "string",
+      "description": "Ville de la boutique candidate Point Relais"
+    },
+    "relais_horaires": {
+      "type": "string",
+      "description": "Horaires d'ouverture de la boutique candidate Point Relais"
+    },
     "ville_destination": {
       "type": "string",
       "description": "Ville de destination pr\u00e9f\u00e9r\u00e9e (pour lecteurs)"
