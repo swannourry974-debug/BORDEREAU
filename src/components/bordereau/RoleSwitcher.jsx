@@ -7,8 +7,9 @@ const roles = [
   { id: 'relais', icon: '🏪', label_key: 'role_relais', desc_key: 'role_switch_relais_desc' },
 ];
 
-export default function RoleSwitcher({ open, onSwitch }) {
+export default function RoleSwitcher({ open, currentRole, onSwitch }) {
   const { t } = useLang();
+  const visibleRoles = currentRole === 'relais' ? roles.filter(r => r.id === 'relais') : roles;
   if (!open) return null;
   return (
     <div style={{
@@ -18,13 +19,18 @@ export default function RoleSwitcher({ open, onSwitch }) {
       maxWidth: 480,
       margin: '0 auto',
     }}>
-      {roles.map((r, i) => (
+      {currentRole === 'relais' && (
+        <div style={{ padding: '12px 0', fontSize: 11, color: 'var(--bordeaux)', fontStyle: 'italic', lineHeight: 1.5 }}>
+          Inscription stricte : ce compte reste uniquement Point Relais.
+        </div>
+      )}
+      {visibleRoles.map((r, i) => (
         <div
           key={r.id}
           onClick={() => onSwitch(r.id)}
           style={{
             padding: '12px 0',
-            borderBottom: i < roles.length - 1 ? '1px dashed rgba(26,16,8,0.2)' : 'none',
+            borderBottom: i < visibleRoles.length - 1 ? '1px dashed rgba(26,16,8,0.2)' : 'none',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
