@@ -83,16 +83,13 @@ export default function BottomNav({ role, relaisValidated = true, activePanel, o
           <NavItem panelId="aide" icon="❓" label={t('nav_aide')} />
         </>
       )}
-      {role === 'relais' && relaisValidated && (
+      {role === 'relais' && (
         <>
           <NavItem panelId="scanner" icon="⬡" label={t('nav_scanner')} />
           <NavItem panelId="stock" icon="📦" label={t('nav_stock')} />
           <NavItem panelId="profils" icon="📊" label={t('nav_profils')} />
           <NavItem panelId="aide" icon="❓" label={t('nav_aide')} />
         </>
-      )}
-      {role === 'relais' && !relaisValidated && (
-        <NavItem panelId="aide" icon="❓" label={t('nav_aide')} />
       )}
       <div
         style={{ ...itemStyle(activePanel === 'profil'), borderRight: 'none' }}

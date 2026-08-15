@@ -9,7 +9,7 @@ const roles = [
 
 export default function RoleSwitcher({ open, currentRole, onSwitch }) {
   const { t } = useLang();
-  const visibleRoles = currentRole === 'relais' ? roles.filter(r => r.id === 'relais') : roles;
+  const visibleRoles = roles;
   if (!open) return null;
   return (
     <div style={{
@@ -19,11 +19,6 @@ export default function RoleSwitcher({ open, currentRole, onSwitch }) {
       maxWidth: 480,
       margin: '0 auto',
     }}>
-      {currentRole === 'relais' && (
-        <div style={{ padding: '12px 0', fontSize: 11, color: 'var(--bordeaux)', fontStyle: 'italic', lineHeight: 1.5 }}>
-          Inscription stricte : ce compte reste uniquement Point Relais.
-        </div>
-      )}
       {visibleRoles.map((r, i) => (
         <div
           key={r.id}
