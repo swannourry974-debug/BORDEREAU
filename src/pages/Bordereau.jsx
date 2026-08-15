@@ -13,7 +13,6 @@ import PanelAccueilVoyageur from '../components/voyageur/PanelAccueilVoyageur';
 import PanelScanner from '../components/relais/PanelScannerReal';
 import PanelProfils from '../components/relais/PanelProfils';
 import RelaisAccessNotice from '../components/relais/RelaisAccessNotice';
-import RelaisStrictAccessNotice from '../components/relais/RelaisStrictAccessNotice';
 import PanelProfil from './PanelProfil';
 import PanelWalletLecteur from '../components/wallet/PanelWalletLecteur';
 import PanelWalletAdmin from '../components/wallet/PanelWalletAdmin';
@@ -95,9 +94,6 @@ export default function Bordero({ initialPanel }) {
   const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/missions': 'missions', '/stock': 'stock', '/Stock': 'stock', '/accueil-voyageur': 'accueil-voyageur', '/scanner': 'scanner', '/profils': 'profils', '/profil': 'profil', '/PanelProfil': 'profil', '/panel-profil': 'profil', '/wallet': 'wallet', '/aide': 'aide' };
   const activePanel = pathToPanel[location.pathname] || initialPanel || 'catalogue';
   const isRelaisValidated = currentUser?.role === 'admin' || (currentUser?.relais_valide === true && currentUser?.relais_validation_status === 'valide');
-  const isStrictRelais = currentUser?.role === 'relais';
-  const relaisBlockedPanels = ['catalogue', 'etagere', 'missions', 'accueil-voyageur', 'wallet'];
-  const relaisBlockedPanelActive = isStrictRelais && relaisBlockedPanels.includes(activePanel);
 
   const markRolePromptSeen = () => {
     const promptKey = `bordero_role_prompt_seen_${currentUser?.email || 'guest'}`;
@@ -136,10 +132,6 @@ export default function Bordero({ initialPanel }) {
 
   const switchPanel = (panelId) => {
     setCommandeOpen(false);
-    if (isStrictRelais && relaisBlockedPanels.includes(panelId)) {
-      navigate(isRelaisValidated ? '/stock' : '/profil');
-      return;
-    }
     navigate('/' + panelId);
   };
 
@@ -241,10 +233,7 @@ export default function Bordero({ initialPanel }) {
 
           {/* Wrapper qui centre le contenu sur grands écrans */}
           <div className="w-full max-w-[640px] mx-auto overflow-visible">
-            {relaisBlockedPanelActive && (
-              <RelaisStrictAccessNotice onBack={() => navigate(isRelaisValidated ? '/stock' : '/profil')} />
-            )}
-            {activePanel === 'catalogue' && !relaisBlockedPanelActive && (
+            {activePanel === 'catalogue' && (
               <PanelCatalogue
                 commandeOpen={commandeOpen}
                 commandeBook={commandeBook}
@@ -252,9 +241,9 @@ export default function Bordero({ initialPanel }) {
                 onCloseCommande={closeCommande}
               />
             )}
-            {activePanel === 'etagere' && !relaisBlockedPanelActive && <PanelEtagere />}
-            {activePanel === 'accueil-voyageur' && !relaisBlockedPanelActive && <PanelAccueilVoyageur />}
-            {activePanel === 'missions' && !relaisBlockedPanelActive && <PanelMissions />}
+            {activePanel === 'etagere' && <PanelEtagere />}
+            {activePanel === 'accueil-voyageur' && <PanelAccueilVoyageur />}
+            {activePanel === 'missions' && <PanelMissions />}
             {['stock', 'scanner', 'profils'].includes(activePanel) && !isRelaisValidated && (
               <RelaisAccessNotice status={currentUser?.relais_validation_status} onBack={() => navigate('/profil')} />
             )}
@@ -262,7 +251,7 @@ export default function Bordero({ initialPanel }) {
             {activePanel === 'scanner' && isRelaisValidated && <PanelScanner />}
             {activePanel === 'profils' && isRelaisValidated && <PanelProfils />}
             {activePanel === 'profil' && <PanelProfil />}
-            {activePanel === 'wallet' && !relaisBlockedPanelActive && (role === 'lecteur' ? <PanelWalletLecteur /> : role === 'voyageur' ? <PanelAccueilVoyageur /> : <PanelWalletAdmin />)}
+            {activePanel === 'wallet' && (role === 'lecteur' ? <PanelWalletLecteur /> : role === 'voyageur' ? <PanelAccueilVoyageur /> : <PanelWalletAdmin />)}
             {activePanel === 'aide' && <PanelAide role={role} />}
           </div>
         </main>
