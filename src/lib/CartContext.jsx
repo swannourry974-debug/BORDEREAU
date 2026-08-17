@@ -1,19 +1,68 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { base44 } from '@/api/base44Client';
 
 const CartContext = createContext(null);
 
+const toCartItem = (record) => ({
+  id: record.id,
+  cartId: record.cart_id,
+  book: record.book,
+  forfait: record.forfait,
+  transit: record.transit,
+  adresse: record.adresse,
+  selectedCity: record.selectedCity,
+  selectedRelay: record.selectedRelay,
+  prixVal: record.prixVal || 0,
+  comparative: record.comparative,
+});
+
 export function CartProvider({ children }) {
-  const [items, setItems] = useState([]); // [{ book, forfait, transit, adresse, prix }]
+  const [items, setItems] = useState([]);
+  const [user, setUser] = useState(null);
 
-  const addItem = (item) => {
-    setItems(prev => [...prev, { ...item, cartId: Date.now() + Math.random() }]);
+  useEffect(() => {
+    base44.auth.me().then(async (u) => {
+      setUser(u);
+      if (!u?.email) return;
+      const savedItems = await base44.entities.CartItem.filter({ user_email: u.email }, '-created_date', 100);
+      setItems((savedItems || []).map(toCartItem));
+    }).catch(() => {});
+  }, []);
+
+  const addItem = async (item) => {
+    const cartId = String(Date.now() + Math.random());
+    const nextItem = { ...item, cartId };
+    setItems(prev => [...prev, nextItem]);
+    if (user?.email) {
+      const saved = await base44.entities.CartItem.create({
+        user_email: user.email,
+        cart_id: cartId,
+        book: item.book,
+        forfait: item.forfait,
+        transit: item.transit,
+        adresse: item.adresse,
+        selectedCity: item.selectedCity,
+        selectedRelay: item.selectedRelay,
+        prixVal: item.prixVal,
+        comparative: item.comparative,
+      });
+      setItems(prev => prev.map(i => i.cartId === cartId ? toCartItem(saved) : i));
+    }
   };
 
-  const removeItem = (cartId) => {
+  const removeItem = async (cartId) => {
+    const target = items.find(i => i.cartId === cartId);
     setItems(prev => prev.filter(i => i.cartId !== cartId));
+    if (target?.id) {
+      await base44.entities.CartItem.delete(target.id);
+    }
   };
 
-  const clearCart = () => setItems([]);
+  const clearCart = async () => {
+    const ids = items.map(i => i.id).filter(Boolean);
+    setItems([]);
+    await Promise.all(ids.map(id => base44.entities.CartItem.delete(id)));
+  };
 
   const total = items.reduce((sum, i) => sum + (i.prixVal || 0), 0);
 

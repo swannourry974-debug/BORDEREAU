@@ -83,7 +83,7 @@ export default function PanierCheckout({ onClose }) {
         code_secret: codeSecret,
       });
       toast.success('Commande confirmée : facture et suivi activés.');
-      clearCart();
+      await clearCart();
       window.location.href = res.data.url;
     } else {
       toast.error('Erreur lors de la création du paiement.');

@@ -1,0 +1,93 @@
+{
+  "name": "CartItem",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email du propri\u00e9taire du panier"
+    },
+    "cart_id": {
+      "type": "string",
+      "description": "Identifiant stable de l'article dans le panier"
+    },
+    "book": {
+      "type": "object",
+      "description": "Livre ajout\u00e9 au panier"
+    },
+    "forfait": {
+      "type": "string"
+    },
+    "transit": {
+      "type": "string"
+    },
+    "adresse": {
+      "type": "string"
+    },
+    "selectedCity": {
+      "type": "object"
+    },
+    "selectedRelay": {
+      "type": "object"
+    },
+    "prixVal": {
+      "type": "number"
+    },
+    "comparative": {
+      "type": "object"
+    }
+  },
+  "required": [
+    "user_email",
+    "cart_id"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

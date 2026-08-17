@@ -83,8 +83,7 @@ export default function Bordero({ initialPanel }) {
       if (['lecteur', 'voyageur', 'relais'].includes(user?.role)) {
         setRole(user.role);
       }
-      const promptKey = `bordero_role_prompt_seen_${user?.email || 'guest'}`;
-      if (user && !localStorage.getItem(promptKey)) {
+      if (user && !user.role_prompt_seen) {
         setRolePromptOpen(true);
       }
     }).catch(() => {});
@@ -95,8 +94,11 @@ export default function Bordero({ initialPanel }) {
   const isRelaisValidated = currentUser?.role === 'admin' || (currentUser?.relais_valide === true && currentUser?.relais_validation_status === 'valide');
 
   const markRolePromptSeen = () => {
-    const promptKey = `bordero_role_prompt_seen_${currentUser?.email || 'guest'}`;
-    localStorage.setItem(promptKey, 'true');
+    if (currentUser) {
+      base44.auth.updateMe({ role_prompt_seen: true }).then(updatedUser => {
+        setCurrentUser(updatedUser || { ...currentUser, role_prompt_seen: true });
+      }).catch(() => {});
+    }
     setRolePromptOpen(false);
   };
 
@@ -109,15 +111,14 @@ export default function Bordero({ initialPanel }) {
       const updates = newRole === 'relais'
         ? {
             role: newRole,
+            role_prompt_seen: true,
             relais_valide: currentUser.relais_valide === true,
             relais_validation_status: currentUser.relais_valide === true ? 'valide' : (currentUser.relais_validation_status || 'aucune'),
           }
-        : { role: newRole };
+        : { role: newRole, role_prompt_seen: true };
       base44.auth.updateMe(updates).then(updatedUser => {
         setCurrentUser(updatedUser || { ...currentUser, ...updates });
       }).catch(() => {});
-      const promptKey = `bordero_role_prompt_seen_${currentUser.email || 'guest'}`;
-      localStorage.setItem(promptKey, 'true');
     }
     const defaults = { lecteur: '/catalogue', voyageur: '/accueil-voyageur', relais: '/stock' };
     navigate(defaults[newRole]);

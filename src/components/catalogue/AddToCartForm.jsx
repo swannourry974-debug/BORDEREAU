@@ -32,8 +32,8 @@ export default function AddToCartForm({ book, selectedCity, selectedRelay, initi
 
   const handleForfaitSelect = (f) => setForfait(f.id);
 
-  const handleAddToCart = () => {
-    addItem({ book, forfait, transit, adresse: destinationLabel, selectedCity, selectedRelay, prixVal, comparative });
+  const handleAddToCart = async () => {
+    await addItem({ book, forfait, transit, adresse: destinationLabel, selectedCity, selectedRelay, prixVal, comparative });
     toast.success(`"${book.title}" ajouté au panier !`, {
       description: `Forfait ${forfait} · ${transit === 'express' ? 'Express' : 'Collectif'} · économie estimée ${comparative.savings.toFixed(0)} €`,
     });
