@@ -11,8 +11,15 @@ const STATUT_LABELS = {
   litige: { label: '⚠️ Litige', color: '#b41414' },
 };
 
+const joursEnStock = (commande) => {
+  const dateReference = commande.date_arrivee_relais || commande.updated_date || commande.created_date;
+  if (!dateReference) return 0;
+  return Math.floor((Date.now() - new Date(dateReference).getTime()) / (1000 * 60 * 60 * 24));
+};
+
 export default function PanelStock() {
   const [view, setView] = useState('stock');
+  const [stockFilter, setStockFilter] = useState('all');
   const [commandes, setCommandes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [relais, setRelais] = useState(null);
@@ -82,6 +89,8 @@ export default function PanelStock() {
   };
 
   const auRelais = commandes.filter(c => c.statut === 'au_relais');
+  const colisStagnants = auRelais.filter(c => joursEnStock(c) > 3);
+  const stockAffiche = stockFilter === 'stagnants' ? colisStagnants : auRelais;
   const enTransit = commandes.filter(c => c.statut === 'en_transit');
   const livrees = commandes.filter(c => c.statut === 'livree');
 
@@ -191,30 +200,47 @@ export default function PanelStock() {
                 <span style={{ flex: 1, height: 1, background: 'repeating-linear-gradient(90deg, var(--bordeaux) 0, var(--bordeaux) 4px, transparent 4px, transparent 8px)' }} />
               </div>
 
-              {auRelais.length === 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
+                <button type="button" onClick={() => setStockFilter('all')} style={{ background: stockFilter === 'all' ? 'var(--bordeaux)' : 'var(--papier)', color: stockFilter === 'all' ? 'var(--creme)' : 'var(--bordeaux)', border: '1.5px solid var(--bordeaux)', padding: '10px 8px', fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Tous ({auRelais.length})
+                </button>
+                <button type="button" onClick={() => setStockFilter('stagnants')} style={{ background: stockFilter === 'stagnants' ? '#b41414' : 'var(--papier)', color: stockFilter === 'stagnants' ? 'var(--creme)' : '#b41414', border: '1.5px solid #b41414', padding: '10px 8px', fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', cursor: 'pointer' }}>
+                  +3 jours ({colisStagnants.length})
+                </button>
+              </div>
+
+              {stockAffiche.length === 0 ? (
                 <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.4)', textAlign: 'center', padding: '24px 0' }}>
-                  Aucun colis au relais pour le moment.
+                  {stockFilter === 'stagnants' ? 'Aucun colis ne stagne depuis plus de trois jours.' : 'Aucun colis au relais pour le moment.'}
                 </div>
-              ) : auRelais.map(c => (
+              ) : stockAffiche.map(c => {
+                const jours = joursEnStock(c);
+                const stagnant = jours > 3;
+                return (
                 <div key={c.id} style={{
-                  background: 'var(--papier)', border: '1px solid hsl(var(--border))',
-                  borderLeft: '4px solid #8B6914', padding: '12px 14px', marginBottom: 10,
+                  background: stagnant ? 'rgba(180,20,20,0.06)' : 'var(--papier)', border: '1px solid hsl(var(--border))',
+                  borderLeft: `4px solid ${stagnant ? '#b41414' : '#8B6914'}`, padding: '12px 14px', marginBottom: 10,
                   display: 'flex', alignItems: 'center', gap: 12,
                 }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', flexShrink: 0, background: '#8B6914' }} />
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', flexShrink: 0, background: stagnant ? '#b41414' : '#8B6914' }} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 13, fontWeight: 700 }}>{c.livre_titre}</div>
                     <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 10, color: 'hsl(var(--muted-foreground))', marginTop: 2 }}>
                       {c.livre_auteur} · Lecteur : {c.lecteur_email?.split('@')[0]}
                     </div>
+                    {stagnant && (
+                      <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, color: '#b41414', marginTop: 5, letterSpacing: 1 }}>
+                        ⚠️ {jours} jours au relais · Voyageur : {c.voyageur_email?.split('@')[0] || '—'}
+                      </div>
+                    )}
                   </div>
                   <div style={{
                     fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase',
-                    padding: '2px 7px', border: '1px solid #8B6914', color: '#8B6914',
+                    padding: '2px 7px', border: `1px solid ${stagnant ? '#b41414' : '#8B6914'}`, color: stagnant ? '#b41414' : '#8B6914',
                     fontFamily: 'Special Elite, monospace',
-                  }}>À remettre</div>
+                  }}>{stagnant ? 'À relancer' : 'À remettre'}</div>
                 </div>
-              ))}
+              );})}
 
               {/* Livres récemment remis */}
               {livrees.length > 0 && (
