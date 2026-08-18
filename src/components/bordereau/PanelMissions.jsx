@@ -23,16 +23,32 @@ function getTotalCommission(missions, zone) {
   return missions.reduce((t, m, i) => t + getCommission(zone, i + 1), 0);
 }
 
-// Missions de démonstration — seront remplacées par les vraies MissionVoyageur en BDD
+// Missions de démonstration — affichées seulement si aucune mission réelle n'existe encore
 const AVAILABLE_MISSIONS = [
   { id: 10, ville: 'MIAMI, FL', date: "Accepte jusqu'au 26 mai · Vol AF038", livre: 'Le Petit Prince', type: 'Poche', poids: '180g', zone_id: 'international', mode_livraison: 'express' },
   { id: 11, ville: 'MIAMI, FL', date: "Accepte jusqu'au 26 mai", livre: "L'Élégance du hérisson", type: 'Poche', poids: '310g', zone_id: 'international', mode_livraison: 'express' },
   { id: 12, ville: 'BERLIN', date: "Accepte jusqu'au 28 mai", livre: 'Madame Bovary', type: 'Poche', poids: '290g', zone_id: 'europe', mode_livraison: 'express' },
 ];
 
+function formatMissionRecord(record) {
+  return {
+    id: record.id,
+    source: 'db',
+    ville: record.ville_destination || 'Destination',
+    date: record.date_limite ? `Accepte jusqu'au ${new Date(record.date_limite).toLocaleDateString('fr-FR')}` : 'Mission disponible',
+    livre: record.livre || 'Livre',
+    type: record.type || 'Poche',
+    poids: record.poids || '200g',
+    zone_id: record.zone_id || 'international',
+    mode_livraison: record.mode_livraison || 'express',
+    commission: record.commission,
+  };
+}
+
 function MissionCard({ mission, rang, onAccept, disabled, onScan, onRemove }) {
   const [loading, setLoading] = useState(false);
-  const commission = rang ? getCommission(rang) : null;
+  const missionZone = Object.values(ZONES).find(z => z.id === mission.zone_id) || ZONES.INTERNATIONAL;
+  const commission = rang ? (mission.commission || getCommission(missionZone, rang)) : null;
 
   const handleAccept = () => {
     if (disabled) return;
@@ -157,12 +173,18 @@ export default function PanelMissions() {
   // Wallet (simulé)
   const [wallet] = useState({ soldeDisponible: 12.50, gainsPrevisionnels: 5.00, virementSuspendu: false });
 
+  const loadAvailableMissions = async () => {
+    const missions = await base44.entities.MissionVoyageur.filter({ mode_livraison: 'express', statut: 'disponible' }, '-created_date', 50);
+    setAvailable(missions?.length ? missions.map(formatMissionRecord) : AVAILABLE_MISSIONS);
+  };
+
   useEffect(() => {
     base44.auth.me().then(async (u) => {
       setUser(u);
       if (!u) return;
       const voyages = await base44.entities.Voyage.filter({ voyageur_email: u.email, actif: true });
       if (voyages.length > 0) setVoyageActif(voyages[0]);
+      await loadAvailableMissions();
     }).catch(() => {});
   }, []);
 
@@ -224,6 +246,15 @@ export default function PanelMissions() {
     const after = getBadgesDebloques(statsAfter);
     const nouveaux = after.filter(id => !before.includes(id));
 
+    if (mission.source === 'db') {
+      base44.entities.MissionVoyageur.update(mission.id, {
+        voyageur_email: user?.email || '',
+        statut: 'engagee',
+        numero_ordre: rang,
+        commission,
+      }).catch(() => {});
+    }
+
     setEngagees(prev => [...prev, { ...mission, engaged: true, status: 'engagee', rang, commission }]);
     setAvailable(prev => prev.filter(m => m.id !== id));
 
@@ -236,6 +267,15 @@ export default function PanelMissions() {
   };
 
   const removeMission = (mission) => {
+    if (mission.source === 'db') {
+      base44.entities.MissionVoyageur.update(mission.id, {
+        voyageur_email: '',
+        statut: 'disponible',
+        numero_ordre: null,
+        commission: null,
+      }).catch(() => {});
+    }
+
     setEngagees(prev => prev
       .filter(m => m.id !== mission.id)
       .map((m, index) => ({ ...m, rang: index + 1 }))
@@ -259,7 +299,7 @@ export default function PanelMissions() {
   };
 
   const handleRefresh = async () => {
-    setAvailable(AVAILABLE_MISSIONS);
+    await loadAvailableMissions();
     setFiltreVille(null);
     await new Promise(r => setTimeout(r, 800));
   };
