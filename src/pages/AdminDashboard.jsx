@@ -5,12 +5,14 @@ import AdminAchatsVilles from '@/components/admin/AdminAchatsVilles';
 import AdminLivraisonsEtats from '@/components/admin/AdminLivraisonsEtats';
 import AdminLitiges from '@/components/admin/AdminLitiges';
 import AdminReseauRelais from '@/components/admin/AdminReseauRelais';
+import AdminCommandesCollectif from '@/components/admin/AdminCommandesCollectif';
 
 const TABS = [
   { id: 'activite', label: "Activité de l'appli" },
   { id: 'villes', label: 'Achats par villes' },
   { id: 'livraisons', label: 'Livraisons & États' },
   { id: 'litiges', label: 'Tableau litiges' },
+  { id: 'collectif', label: 'Commandes collectif' },
   { id: 'relais', label: 'Réseau Points Relais' },
 ];
 
@@ -111,6 +113,7 @@ export default function AdminDashboard() {
         {activeTab === 'villes' && <AdminAchatsVilles />}
         {activeTab === 'livraisons' && <AdminLivraisonsEtats />}
         {activeTab === 'litiges' && <AdminLitiges />}
+        {activeTab === 'collectif' && <AdminCommandesCollectif />}
         {activeTab === 'relais' && <AdminReseauRelais />}
       </div>
     </div>

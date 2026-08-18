@@ -1,5 +1,4 @@
 import React from 'react';
-import CouponButton from '@/components/shared/CouponButton';
 
 const roles = [
   {
@@ -53,14 +52,9 @@ export default function RoleOnboardingPrompt({ open, currentRole, onSelect, onCl
           })}
         </div>
 
-        <div className="mt-5 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-          <CouponButton secondary onClick={onClose} className="w-full sm:w-auto">
-            Choisir plus tard
-          </CouponButton>
-          <p className="text-[11px] text-encre/45 italic text-center sm:text-right">
-            Les Points Relais s’inscrivent depuis la page dédiée.
-          </p>
-        </div>
+        <p className="mt-5 text-[11px] text-encre/45 italic text-center">
+          Les Points Relais s’inscrivent depuis la page dédiée.
+        </p>
       </div>
     </div>
   );

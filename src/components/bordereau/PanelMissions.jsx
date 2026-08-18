@@ -25,9 +25,9 @@ function getTotalCommission(missions, zone) {
 
 // Missions de démonstration — seront remplacées par les vraies MissionVoyageur en BDD
 const AVAILABLE_MISSIONS = [
-  { id: 10, ville: 'MIAMI, FL', date: "Accepte jusqu'au 26 mai · Vol AF038", livre: 'Le Petit Prince', type: 'Poche', poids: '180g', zone_id: 'international' },
-  { id: 11, ville: 'MIAMI, FL', date: "Accepte jusqu'au 26 mai", livre: "L'Élégance du hérisson", type: 'Poche', poids: '310g', zone_id: 'international' },
-  { id: 12, ville: 'BERLIN', date: "Accepte jusqu'au 28 mai", livre: 'Madame Bovary', type: 'Poche', poids: '290g', zone_id: 'europe' },
+  { id: 10, ville: 'MIAMI, FL', date: "Accepte jusqu'au 26 mai · Vol AF038", livre: 'Le Petit Prince', type: 'Poche', poids: '180g', zone_id: 'international', mode_livraison: 'express' },
+  { id: 11, ville: 'MIAMI, FL', date: "Accepte jusqu'au 26 mai", livre: "L'Élégance du hérisson", type: 'Poche', poids: '310g', zone_id: 'international', mode_livraison: 'express' },
+  { id: 12, ville: 'BERLIN', date: "Accepte jusqu'au 28 mai", livre: 'Madame Bovary', type: 'Poche', poids: '290g', zone_id: 'europe', mode_livraison: 'express' },
 ];
 
 function MissionCard({ mission, rang, onAccept, disabled, onScan, onRemove }) {
@@ -197,8 +197,9 @@ export default function PanelMissions() {
     paysVisites: 2,
   };
 
-  // Filtrer les missions : voyage actif ET/OU filtre manuel
-  const missionsFiltered = available.filter(m => {
+  // Filtrer les missions : les voyageurs voient uniquement les missions express
+  const availableExpress = available.filter(m => m.mode_livraison === 'express');
+  const missionsFiltered = availableExpress.filter(m => {
     const matchVoyage = voyageActif
       ? m.ville.toLowerCase().includes(voyageActif.arrivee_ville.toLowerCase())
       : true;
@@ -371,7 +372,7 @@ export default function PanelMissions() {
 
       {/* Missions disponibles */}
       <SectionTitle>Missions disponibles</SectionTitle>
-      <FiltreVille filtre={filtreVille} onFiltre={setFiltreVille} missions={available} />
+      <FiltreVille filtre={filtreVille} onFiltre={setFiltreVille} missions={availableExpress} />
 
       {limitAtteinte && (
         <div style={{
@@ -385,7 +386,7 @@ export default function PanelMissions() {
         </div>
       )}
 
-      {available.length === 0 && !limitAtteinte && (
+      {availableExpress.length === 0 && !limitAtteinte && (
         <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))', textAlign: 'center', padding: 20 }}>
           Aucune mission disponible pour ce trajet.
         </div>

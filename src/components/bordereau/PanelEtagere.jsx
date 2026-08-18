@@ -18,21 +18,31 @@ export default function PanelEtagere() {
   const [selectedCommande, setSelectedCommande] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const loadCommandes = async () => {
+    const u = await base44.auth.me();
+    setUser(u);
+    if (!u) { setLoading(false); return; }
+    const data = await base44.entities.Commande.filter({
+      $or: [
+        { lecteur_email: u.email },
+        { voyageur_email: u.email },
+        { created_by_id: u.id },
+        { created_by: u.email },
+      ],
+    }, '-created_date', 50);
+    setCommandes(data || []);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    base44.auth.me().then(async (u) => {
-      setUser(u);
-      if (!u) { setLoading(false); return; }
-      const data = await base44.entities.Commande.filter({
-        $or: [
-          { lecteur_email: u.email },
-          { voyageur_email: u.email },
-          { created_by_id: u.id },
-          { created_by: u.email },
-        ],
-      }, '-created_date', 50);
-      setCommandes(data || []);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    loadCommandes().catch(() => setLoading(false));
+    const unsubscribe = base44.entities.Commande.subscribe(() => loadCommandes().catch(() => {}));
+    const onFocus = () => loadCommandes().catch(() => {});
+    window.addEventListener('focus', onFocus);
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+      window.removeEventListener('focus', onFocus);
+    };
   }, []);
 
   const enCours = commandes.filter(c => !['livree'].includes(c.statut));

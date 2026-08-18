@@ -66,22 +66,26 @@ export default function PanierCheckout({ onClose }) {
     if (res?.data?.url) {
       const user = await base44.auth.me().catch(() => null);
       const codeSecret = String(Math.floor(100 + Math.random() * 900));
-      await base44.entities.Commande.create({
-        lecteur_email: user?.email || '',
-        livre_titre: first.book?.title || 'Livre',
-        livre_auteur: first.book?.author || '',
-        livre_type: FORFAITS_STRIPE[first.forfait] === 'broche' ? 'Broché' : FORFAITS_STRIPE[first.forfait] === 'bd' ? 'BD' : 'Poche',
-        zone_id: first.selectedCity?.zone_id || 'international',
-        zone_nom: first.selectedCity?.label || first.adresse || 'International',
-        mode_livraison: first.transit === 'collecte' ? 'collectif' : 'express',
-        montant_paye: totalFinal,
-        statut: 'en_attente_paiement',
-        suivi_facturation_mode: suiviMode,
-        suivi_active: true,
-        facture_reference: `BORD-${new Date().getFullYear()}-${codeSecret}`,
-        facture_emise_le: new Date().toISOString(),
-        code_secret: codeSecret,
-      });
+      await base44.entities.Commande.bulkCreate(items.map((item, index) => {
+        const itemSecret = index === 0 ? codeSecret : String(Math.floor(100 + Math.random() * 900));
+        const itemTotal = Math.max(0, item.prixVal - (couponDiscount / items.length));
+        return {
+          lecteur_email: user?.email || '',
+          livre_titre: item.book?.title || 'Livre',
+          livre_auteur: item.book?.author || '',
+          livre_type: FORFAITS_STRIPE[item.forfait] === 'broche' ? 'Broché' : FORFAITS_STRIPE[item.forfait] === 'bd' ? 'BD' : 'Poche',
+          zone_id: item.selectedCity?.zone_id || 'international',
+          zone_nom: item.selectedCity?.label || item.adresse || 'International',
+          mode_livraison: item.transit === 'collecte' ? 'collectif' : 'express',
+          montant_paye: itemTotal,
+          statut: 'en_attente_paiement',
+          suivi_facturation_mode: suiviMode,
+          suivi_active: true,
+          facture_reference: `BORD-${new Date().getFullYear()}-${itemSecret}`,
+          facture_emise_le: new Date().toISOString(),
+          code_secret: itemSecret,
+        };
+      }));
       toast.success('Commande confirmée : facture et suivi activés.');
       await clearCart();
       window.location.href = res.data.url;
