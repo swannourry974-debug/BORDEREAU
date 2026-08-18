@@ -12,6 +12,7 @@ import PanelStock from '../components/bordereau/PanelStockReal';
 import PanelAccueilVoyageur from '../components/voyageur/PanelAccueilVoyageur';
 import PanelScanner from '../components/relais/PanelScannerReal';
 import PanelProfils from '../components/relais/PanelProfils';
+import RelaisAccessNotice from '../components/relais/RelaisAccessNotice';
 import PanelProfil from './PanelProfil';
 import PanelWalletLecteur from '../components/wallet/PanelWalletLecteur';
 import PanelWalletAdmin from '../components/wallet/PanelWalletAdmin';
@@ -92,6 +93,7 @@ export default function Bordero({ initialPanel }) {
   const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/missions': 'missions', '/stock': 'stock', '/Stock': 'stock', '/accueil-voyageur': 'accueil-voyageur', '/scanner': 'scanner', '/profils': 'profils', '/profil': 'profil', '/PanelProfil': 'profil', '/panel-profil': 'profil', '/wallet': 'wallet', '/aide': 'aide' };
   const activePanel = pathToPanel[location.pathname] || initialPanel || 'catalogue';
   const isRelaisValidated = currentUser?.role === 'admin' || (currentUser?.relais_valide === true && currentUser?.relais_validation_status === 'valide');
+  const isRelaisPanel = ['stock', 'scanner', 'profils'].includes(activePanel);
 
   const markRolePromptSeen = () => {
     if (currentUser) {
@@ -238,9 +240,10 @@ export default function Bordero({ initialPanel }) {
             {activePanel === 'etagere' && <PanelEtagere />}
             {activePanel === 'accueil-voyageur' && <PanelAccueilVoyageur />}
             {activePanel === 'missions' && <PanelMissions />}
-            {activePanel === 'stock' && <PanelStock />}
-            {activePanel === 'scanner' && <PanelScanner />}
-            {activePanel === 'profils' && <PanelProfils />}
+            {isRelaisPanel && !isRelaisValidated && <RelaisAccessNotice status={currentUser?.relais_validation_status} onBack={() => switchPanel('profil')} />}
+            {activePanel === 'stock' && isRelaisValidated && <PanelStock />}
+            {activePanel === 'scanner' && isRelaisValidated && <PanelScanner />}
+            {activePanel === 'profils' && isRelaisValidated && <PanelProfils />}
             {activePanel === 'profil' && <PanelProfil />}
             {activePanel === 'wallet' && (role === 'lecteur' ? <PanelWalletLecteur /> : role === 'voyageur' ? <PanelAccueilVoyageur /> : <PanelWalletAdmin />)}
             {activePanel === 'aide' && <PanelAide role={role} />}

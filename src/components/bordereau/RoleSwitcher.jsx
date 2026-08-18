@@ -4,7 +4,6 @@ import { useLang } from '@/lib/LangContext';
 const roles = [
   { id: 'lecteur', icon: '📖', label_key: 'role_lecteur', desc_key: 'role_switch_lecteur_desc' },
   { id: 'voyageur', icon: '✈️', label_key: 'role_voyageur', desc_key: 'role_switch_voyageur_desc' },
-  { id: 'relais', icon: '🏪', label_key: 'role_relais', desc_key: 'role_switch_relais_desc' },
 ];
 
 export default function RoleSwitcher({ open, currentRole, onSwitch }) {

@@ -65,6 +65,23 @@
       "type": "string",
       "description": "Ville de la boutique candidate Point Relais"
     },
+    "relais_pays": {
+      "type": "string",
+      "description": "Pays de la boutique candidate Point Relais"
+    },
+    "relais_type_commerce": {
+      "type": "string",
+      "enum": [
+        "Boulangerie",
+        "Caf\u00e9",
+        "Restaurant"
+      ],
+      "description": "Type de commerce candidat Point Relais"
+    },
+    "relais_telephone": {
+      "type": "string",
+      "description": "T\u00e9l\u00e9phone de la boutique candidate Point Relais"
+    },
     "relais_horaires": {
       "type": "string",
       "description": "Horaires d'ouverture de la boutique candidate Point Relais"

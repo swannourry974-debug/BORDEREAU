@@ -6,6 +6,19 @@
       "type": "string",
       "description": "Email du voyageur"
     },
+    "commande_id": {
+      "type": "string",
+      "description": "ID de la commande associ\u00e9e"
+    },
+    "mode_livraison": {
+      "type": "string",
+      "enum": [
+        "express",
+        "collectif"
+      ],
+      "default": "express",
+      "description": "Les voyageurs ne voient que les missions express"
+    },
     "livre": {
       "type": "string",
       "description": "Titre du livre"
