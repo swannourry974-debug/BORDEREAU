@@ -88,6 +88,16 @@
     "read": {
       "$or": [
         {
+          "$and": [
+            {
+              "data.statut": "disponible"
+            },
+            {
+              "data.mode_livraison": "express"
+            }
+          ]
+        },
+        {
           "data.voyageur_email": "{{user.email}}"
         },
         {
@@ -103,9 +113,26 @@
       ]
     },
     "update": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.statut": "disponible"
+            },
+            {
+              "data.mode_livraison": "express"
+            }
+          ]
+        },
+        {
+          "data.voyageur_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "delete": {
       "$or": [
