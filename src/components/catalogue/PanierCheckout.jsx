@@ -17,6 +17,7 @@ export default function PanierCheckout({ onClose }) {
   const [couponDiscount, setCouponDiscount] = useState(0);
   const [suiviMode, setSuiviMode] = useState('application');
   const [loading, setLoading] = useState(false);
+  const isTestPreview = window.self !== window.top;
 
   // Codes de parrainage simulés (à connecter à une entité si nécessaire)
   const CODES_VALIDES = { 'BIENVENUE': 2, 'AMI10': 1, 'BORDERO': 3 };
@@ -38,17 +39,44 @@ export default function PanierCheckout({ onClose }) {
     return sum + comparative.savings;
   }, 0);
 
+  const createCommandes = async (statut) => {
+    const user = await base44.auth.me().catch(() => null);
+    const codeSecret = String(Math.floor(100 + Math.random() * 900));
+    await base44.entities.Commande.bulkCreate(items.map((item, index) => {
+      const itemSecret = index === 0 ? codeSecret : String(Math.floor(100 + Math.random() * 900));
+      const itemTotal = Math.max(0, item.prixVal - (couponDiscount / items.length));
+      return {
+        lecteur_email: user?.email || '',
+        livre_titre: item.book?.title || 'Livre',
+        livre_auteur: item.book?.author || '',
+        livre_type: FORFAITS_STRIPE[item.forfait] === 'broche' ? 'Broché' : FORFAITS_STRIPE[item.forfait] === 'bd' ? 'BD' : 'Poche',
+        zone_id: item.selectedCity?.zone_id || 'international',
+        zone_nom: item.selectedCity?.label || item.adresse || 'International',
+        mode_livraison: item.transit === 'collecte' ? 'collectif' : 'express',
+        montant_paye: itemTotal,
+        statut,
+        suivi_facturation_mode: suiviMode,
+        suivi_active: true,
+        facture_reference: `BORD-${new Date().getFullYear()}-${itemSecret}`,
+        facture_emise_le: new Date().toISOString(),
+        code_secret: itemSecret,
+      };
+    }));
+  };
+
   const handlePay = async () => {
     if (items.length === 0) return;
+    setLoading(true);
 
-    // Vérifier iframe
-    if (window.self !== window.top) {
-      alert("Le paiement est uniquement disponible depuis l'application publiée.");
+    if (isTestPreview) {
+      await createCommandes('payee');
+      await clearCart();
+      setLoading(false);
+      toast.success('Achat test simulé : commande ajoutée à votre étagère.');
+      onClose?.();
       return;
     }
 
-    setLoading(true);
-    // Pour l'instant on passe le premier livre — on pourrait créer une session multi-articles
     const first = items[0];
     const res = await base44.functions.invoke('createCheckout', {
       book: first.book,
@@ -64,28 +92,7 @@ export default function PanierCheckout({ onClose }) {
     setLoading(false);
 
     if (res?.data?.url) {
-      const user = await base44.auth.me().catch(() => null);
-      const codeSecret = String(Math.floor(100 + Math.random() * 900));
-      await base44.entities.Commande.bulkCreate(items.map((item, index) => {
-        const itemSecret = index === 0 ? codeSecret : String(Math.floor(100 + Math.random() * 900));
-        const itemTotal = Math.max(0, item.prixVal - (couponDiscount / items.length));
-        return {
-          lecteur_email: user?.email || '',
-          livre_titre: item.book?.title || 'Livre',
-          livre_auteur: item.book?.author || '',
-          livre_type: FORFAITS_STRIPE[item.forfait] === 'broche' ? 'Broché' : FORFAITS_STRIPE[item.forfait] === 'bd' ? 'BD' : 'Poche',
-          zone_id: item.selectedCity?.zone_id || 'international',
-          zone_nom: item.selectedCity?.label || item.adresse || 'International',
-          mode_livraison: item.transit === 'collecte' ? 'collectif' : 'express',
-          montant_paye: itemTotal,
-          statut: 'en_attente_paiement',
-          suivi_facturation_mode: suiviMode,
-          suivi_active: true,
-          facture_reference: `BORD-${new Date().getFullYear()}-${itemSecret}`,
-          facture_emise_le: new Date().toISOString(),
-          code_secret: itemSecret,
-        };
-      }));
+      await createCommandes('en_attente_paiement');
       toast.success('Commande confirmée : facture et suivi activés.');
       await clearCart();
       window.location.href = res.data.url;
@@ -246,7 +253,7 @@ export default function PanierCheckout({ onClose }) {
             </div>
 
             <CouponButton onClick={handlePay} disabled={loading} className="w-full py-4 text-center">
-              {loading ? '⟳ Chargement...' : `✦ Payer par carte ou PayPal ${totalFinal.toFixed(2)} €`}
+              {loading ? '⟳ Chargement...' : isTestPreview ? `✦ Simuler l’achat test ${totalFinal.toFixed(2)} €` : `✦ Payer par carte ou PayPal ${totalFinal.toFixed(2)} €`}
             </CouponButton>
           </>
         )}
