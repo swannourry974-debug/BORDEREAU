@@ -23,12 +23,7 @@ function getTotalCommission(missions, zone) {
   return missions.reduce((t, m, i) => t + getCommission(zone, i + 1), 0);
 }
 
-// Missions de démonstration — affichées seulement si aucune mission réelle n'existe encore
-const AVAILABLE_MISSIONS = [
-  { id: 10, ville: 'MIAMI, FL', date: "Accepte jusqu'au 26 mai · Vol AF038", livre: 'Le Petit Prince', type: 'Poche', poids: '180g', zone_id: 'international', mode_livraison: 'express' },
-  { id: 11, ville: 'MIAMI, FL', date: "Accepte jusqu'au 26 mai", livre: "L'Élégance du hérisson", type: 'Poche', poids: '310g', zone_id: 'international', mode_livraison: 'express' },
-  { id: 12, ville: 'BERLIN', date: "Accepte jusqu'au 28 mai", livre: 'Madame Bovary', type: 'Poche', poids: '290g', zone_id: 'europe', mode_livraison: 'express' },
-];
+const AVAILABLE_MISSIONS = [];
 
 function formatMissionRecord(record) {
   return {
@@ -159,9 +154,7 @@ function MissionCard({ mission, rang, onAccept, disabled, onScan, onRemove }) {
 }
 
 export default function PanelMissions() {
-  const [engagees, setEngagees] = useState([
-    { id: 3, ville: 'MIAMI, FL', date: 'Ticket scanné · Achat confirmé', livre: 'Astérix T.1', type: 'BD', poids: '250g', engaged: true, rang: 1, commission: 10.00, zone_id: 'international' },
-  ]);
+  const [engagees, setEngagees] = useState([]);
   const [available, setAvailable] = useState(AVAILABLE_MISSIONS);
   const [scanMission, setScanMission] = useState(null);
   const [newBadge, setNewBadge] = useState(null);
@@ -175,7 +168,7 @@ export default function PanelMissions() {
 
   const loadAvailableMissions = async () => {
     const missions = await base44.entities.MissionVoyageur.filter({ mode_livraison: 'express', statut: 'disponible' }, '-created_date', 50);
-    setAvailable(missions?.length ? missions.map(formatMissionRecord) : AVAILABLE_MISSIONS);
+    setAvailable(missions?.length ? missions.map(formatMissionRecord) : []);
   };
 
   useEffect(() => {

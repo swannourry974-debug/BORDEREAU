@@ -17,12 +17,7 @@ import { useCart } from '@/lib/CartContext';
 import { toast } from 'sonner';
 import { getZoneById } from '@/lib/tarifsConfig';
 
-const DEFAULT_BOOKS_BASE = [
-  { id: 1, title: 'Le Petit Prince', author: 'Antoine de Saint-Exupéry', type: 'Poche', price: '8,90 €', availability: '2 voyageurs', coverText: 'LE PETIT\nPRINCE' },
-  { id: 2, title: "L'Élégance du hérisson", author: 'Muriel Barbery', type: 'Poche', price: '9,50 €', availability: '1 voyageur', coverText: "L'ÉLÉGANCE\nDU\nHÉRISSON" },
-  { id: 3, title: 'Les Misérables', author: 'Victor Hugo', type: 'Broché', price: '28,00 €', availability: 'Collecte', coverText: 'LES\nMISÉRABLES' },
-  { id: 4, title: 'Astérix & Obélix T.1', author: 'Goscinny & Uderzo', type: 'BD', price: '11,50 €', availability: '3 voyageurs', coverText: 'ASTÉRIX\nT.1' },
-];
+const DEFAULT_BOOKS_BASE = [];
 
 async function fetchCoverUrl(title, author) {
   try {
@@ -47,8 +42,8 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
   const [panierOpen, setPanierOpen] = useState(false);
   const [confirmation, setConfirmation] = useState(null);
   const [defaultBooks, setDefaultBooks] = useState(DEFAULT_BOOKS_BASE);
-  const [selectedCity, setSelectedCity] = useState({ label: 'Miami, FL — USA', emoji: '🇺🇸', zone_id: 'international' });
-  const [selectedRelay, setSelectedRelay] = useState({ name: 'Librairie Little Havana', city: 'Miami, FL — USA' });
+  const [selectedCity, setSelectedCity] = useState(null);
+  const [selectedRelay, setSelectedRelay] = useState(null);
   const [deliveryMode, setDeliveryMode] = useState('express');
   const [catalogueStep, setCatalogueStep] = useState(1);
 
@@ -277,7 +272,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
             />
           )}
 
-              <SectionTitle>{hasSearched ? 'Résultats de recherche' : 'Livres disponibles'}</SectionTitle>
+              <SectionTitle>{hasSearched ? 'Résultats de recherche' : 'Rechercher un livre'}</SectionTitle>
 
           {loading && (
             <div className="text-center py-8 text-foreground/40 italic font-fell text-[13px]">
@@ -302,6 +297,11 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
                   onClick={() => setOrderingBook(book)}
                 />
               ))}
+              {!hasSearched && !loading && displayBooks.length === 0 && (
+                <div className="text-center py-8 text-foreground/40 italic font-fell text-[13px]">
+                  Recherchez un titre, un auteur ou scannez un ISBN pour afficher des livres.
+                </div>
+              )}
               {hasSearched && !loading && displayBooks.length === 0 && (
                 <div className="text-center py-8 text-foreground/40 italic font-fell text-[13px]">
                   Aucun livre trouvé.
