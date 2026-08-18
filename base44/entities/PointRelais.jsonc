@@ -16,6 +16,19 @@
       "type": "string",
       "description": "Code ISO pays"
     },
+    "pays_nom": {
+      "type": "string",
+      "description": "Pays du commerce partenaire"
+    },
+    "type_commerce": {
+      "type": "string",
+      "enum": [
+        "Boulangerie",
+        "Caf\u00e9",
+        "Restaurant"
+      ],
+      "description": "Type de commerce candidat Point Relais"
+    },
     "zone_id": {
       "type": "string",
       "description": "R\u00e9f\u00e9rence vers ZonesTarifs"
@@ -57,14 +70,26 @@
   },
   "required": [
     "nom",
+    "adresse",
     "ville",
-    "pays_code"
+    "pays_code",
+    "type_commerce",
+    "gerant_email",
+    "telephone",
+    "horaires"
   ],
   "rls": {
     "create": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "data.gerant_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "read": {
       "$or": [
@@ -79,6 +104,9 @@
           ]
         },
         {
+          "data.gerant_email": "{{user.email}}"
+        },
+        {
           "user_condition": {
             "role": "admin"
           }
@@ -91,9 +119,23 @@
       ]
     },
     "update": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "$and": [
+            {
+              "data.gerant_email": "{{user.email}}"
+            },
+            {
+              "data.validation_admin": "en_attente"
+            }
+          ]
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "delete": {
       "user_condition": {
