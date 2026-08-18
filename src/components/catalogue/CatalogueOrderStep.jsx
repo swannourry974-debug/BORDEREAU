@@ -18,7 +18,7 @@ export default function CatalogueOrderStep({ selectedCity, selectedRelay, delive
         <div className="font-typewriter text-[9px] tracking-[3px] uppercase opacity-70 mb-2">Commande Bordero</div>
         <h2 className="font-serif text-[23px] font-bold leading-tight">Résumé, facture et suivi</h2>
         <p className="font-fell italic text-[12px] opacity-80 mt-2 leading-relaxed">
-          {deliveryMode === 'express' ? 'Express voyageur' : 'Collectif malle'} · {selectedCity?.emoji} {selectedCity?.label} · {selectedRelay?.name}
+          {deliveryMode === 'express' ? 'Express' : 'Collectif malle'} · {selectedCity?.emoji} {selectedCity?.label} · {selectedRelay?.name}
         </p>
       </div>
 

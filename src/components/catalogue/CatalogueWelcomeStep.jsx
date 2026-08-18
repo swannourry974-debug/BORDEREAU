@@ -4,7 +4,7 @@ import LangSwitcher from '@/components/shared/LangSwitcher';
 import { CATALOGUE_COUNTRIES } from '@/lib/catalogueDestinations';
 
 const MODES = [
-  { id: 'express', title: 'Express voyageur', desc: 'Le plus rapide, remis par un voyageur.' },
+  { id: 'express', title: 'Express', desc: 'Le plus rapide, remis par un voyageur.' },
   { id: 'collecte', title: 'Collectif malle', desc: 'Plus économique, groupé par destination.' },
 ];
 
