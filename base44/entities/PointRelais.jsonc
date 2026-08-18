@@ -126,7 +126,12 @@
               "data.gerant_email": "{{user.email}}"
             },
             {
-              "data.validation_admin": "en_attente"
+              "data.validation_admin": {
+                "$in": [
+                  "en_attente",
+                  "rejete"
+                ]
+              }
             }
           ]
         },
