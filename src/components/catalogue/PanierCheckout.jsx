@@ -42,7 +42,7 @@ export default function PanierCheckout({ onClose }) {
   const createCommandes = async (statut) => {
     const user = await base44.auth.me().catch(() => null);
     const codeSecret = String(Math.floor(100 + Math.random() * 900));
-    await base44.entities.Commande.bulkCreate(items.map((item, index) => {
+    const created = await base44.entities.Commande.bulkCreate(items.map((item, index) => {
       const itemSecret = index === 0 ? codeSecret : String(Math.floor(100 + Math.random() * 900));
       const itemTotal = Math.max(0, item.prixVal - (couponDiscount / items.length));
       return {
@@ -62,6 +62,7 @@ export default function PanierCheckout({ onClose }) {
         code_secret: itemSecret,
       };
     }));
+    await Promise.all((created || []).map(cmd => base44.functions.invoke('genererQrCommande', { commande_id: cmd.id }).catch(() => null)));
   };
 
   const completeSimulatedPurchase = async () => {

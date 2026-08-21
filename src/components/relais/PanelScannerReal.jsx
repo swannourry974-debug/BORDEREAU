@@ -29,19 +29,31 @@ export default function PanelScanner() {
     setActionDone(false);
     setLoading(true);
     try {
-      // Le QR code contient l'ID de la commande ; une photo peut aussi fournir l'ISBN.
       const cmdId = text.trim();
+
+      if (cmdId.startsWith('BORDERO-SECURE:')) {
+        const res = await base44.functions.invoke('validerRetraitBordero', { token: cmdId });
+        if (!res.data?.valide) {
+          setError(res.data?.raison || 'Échec d\'authentification de sécurité Bordero : incohérence entre le visuel de commande et le code de validation.');
+          setLoading(false);
+          return;
+        }
+        setCommande(res.data.commande);
+        setActionDone(res.data.action === 'reception_relais' ? 'depot' : 'retrait');
+        setLoading(false);
+        return;
+      }
+
       const cleanIsbn = cmdId.replace(/[^0-9X]/gi, '');
       const results = await base44.entities.Commande.filter({ id: cmdId });
       if (!results || results.length === 0) {
-        // Essayer par stripe_session_id ou qr_code_depot
         const byQr = await base44.entities.Commande.list('-created_date', 200);
         const found = byQr.find(c => {
           const orderIsbn = String(c.code_barre_isbn || '').replace(/[^0-9X]/gi, '');
-          return c.qr_code_depot === cmdId || c.stripe_session_id === cmdId || c.id === cmdId || (cleanIsbn && orderIsbn === cleanIsbn);
+          return c.stripe_session_id === cmdId || c.id === cmdId || (cleanIsbn && orderIsbn === cleanIsbn);
         });
         if (!found) {
-          setError('Bordero introuvable. Vérifiez le QR code ou l’ISBN scanné.');
+          setError('Bordero introuvable. Vérifiez le QR code sécurisé Bordero ou l’ISBN scanné.');
           setLoading(false);
           return;
         }
@@ -223,6 +235,15 @@ export default function PanelScanner() {
             📦 Mode : {commande.mode_livraison === 'express' ? 'Express' : 'Collectif'}
           </div>
 
+          {commande.visuel_bordero_url && (
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 8 }}>
+                Visuel sécurisé à comparer · {commande.visuel_bordero_serie || 'Série Bordero'} · Taille {commande.format_livre_bordero || '—'}
+              </div>
+              <img src={commande.visuel_bordero_url} alt="Visuel sécurisé Bordero" style={{ width: '100%', border: '1.5px solid var(--encre)' }} />
+            </div>
+          )}
+
           {/* Statut actuel */}
           <div style={{
             display: 'inline-block', padding: '4px 12px', marginBottom: 20,
@@ -234,40 +255,18 @@ export default function PanelScanner() {
 
           {/* Actions */}
           {actionType === 'depot' && (
-            <div>
-              <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.6)', marginBottom: 14 }}>
-                Ce livre arrive au relais. Confirmez la réception du colis.
+            <div style={{ background: 'rgba(139,105,20,0.08)', border: '1px dashed #8B6914', padding: 14 }}>
+              <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.65)', lineHeight: 1.6 }}>
+                Réception relais verrouillée : scannez le QR sécurisé Bordero présenté par le voyageur pour valider automatiquement le visuel, la taille S/M/L et le hash de sécurité.
               </div>
-              <button
-                onClick={handleDepot}
-                disabled={loading}
-                style={{
-                  width: '100%', background: '#8B6914', color: 'var(--creme)',
-                  border: 'none', padding: '14px', fontFamily: 'Special Elite, monospace',
-                  fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', cursor: 'pointer',
-                }}
-              >
-                📦 Confirmer le dépôt au relais
-              </button>
             </div>
           )}
 
           {actionType === 'retrait' && (
-            <div>
-              <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.6)', marginBottom: 14 }}>
-                Ce livre est au relais. Confirmez la remise au lecteur.
+            <div style={{ background: 'rgba(45,106,45,0.08)', border: '1px dashed #2d6a2d', padding: 14 }}>
+              <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.65)', lineHeight: 1.6 }}>
+                Remise lecteur verrouillée : scannez le QR sécurisé affiché dans l’étagère du lecteur pour valider automatiquement le visuel officiel, la taille physique S/M/L et le hash de sécurité.
               </div>
-              <button
-                onClick={handleRetrait}
-                disabled={loading}
-                style={{
-                  width: '100%', background: '#2d6a2d', color: 'var(--creme)',
-                  border: 'none', padding: '14px', fontFamily: 'Special Elite, monospace',
-                  fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', cursor: 'pointer',
-                }}
-              >
-                ✅ Confirmer la remise au lecteur
-              </button>
             </div>
           )}
 
@@ -295,8 +294,11 @@ export default function PanelScanner() {
             {actionDone === 'depot' ? 'Dépôt confirmé !' : 'Remise confirmée !'}
           </div>
           <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.55)' }}>
-            {actionDone === 'depot' ? 'Le livre est bien enregistré dans votre stock.' : 'Le lecteur a bien récupéré son livre.'}
+            {commande?.recu_horodate || (actionDone === 'depot' ? 'Le livre est bien enregistré dans votre stock.' : 'Le lecteur a bien récupéré son livre.')}
           </div>
+          {commande?.visuel_bordero_url && (
+            <img src={commande.visuel_bordero_url} alt="Visuel validé Bordero" style={{ width: '100%', marginTop: 14, border: '1.5px solid var(--encre)' }} />
+          )}
           <button onClick={reset} style={{ marginTop: 16, fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', background: 'var(--bordeaux)', color: 'var(--creme)', border: 'none', padding: '10px 20px', cursor: 'pointer' }}>
             Nouveau scan
           </button>

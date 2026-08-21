@@ -1,7 +1,17 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
+import { base44 } from '@/api/base44Client';
 
 export default function ConfirmationBordero({ commandeId, bookTitle, onClose }) {
+  const [token, setToken] = useState(commandeId);
+
+  useEffect(() => {
+    if (!commandeId) return;
+    base44.functions.invoke('genererQrCommande', { commande_id: commandeId })
+      .then(res => setToken(res.data.token || commandeId))
+      .catch(() => setToken(commandeId));
+  }, [commandeId]);
+
   return (
     <div style={{
       background: 'var(--papier)', border: '2px solid var(--encre)',
@@ -26,7 +36,7 @@ export default function ConfirmationBordero({ commandeId, bookTitle, onClose }) 
         marginBottom: 16,
       }}>
         <QRCodeSVG
-          value={commandeId}
+          value={token}
           size={180}
           bgColor="#ffffff"
           fgColor="#1a1008"
@@ -35,7 +45,7 @@ export default function ConfirmationBordero({ commandeId, bookTitle, onClose }) 
       </div>
 
       <div style={{ fontFamily: 'monospace', fontSize: 10, letterSpacing: 2, color: 'rgba(26,16,8,0.4)', marginBottom: 20 }}>
-        {commandeId}
+        {token}
       </div>
 
       <button

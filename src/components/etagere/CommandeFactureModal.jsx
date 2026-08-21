@@ -1,5 +1,6 @@
 import React from 'react';
 import CouponButton from '@/components/shared/CouponButton';
+import BorderoSecurityPass from '@/components/security/BorderoSecurityPass';
 
 const STEPS = [
   { key: 'payee', label: 'En préparation' },
@@ -59,6 +60,8 @@ export default function CommandeFactureModal({ commande, onClose }) {
         <div style={{ background: 'rgba(45,106,45,0.08)', border: '1px dashed #2d6a2d', padding: 12, fontSize: 12, lineHeight: 1.6, marginBottom: 14 }}>
           Génération de facture et suivi activés. Mode choisi : {commande.suivi_facturation_mode === 'email' ? 'e-mail uniquement' : "via l'application"}.
         </div>
+
+        <BorderoSecurityPass commande={commande} />
 
         <div style={{ fontSize: 12, color: 'hsl(var(--muted-foreground))', marginBottom: 14 }}>
           Facture {commande.facture_reference || commande.id} · Total {(commande.montant_paye || 0).toFixed(2)} € · {commande.zone_nom || 'Destination à confirmer'}

@@ -1,0 +1,56 @@
+{
+  "name": "VisuelBordero",
+  "type": "object",
+  "properties": {
+    "serie": {
+      "type": "string",
+      "description": "Num\u00e9ro de s\u00e9rie officiel du visuel Bordero, ex: S25"
+    },
+    "taille": {
+      "type": "string",
+      "enum": [
+        "S",
+        "M",
+        "L"
+      ],
+      "description": "Format physique strict du livre: S=Poche, M=Broch\u00e9, L=BD/Reli\u00e9"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "URL du visuel officiel Bordero"
+    },
+    "animal": {
+      "type": "string"
+    },
+    "citation": {
+      "type": "string"
+    },
+    "actif": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "serie",
+    "taille",
+    "image_url"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

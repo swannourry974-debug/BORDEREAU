@@ -87,8 +87,7 @@ export default function BookValidation({ book, zone: zoneProp, onConfirm, onCanc
         economie_realisee: comparative?.savings || 0,
         code_secret: codeSecret,
       });
-      // Stocker l'ID dans qr_code_depot pour que le scanner relais puisse retrouver la commande
-      await base44.entities.Commande.update(commande.id, { qr_code_depot: commande.id });
+      await base44.functions.invoke('genererQrCommande', { commande_id: commande.id }).catch(() => null);
       onConfirm({ book, format, prix: prixNum, total, poids, zone, modeLivraison, suiviMode, codeSecret, commandeId: commande.id });
     } catch (e) {
       alert('Erreur lors de la commande. Réessayez.');

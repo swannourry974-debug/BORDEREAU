@@ -102,6 +102,51 @@
     "qr_code_depot": {
       "type": "string"
     },
+    "visuel_bordero_id": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence du visuel officiel Bordero assign\u00e9"
+    },
+    "visuel_bordero_url": {
+      "type": "string",
+      "description": "URL du visuel officiel Bordero assign\u00e9"
+    },
+    "visuel_bordero_serie": {
+      "type": "string",
+      "description": "Num\u00e9ro de s\u00e9rie du visuel Bordero assign\u00e9"
+    },
+    "format_livre_bordero": {
+      "type": "string",
+      "enum": [
+        "S",
+        "M",
+        "L"
+      ],
+      "description": "Format physique strict du livre pour le protocole Bordero"
+    },
+    "qr_code_token": {
+      "type": "string",
+      "description": "Jeton QR statique s\u00e9curis\u00e9 Bordero"
+    },
+    "hash_securite": {
+      "type": "string",
+      "description": "Hash de s\u00e9curit\u00e9 calcul\u00e9 \u00e0 partir de la commande, du lecteur et du format"
+    },
+    "recu_horodate": {
+      "type": "string",
+      "description": "Re\u00e7u num\u00e9rique horodat\u00e9 g\u00e9n\u00e9r\u00e9 apr\u00e8s validation"
+    },
+    "date_retrait": {
+      "type": "string",
+      "description": "Date ISO du retrait par le lecteur"
+    },
+    "alerte_securite_bordero": {
+      "type": "string",
+      "description": "Derni\u00e8re alerte de s\u00e9curit\u00e9 Bordero"
+    },
+    "derniere_alerte_securite": {
+      "type": "string",
+      "description": "Date ISO de la derni\u00e8re alerte de s\u00e9curit\u00e9"
+    },
     "date_limite_collecte": {
       "type": "string",
       "description": "Date limite sans p\u00e9nalit\u00e9 (J+7 apr\u00e8s arriv\u00e9e relais)"
