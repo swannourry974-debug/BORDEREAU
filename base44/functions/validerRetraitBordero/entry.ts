@@ -19,6 +19,9 @@ export default async function(req: Request): Promise<Response> {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!['admin', 'admin_secondaire', 'relais', 'voyageur'].includes(user.role)) {
+      return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     const body = await req.json();
     const token = String(body.token || '').trim();
@@ -51,7 +54,7 @@ export default async function(req: Request): Promise<Response> {
     const now = new Date();
     const action = commande.statut === 'en_transit' ? 'reception_relais' : 'retrait_lecteur';
     const receipt = `${action === 'reception_relais' ? 'Réceptionné en point relais' : 'Retiré par le lecteur'} · ${now.toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })} · ${commande.id}`;
-    const updates = {
+    const updates: Record<string, any> = {
       statut: action === 'reception_relais' ? 'au_relais' : 'livree',
       recu_horodate: receipt,
       alerte_securite_bordero: '',
