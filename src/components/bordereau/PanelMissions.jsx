@@ -11,6 +11,7 @@ import FiltreVille from '@/components/missions/FiltreVille';
 import { BADGES_CONFIG, getBadgesDebloques } from '@/lib/badges';
 import { base44 } from '@/api/base44Client';
 import { ZONES, POIDS_FORMAT, getQuotaLivres, getQuotaKg } from '@/lib/tarifsConfig';
+import { useSearchParams } from 'react-router-dom';
 
 // Commission Express par zone et rang du livre dans la valise
 function getCommission(zone, rang) {
@@ -82,9 +83,9 @@ function MissionCard({ mission, rang, onAccept, disabled, onScan, onRemove }) {
           onClick={() => onRemove(mission)}
           style={{
             position: 'absolute', top: 6, right: 6, zIndex: 3,
-            width: 24, height: 24, border: 'none', borderRadius: '50%',
+            width: 44, height: 44, border: 'none', borderRadius: '50%',
             background: 'var(--creme)', color: 'var(--bordeaux)',
-            fontFamily: 'Special Elite, monospace', fontSize: 16, lineHeight: '24px',
+            fontFamily: 'Special Elite, monospace', fontSize: 18, lineHeight: '44px',
             cursor: 'pointer', boxShadow: '0 1px 4px rgba(26,16,8,0.25)',
           }}
         >×</button>
@@ -162,6 +163,8 @@ export default function PanelMissions() {
   const [voyageActif, setVoyageActif] = useState(null);
   const [showFormVol, setShowFormVol] = useState(false);
   const [filtreVille, setFiltreVille] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const modalParam = searchParams.get('modal');
 
   // Wallet (simulé)
   const [wallet] = useState({ soldeDisponible: 12.50, gainsPrevisionnels: 5.00, virementSuspendu: false });
@@ -180,6 +183,24 @@ export default function PanelMissions() {
       await loadAvailableMissions();
     }).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (modalParam !== 'scan-validation') setScanMission(null);
+  }, [modalParam]);
+
+  const setModalParam = (modal) => {
+    const next = new URLSearchParams(searchParams);
+    next.set('modal', modal);
+    setSearchParams(next);
+  };
+
+  const clearModalParam = (modal) => {
+    const next = new URLSearchParams(searchParams);
+    if (next.get('modal') === modal) {
+      next.delete('modal');
+      setSearchParams(next, { replace: true });
+    }
+  };
 
   // Détecter la zone du voyage actif pour appliquer le bon quota
   const zoneVoyage = voyageActif
@@ -239,36 +260,33 @@ export default function PanelMissions() {
     const after = getBadgesDebloques(statsAfter);
     const nouveaux = after.filter(id => !before.includes(id));
 
-    if (mission.source === 'db') {
-      base44.entities.MissionVoyageur.update(mission.id, {
-        voyageur_email: user?.email || '',
-        statut: 'engagee',
-        numero_ordre: rang,
-        commission,
-      }).catch(() => {});
-    }
-
-    setEngagees(prev => [...prev, { ...mission, engaged: true, status: 'engagee', rang, commission }]);
+    const engagedMission = { ...mission, engaged: true, status: 'engagee', rang, commission };
+    setEngagees(prev => [...prev, engagedMission]);
     setAvailable(prev => prev.filter(m => m.id !== id));
 
-    if (nouveaux.length > 0) {
-      const badge = BADGES_CONFIG.find(b => b.id === nouveaux[0]);
-      if (badge) {
-        setTimeout(() => setNewBadge(badge), 500);
+    const persist = mission.source === 'db'
+      ? base44.entities.MissionVoyageur.update(mission.id, {
+          voyageur_email: user?.email || '',
+          statut: 'engagee',
+          numero_ordre: rang,
+          commission,
+        })
+      : Promise.resolve();
+
+    persist.then(() => {
+      if (nouveaux.length > 0) {
+        const badge = BADGES_CONFIG.find(b => b.id === nouveaux[0]);
+        if (badge) setTimeout(() => setNewBadge(badge), 500);
       }
-    }
+    }).catch(() => {
+      setEngagees(prev => prev.filter(m => m.id !== mission.id));
+      setAvailable(prev => prev.some(m => m.id === mission.id) ? prev : [mission, ...prev]);
+    });
   };
 
   const removeMission = (mission) => {
-    if (mission.source === 'db') {
-      base44.entities.MissionVoyageur.update(mission.id, {
-        voyageur_email: '',
-        statut: 'disponible',
-        numero_ordre: null,
-        commission: null,
-      }).catch(() => {});
-    }
-
+    const previousEngagees = engagees;
+    const previousAvailable = available;
     setEngagees(prev => prev
       .filter(m => m.id !== mission.id)
       .map((m, index) => ({ ...m, rang: index + 1 }))
@@ -277,6 +295,18 @@ export default function PanelMissions() {
       ? prev
       : [{ ...mission, engaged: false, status: undefined, rang: undefined, commission: undefined }, ...prev]
     );
+
+    if (mission.source === 'db') {
+      base44.entities.MissionVoyageur.update(mission.id, {
+        voyageur_email: '',
+        statut: 'disponible',
+        numero_ordre: null,
+        commission: null,
+      }).catch(() => {
+        setEngagees(previousEngagees);
+        setAvailable(previousAvailable);
+      });
+    }
   };
 
   const updateMissionStatus = (missionId, status) => {
@@ -288,7 +318,8 @@ export default function PanelMissions() {
       updateMissionStatus(mission.id, 'livree');
       return;
     }
-    updateMissionStatus(mission.id, 'en_transit');
+    setScanMission(mission);
+    setModalParam('scan-validation');
   };
 
   const handleRefresh = async () => {
@@ -348,10 +379,11 @@ export default function PanelMissions() {
       {scanMission && (
         <ScanValidation
           mission={scanMission}
-          onClose={() => setScanMission(null)}
+          onClose={() => { setScanMission(null); clearModalParam('scan-validation'); }}
           onValidated={() => {
             updateMissionStatus(scanMission.id, 'en_transit');
             setScanMission(null);
+            clearModalParam('scan-validation');
           }}
         />
       )}

@@ -16,6 +16,7 @@ import { useBookSearch } from '@/hooks/useBookSearch';
 import { useCart } from '@/lib/CartContext';
 import { toast } from 'sonner';
 import { getZoneById } from '@/lib/tarifsConfig';
+import { useSearchParams } from 'react-router-dom';
 
 const DEFAULT_BOOKS_BASE = [];
 
@@ -46,6 +47,22 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
   const [selectedRelay, setSelectedRelay] = useState(null);
   const [deliveryMode, setDeliveryMode] = useState('express');
   const [catalogueStep, setCatalogueStep] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const modalParam = searchParams.get('modal');
+
+  const setModalParam = (modal) => {
+    const next = new URLSearchParams(searchParams);
+    next.set('modal', modal);
+    setSearchParams(next);
+  };
+
+  const clearModalParam = (modal) => {
+    const next = new URLSearchParams(searchParams);
+    if (next.get('modal') === modal) {
+      next.delete('modal');
+      setSearchParams(next, { replace: true });
+    }
+  };
 
   // Enrichir les livres par défaut avec les couvertures via Google Books
   useEffect(() => {
@@ -60,6 +77,11 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
     });
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    if (modalParam !== 'panier') setPanierOpen(false);
+    if (modalParam !== 'add-to-cart') setOrderingBook(null);
+  }, [modalParam]);
 
   const handleSearch = (query) => {
     if (!query || query.trim().length < 2) {
@@ -182,7 +204,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
       )}
 
       {/* Panier checkout */}
-      {panierOpen && <PanierCheckout onClose={() => setPanierOpen(false)} />}
+      {panierOpen && <PanierCheckout onClose={() => { setPanierOpen(false); clearModalParam('panier'); }} />}
 
       <PullToRefresh onRefresh={handleRefresh}>
         <div>
@@ -268,7 +290,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
               selectedRelay={selectedRelay}
               initialTransit={deliveryMode}
               onItemAdded={() => setCatalogueStep(3)}
-              onClose={() => setOrderingBook(null)}
+              onClose={() => { setOrderingBook(null); clearModalParam('add-to-cart'); }}
             />
           )}
 
@@ -294,7 +316,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
                   destination={selectedCity?.label}
                   deliveryPrice={deliveryPrice}
                   showSavings
-                  onClick={() => setOrderingBook(book)}
+                  onClick={() => { setOrderingBook(book); setModalParam('add-to-cart'); }}
                 />
               ))}
               {!hasSearched && !loading && displayBooks.length === 0 && (
@@ -318,7 +340,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
               selectedRelay={selectedRelay}
               deliveryMode={deliveryMode}
               onBack={() => setCatalogueStep(2)}
-              onPay={() => setPanierOpen(true)}
+              onPay={() => { setPanierOpen(true); setModalParam('panier'); }}
             />
           )}
         </div>

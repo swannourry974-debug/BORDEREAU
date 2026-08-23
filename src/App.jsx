@@ -46,33 +46,43 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <Routes>
-      <Route path="/" element={<Bordero />} />
-      <Route path="/catalogue" element={<Bordero initialPanel="catalogue" />} />
-      <Route path="/etagere" element={<Bordero initialPanel="etagere" />} />
-      <Route path="/missions" element={<Bordero initialPanel="missions" />} />
-      <Route path="/accueil-voyageur" element={<Bordero initialPanel="accueil-voyageur" />} />
-      <Route path="/stock" element={<Bordero initialPanel="stock" />} />
-      <Route path="/Stock" element={<Bordero initialPanel="stock" />} />
-      <Route path="/scanner" element={<Bordero initialPanel="scanner" />} />
-      <Route path="/profils" element={<Bordero initialPanel="profils" />} />
-      <Route path="/profil" element={<Bordero initialPanel="profil" />} />
-      <Route path="/wallet" element={<Bordero initialPanel="wallet" />} />
-      <Route path="/aide" element={<Bordero initialPanel="aide" />} />
-      {/* Add your page Route elements here */}
-      <Route path="/landing-lecteur" element={<LandingLecteur />} />
-      <Route path="/landing-voyageur" element={<LandingVoyageur />} />
-      <Route path="/landing-relais" element={<LandingRelais />} />
-      <Route path="/LandingRelais" element={<LandingRelais />} />
-      <Route path="/LandingRelais/" element={<LandingRelais />} />
-      <Route path="/relais" element={<LandingRelais />} />
-      <Route path="/panel-profil" element={<PanelProfil />} />
-      <Route path="/PanelProfil" element={<PanelProfil />} />
-      <Route path="/PanelProfil/" element={<PanelProfil />} />
-      <Route path="/panelprofil" element={<PanelProfil />} />
-      <Route path="/admin" element={<AdminDashboard />} />
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.22, ease: 'easeOut' }}
+      >
+        <Routes location={location}>
+          <Route path="/" element={<Bordero />} />
+          <Route path="/catalogue" element={<Bordero initialPanel="catalogue" />} />
+          <Route path="/etagere" element={<Bordero initialPanel="etagere" />} />
+          <Route path="/missions" element={<Bordero initialPanel="missions" />} />
+          <Route path="/accueil-voyageur" element={<Bordero initialPanel="accueil-voyageur" />} />
+          <Route path="/stock" element={<Bordero initialPanel="stock" />} />
+          <Route path="/Stock" element={<Bordero initialPanel="stock" />} />
+          <Route path="/scanner" element={<Bordero initialPanel="scanner" />} />
+          <Route path="/profils" element={<Bordero initialPanel="profils" />} />
+          <Route path="/profil" element={<Bordero initialPanel="profil" />} />
+          <Route path="/wallet" element={<Bordero initialPanel="wallet" />} />
+          <Route path="/aide" element={<Bordero initialPanel="aide" />} />
+          {/* Add your page Route elements here */}
+          <Route path="/landing-lecteur" element={<LandingLecteur />} />
+          <Route path="/landing-voyageur" element={<LandingVoyageur />} />
+          <Route path="/landing-relais" element={<LandingRelais />} />
+          <Route path="/LandingRelais" element={<LandingRelais />} />
+          <Route path="/LandingRelais/" element={<LandingRelais />} />
+          <Route path="/relais" element={<LandingRelais />} />
+          <Route path="/panel-profil" element={<PanelProfil />} />
+          <Route path="/PanelProfil" element={<PanelProfil />} />
+          <Route path="/PanelProfil/" element={<PanelProfil />} />
+          <Route path="/panelprofil" element={<PanelProfil />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="*" element={<PageNotFound />} />
+        </Routes>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 
