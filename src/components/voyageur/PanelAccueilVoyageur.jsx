@@ -123,9 +123,9 @@ export default function PanelAccueilVoyageur() {
               title="Retirer cette mission"
               onClick={() => retirerMission(m)}
               style={{
-                width: 24, height: 24, border: '1px solid rgba(128,0,32,0.25)',
+                width: 44, height: 44, border: '1px solid rgba(128,0,32,0.25)',
                 background: 'var(--creme)', color: 'var(--bordeaux)', cursor: 'pointer',
-                fontFamily: 'Special Elite, monospace', fontSize: 16, lineHeight: '20px', flexShrink: 0,
+                fontFamily: 'Special Elite, monospace', fontSize: 18, lineHeight: '44px', flexShrink: 0,
               }}
             >×</button>
           </div>
@@ -203,9 +203,9 @@ export default function PanelAccueilVoyageur() {
               title="Retirer cette mission"
               onClick={() => retirerMission(m)}
               style={{
-                width: 24, height: 24, border: '1px solid rgba(128,0,32,0.25)',
+                width: 44, height: 44, border: '1px solid rgba(128,0,32,0.25)',
                 background: 'var(--creme)', color: 'var(--bordeaux)', cursor: 'pointer',
-                fontFamily: 'Special Elite, monospace', fontSize: 16, lineHeight: '20px', flexShrink: 0,
+                fontFamily: 'Special Elite, monospace', fontSize: 18, lineHeight: '44px', flexShrink: 0,
               }}
             >×</button>
           </div>

@@ -76,26 +76,39 @@
   }
 }
 
-/* Mode sombre désactivé visuellement : conserver l'identité gris sable demandée */
+/* Thème sombre WebView Android : charbon chaud, sépia lisible */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: 42 24% 90%;
-    --foreground: 25 35% 8%;
-    --card: 42 38% 96%;
-    --card-foreground: 25 35% 8%;
-    --popover: 42 38% 96%;
-    --popover-foreground: 25 35% 8%;
-    --primary: 345 100% 25%;
-    --primary-foreground: 60 33% 97%;
-    --secondary: 42 28% 86%;
-    --secondary-foreground: 25 35% 8%;
-    --muted: 42 22% 83%;
-    --muted-foreground: 25 20% 38%;
-    --accent: 345 100% 25%;
-    --accent-foreground: 60 33% 97%;
-    --border: 38 18% 72%;
-    --input: 38 18% 72%;
-    --ring: 345 100% 25%;
+    --background: 28 18% 10%;
+    --foreground: 38 45% 90%;
+    --card: 30 20% 14%;
+    --card-foreground: 38 45% 90%;
+    --popover: 30 20% 14%;
+    --popover-foreground: 38 45% 90%;
+    --primary: 345 72% 48%;
+    --primary-foreground: 42 55% 94%;
+    --secondary: 32 22% 20%;
+    --secondary-foreground: 38 45% 90%;
+    --muted: 30 16% 22%;
+    --muted-foreground: 36 24% 68%;
+    --accent: 27 78% 48%;
+    --accent-foreground: 42 55% 94%;
+    --destructive: 0 68% 52%;
+    --destructive-foreground: 42 55% 94%;
+    --border: 31 18% 28%;
+    --input: 31 18% 28%;
+    --ring: 27 78% 48%;
+
+    --creme:         #17110D;
+    --bordeaux:      #B84A68;
+    --bordeaux-dark: #7A2038;
+    --cta-orange:    #D75A1D;
+    --cta-orange-dark:#B94714;
+    --cta-foreground:#FFF7EA;
+    --encre:         #F6EAD7;
+    --sepia:         #D3A55E;
+    --papier:        rgba(42, 31, 24, 0.94);
+    --papier-fonce:  rgba(58, 42, 31, 0.96);
   }
 }
 
@@ -153,6 +166,12 @@ body::after {
 body, body * { font-family: 'Poppins', sans-serif !important; }
 button, input, textarea, select, img, [class*="border"], [style*="border"] { border-radius: 10px !important; }
 button, input, textarea, select { transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease; }
+button, select, nav, [role="tab"], [role="tablist"] {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
 button[style*="var(--bordeaux)"], button[class*="bg-bordeaux"], button[class*="bg-primary"], a[class*="bg-bordeaux"], a[class*="bg-primary"] {
   background-color: var(--cta-orange) !important;
   border-color: var(--cta-orange) !important;

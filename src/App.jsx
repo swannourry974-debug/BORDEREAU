@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import LoadingScreen from '@/components/shared/LoadingScreen';
 import { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { CartProvider } from '@/lib/CartContext';
 import { LangProvider } from '@/lib/LangContext';
 // Add page imports here

@@ -34,19 +34,24 @@ export function CartProvider({ children }) {
     const nextItem = { ...item, cartId };
     setItems(prev => [...prev, nextItem]);
     if (user?.email) {
-      const saved = await base44.entities.CartItem.create({
-        user_email: user.email,
-        cart_id: cartId,
-        book: item.book,
-        forfait: item.forfait,
-        transit: item.transit,
-        adresse: item.adresse,
-        selectedCity: item.selectedCity,
-        selectedRelay: item.selectedRelay,
-        prixVal: item.prixVal,
-        comparative: item.comparative,
-      });
-      setItems(prev => prev.map(i => i.cartId === cartId ? toCartItem(saved) : i));
+      try {
+        const saved = await base44.entities.CartItem.create({
+          user_email: user.email,
+          cart_id: cartId,
+          book: item.book,
+          forfait: item.forfait,
+          transit: item.transit,
+          adresse: item.adresse,
+          selectedCity: item.selectedCity,
+          selectedRelay: item.selectedRelay,
+          prixVal: item.prixVal,
+          comparative: item.comparative,
+        });
+        setItems(prev => prev.map(i => i.cartId === cartId ? toCartItem(saved) : i));
+      } catch (error) {
+        setItems(prev => prev.filter(i => i.cartId !== cartId));
+        throw error;
+      }
     }
   };
 
@@ -54,14 +59,25 @@ export function CartProvider({ children }) {
     const target = items.find(i => i.cartId === cartId);
     setItems(prev => prev.filter(i => i.cartId !== cartId));
     if (target?.id) {
-      await base44.entities.CartItem.delete(target.id);
+      try {
+        await base44.entities.CartItem.delete(target.id);
+      } catch (error) {
+        setItems(prev => prev.some(i => i.cartId === cartId) ? prev : [...prev, target]);
+        throw error;
+      }
     }
   };
 
   const clearCart = async () => {
+    const previousItems = items;
     const ids = items.map(i => i.id).filter(Boolean);
     setItems([]);
-    await Promise.all(ids.map(id => base44.entities.CartItem.delete(id)));
+    try {
+      await Promise.all(ids.map(id => base44.entities.CartItem.delete(id)));
+    } catch (error) {
+      setItems(previousItems);
+      throw error;
+    }
   };
 
   const total = items.reduce((sum, i) => sum + (i.prixVal || 0), 0);

@@ -13,7 +13,7 @@ export default function BottomNav({ role, relaisValidated = true, activePanel, o
     borderTop: '2px solid hsl(var(--border))',
     display: 'flex',
     zIndex: 100,
-    paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+    paddingBottom: 'calc(8px + env(safe-area-inset-bottom, 0px))',
     boxShadow: '0 -6px 18px rgba(26,16,8,0.12)',
   };
 

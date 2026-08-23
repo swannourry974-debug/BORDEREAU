@@ -57,20 +57,36 @@ export default function PanelStock() {
   useEffect(() => { load(); }, []);
 
   const updateStockCount = async (nextValue) => {
+    const previous = stockCount;
+    const previousRelais = relais;
     const next = Math.max(0, nextValue);
     setStockCount(next);
-    const res = await base44.functions.invoke('updateRelayInventory', { stock_actuel: next, actif: relayActive });
-    if (res?.data?.relais) {
-      setRelais(res.data.relais);
+    try {
+      const res = await base44.functions.invoke('updateRelayInventory', { stock_actuel: next, actif: relayActive });
+      if (res?.data?.relais) {
+        setRelais(res.data.relais);
+      }
+    } catch (error) {
+      setStockCount(previous);
+      setRelais(previousRelais);
+      throw error;
     }
   };
 
   const toggleRelayActive = async () => {
+    const previous = relayActive;
+    const previousRelais = relais;
     const next = !relayActive;
     setRelayActive(next);
-    const res = await base44.functions.invoke('updateRelayInventory', { stock_actuel: stockCount, actif: next });
-    if (res?.data?.relais) {
-      setRelais(res.data.relais);
+    try {
+      const res = await base44.functions.invoke('updateRelayInventory', { stock_actuel: stockCount, actif: next });
+      if (res?.data?.relais) {
+        setRelais(res.data.relais);
+      }
+    } catch (error) {
+      setRelayActive(previous);
+      setRelais(previousRelais);
+      throw error;
     }
   };
 

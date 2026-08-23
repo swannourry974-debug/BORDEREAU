@@ -26,7 +26,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-creme border-t-2 border-encre z-50 max-w-[480px] mx-auto md:left-1/2 md:-translate-x-1/2 md:w-[480px]">
+    <nav className="fixed bottom-0 left-0 right-0 bg-creme border-t-2 border-encre z-50 max-w-[480px] mx-auto md:left-1/2 md:-translate-x-1/2 md:w-[480px]" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
       <div className="flex">
         {items.map((item, i) => {
           const isActive = location.pathname === item.path;
