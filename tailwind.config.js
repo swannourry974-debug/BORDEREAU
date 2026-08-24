@@ -5,9 +5,12 @@ module.exports = {
   theme: {
   	extend: {
   		fontFamily: {
-  			typewriter: ['Poppins', 'sans-serif'],
-  			serif: ['Poppins', 'sans-serif'],
-  			fell: ['Poppins', 'sans-serif'],
+  		  heading: ['Playfair Display', 'serif'],
+  		  body: ['Cormorant Garamond', 'serif'],
+  		  ui: ['Inter', 'sans-serif'],
+  		  typewriter: ['Inter', 'sans-serif'],
+  		  serif: ['Playfair Display', 'serif'],
+  		  fell: ['Cormorant Garamond', 'serif'],
   		}, 
   		borderRadius: {
   			lg: 'var(--radius)',
@@ -66,22 +69,24 @@ module.exports = {
   				ring: 'hsl(var(--sidebar-ring))'
   			},
   			bordeaux: {
-  					DEFAULT: '#800020',
-  					light: '#a0304a',
-  					dark: '#5a0015',
-  				},
-				cta: {
-  					DEFAULT: '#C2410C',
-  					dark: '#9A3412',
-  					foreground: '#FDFCF0',
-  				},
-  				encre: '#1a1008',
-  				sepia: '#8A5A1A',
-  				papier: {
-  					DEFAULT: '#FAF7EF',
-  					fonce: '#EDE5D5',
-  				},
-  				creme: '#ECE7DB',
+  			      DEFAULT: '#4B1E1E',
+  			      light: '#6A2C2C',
+  			      dark: '#2E1111',
+  			    },
+  			cta: {
+  			      DEFAULT: '#C8A165',
+  			      dark: '#D8B87A',
+  			      foreground: '#4B1E1E',
+  			    },
+  			    encre: '#2E1111',
+  			    sepia: '#C8A165',
+  			    bois: '#5A3A22',
+  			    or: '#D8B87A',
+  			    papier: {
+  			      DEFAULT: '#2E1111',
+  			      fonce: '#4B1E1E',
+  			    },
+  			    creme: '#F5E6CC',
   		},
   		keyframes: {
   			'accordion-down': {

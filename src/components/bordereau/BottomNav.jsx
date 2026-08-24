@@ -72,7 +72,7 @@ export default function BottomNav({ role, relaisValidated = true, activePanel, o
       {role === 'lecteur' && (
         <>
           <NavItem panelId="catalogue" icon="🏠" label="Accueil" />
-          <NavItem panelId="etagere" icon="📚" label="Bibliothèque" />
+          <NavItem panelId="etagere" icon="▥" label="Bibliothèque" />
           <NavItem panelId="wishlist" icon="♡" label="Wishlist" />
           <NavItem panelId="favoris" icon="★" label="Favoris" />
         </>
