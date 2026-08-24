@@ -9,12 +9,12 @@
    Référence visuelle : bibliothèque vintage premium,
    carnet de voyage, billet ancien et application moderne.
 
-   Primary Burgundy : #4B1E1E
-   Dark Burgundy    : #2E1111
+   Primary Burgundy : #800020
+   Dark Burgundy    : #5A0015
    Vintage Cream    : #F5E6CC
    Antique Gold     : #C8A165
-   Dark Wood        : #5A3A22
-   Light Gold       : #D8B87A
+   Action Orange    : #C2410C
+   Dark Orange      : #9A3412
    ============================================================ */
 
 @layer base {
@@ -29,9 +29,9 @@
     --card-foreground: 38 68% 88%;
     --popover: 0 46% 12%;
     --popover-foreground: 38 68% 88%;
-    --primary: 0 43% 21%;
+    --primary: 345 100% 25%;
     --primary-foreground: 38 68% 88%;
-    --secondary: 32 45% 24%;
+    --secondary: 345 100% 18%;
     --secondary-foreground: 38 68% 88%;
     --muted: 32 28% 28%;
     --muted-foreground: 38 34% 74%;
@@ -46,14 +46,14 @@
 
     /* — Theme Bordero officiel — */
     --creme:         #F5E6CC;
-    --bordeaux:      #4B1E1E;
-    --bordeaux-dark: #2E1111;
-    --cta-orange:    #C8A165;
-    --cta-orange-dark:#D8B87A;
-    --cta-foreground:#4B1E1E;
+    --bordeaux:      #800020;
+    --bordeaux-dark: #5A0015;
+    --cta-orange:    #C2410C;
+    --cta-orange-dark:#9A3412;
+    --cta-foreground:#FDFCF0;
     --encre:         #2E1111;
     --sepia:         #C8A165;
-    --bois-fonce:    #5A3A22;
+    --bois-fonce:    #800020;
     --or-clair:      #D8B87A;
     --papier:        rgba(46, 17, 17, 0.88);
     --papier-fonce:  rgba(75, 30, 30, 0.92);
@@ -85,7 +85,7 @@
     --card-foreground: 38 68% 88%;
     --popover: 0 46% 12%;
     --popover-foreground: 38 68% 88%;
-    --primary: 0 43% 21%;
+    --primary: 345 100% 25%;
     --primary-foreground: 38 68% 88%;
     --secondary: 30 45% 24%;
     --secondary-foreground: 38 68% 88%;
@@ -100,14 +100,14 @@
     --ring: 39 46% 59%;
 
     --creme:         #F5E6CC;
-    --bordeaux:      #4B1E1E;
-    --bordeaux-dark: #2E1111;
-    --cta-orange:    #C8A165;
-    --cta-orange-dark:#D8B87A;
-    --cta-foreground:#4B1E1E;
+    --bordeaux:      #800020;
+    --bordeaux-dark: #5A0015;
+    --cta-orange:    #C2410C;
+    --cta-orange-dark:#9A3412;
+    --cta-foreground:#FDFCF0;
     --encre:         #F5E6CC;
     --sepia:         #D8B87A;
-    --bois-fonce:    #5A3A22;
+    --bois-fonce:    #800020;
     --or-clair:      #D8B87A;
     --papier:        rgba(46, 17, 17, 0.94);
     --papier-fonce:  rgba(75, 30, 30, 0.96);

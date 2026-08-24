@@ -5,10 +5,10 @@ import { chunkBooks, LIBRARY_COLORS } from './libraryUtils';
 export default function WoodenShelf({ books, selectedId, addedBookId, onSelect }) {
   const rows = chunkBooks(books, 5);
   return (
-    <div className="p-4 shadow-2xl" style={{ background: 'linear-gradient(90deg,#2E1111,#5A3A22,#2E1111)', border: '1px solid rgba(200,161,101,0.34)' }}>
+    <div className="p-4 shadow-2xl" style={{ background: 'linear-gradient(90deg,#5A0015,#800020,#5A0015)', border: '1px solid rgba(200,161,101,0.34)' }}>
       {rows.map((row, rowIndex) => (
         <div key={rowIndex} className="relative mb-5 last:mb-0">
-          <div className="min-h-[160px] flex items-end gap-3 px-3 pt-4" style={{ background: 'linear-gradient(180deg,rgba(46,17,17,0.78),rgba(90,58,34,0.58))' }}>
+          <div className="min-h-[160px] flex items-end gap-3 px-3 pt-4" style={{ background: 'linear-gradient(180deg,rgba(90,0,21,0.78),rgba(128,0,32,0.58))' }}>
             {row.length === 0 ? (
               <div className="w-full text-center pb-12 text-sm italic" style={{ color: 'rgba(245,230,204,0.55)' }}>Votre prochaine lecture prendra place ici.</div>
             ) : row.map((book, index) => (

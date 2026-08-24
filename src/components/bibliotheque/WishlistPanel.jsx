@@ -23,9 +23,9 @@ export default function WishlistPanel({ items, onAdd, onDelete, onImport }) {
         </select>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 mb-4">
-        <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Titre" className="px-3 py-2 text-sm text-[#4B1E1E] bg-[#F5E6CC] sm:col-span-2" />
-        <input value={form.author} onChange={e => setForm({ ...form, author: e.target.value })} placeholder="Auteur" className="px-3 py-2 text-sm text-[#4B1E1E] bg-[#F5E6CC]" />
-        <input value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} placeholder="Prix" type="number" className="px-3 py-2 text-sm text-[#4B1E1E] bg-[#F5E6CC]" />
+        <input value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Titre" className="px-3 py-2 text-sm text-[#800020] bg-[#F5E6CC] sm:col-span-2" />
+        <input value={form.author} onChange={e => setForm({ ...form, author: e.target.value })} placeholder="Auteur" className="px-3 py-2 text-sm text-[#800020] bg-[#F5E6CC]" />
+        <input value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} placeholder="Prix" type="number" className="px-3 py-2 text-sm text-[#800020] bg-[#F5E6CC]" />
       </div>
       <button type="button" onClick={submit} className="w-full mb-4 py-3 font-bold" style={{ background: LIBRARY_COLORS.gold, color: LIBRARY_COLORS.wine }}>Ajouter à ma wishlist</button>
       <div className="space-y-2">

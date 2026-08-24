@@ -1,11 +1,11 @@
 export const LIBRARY_COLORS = {
-  wine: '#4B1E1E',
-  darkWine: '#2E1111',
+  wine: '#800020',
+  darkWine: '#5A0015',
   cream: '#F5E6CC',
   gold: '#C8A165',
   lightGold: '#D8B87A',
   leather: '#2E1111',
-  wood: '#5A3A22',
+  wood: '#800020',
 };
 
 export const BADGE_LEVELS = [
@@ -15,7 +15,7 @@ export const BADGE_LEVELS = [
   { name: 'Maître de la Bibliothèque', threshold: 100, icon: '⚜' },
 ];
 
-const BOOK_COLORS = ['#4B1E1E', '#2E1111', '#5A3A22', '#6A2C2C', '#7B4C2B', '#3A1914'];
+const BOOK_COLORS = ['#800020', '#5A0015', '#A0304A', '#6B001F', '#8A0028', '#4A0012'];
 
 export function getReaderLevel(count) {
   const unlocked = BADGE_LEVELS.filter(level => count >= level.threshold).pop();

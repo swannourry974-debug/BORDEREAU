@@ -69,18 +69,18 @@ module.exports = {
   				ring: 'hsl(var(--sidebar-ring))'
   			},
   			bordeaux: {
-  			      DEFAULT: '#4B1E1E',
-  			      light: '#6A2C2C',
-  			      dark: '#2E1111',
+  			      DEFAULT: '#800020',
+  			      light: '#A0304A',
+  			      dark: '#5A0015',
   			    },
   			cta: {
-  			      DEFAULT: '#C8A165',
-  			      dark: '#D8B87A',
-  			      foreground: '#4B1E1E',
+  			      DEFAULT: '#C2410C',
+  			      dark: '#9A3412',
+  			      foreground: '#FDFCF0',
   			    },
-  			    encre: '#2E1111',
+  			    encre: '#5A0015',
   			    sepia: '#C8A165',
-  			    bois: '#5A3A22',
+  			    bois: '#800020',
   			    or: '#D8B87A',
   			    papier: {
   			      DEFAULT: '#2E1111',
