@@ -90,7 +90,7 @@ export default function Bordero({ initialPanel }) {
     }).catch(() => {});
   }, []);
 
-  const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/missions': 'missions', '/stock': 'stock', '/Stock': 'stock', '/accueil-voyageur': 'accueil-voyageur', '/scanner': 'scanner', '/profils': 'profils', '/profil': 'profil', '/PanelProfil': 'profil', '/panel-profil': 'profil', '/wallet': 'wallet', '/aide': 'aide' };
+  const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/bibliotheque': 'etagere', '/wishlist': 'wishlist', '/favoris': 'favoris', '/missions': 'missions', '/stock': 'stock', '/Stock': 'stock', '/accueil-voyageur': 'accueil-voyageur', '/scanner': 'scanner', '/profils': 'profils', '/profil': 'profil', '/PanelProfil': 'profil', '/panel-profil': 'profil', '/wallet': 'wallet', '/aide': 'aide' };
   const activePanel = pathToPanel[location.pathname] || initialPanel || 'catalogue';
   const isRelaisValidated = currentUser?.role === 'admin' || (currentUser?.relais_valide === true && currentUser?.relais_validation_status === 'valide');
   const isRelaisPanel = ['stock', 'scanner', 'profils'].includes(activePanel);
@@ -185,10 +185,10 @@ export default function Bordero({ initialPanel }) {
           <nav style={{ padding: '16px 0' }}>
             {role === 'lecteur' && (
               <>
-                <SidebarItem icon="🔍" label="Catalogue" panelId="catalogue" active={activePanel === 'catalogue'} onClick={() => switchPanel('catalogue')} />
-                <SidebarItem icon="📚" label="Étagère" panelId="etagere" active={activePanel === 'etagere'} onClick={() => switchPanel('etagere')} />
-                <SidebarItem icon="💳" label="Wallet" panelId="wallet" active={activePanel === 'wallet'} onClick={() => switchPanel('wallet')} />
-                <SidebarItem icon="❓" label="Aide" panelId="aide" active={activePanel === 'aide'} onClick={() => switchPanel('aide')} />
+                <SidebarItem icon="🏠" label="Accueil" panelId="catalogue" active={activePanel === 'catalogue'} onClick={() => switchPanel('catalogue')} />
+                <SidebarItem icon="📚" label="Bibliothèque" panelId="etagere" active={activePanel === 'etagere'} onClick={() => switchPanel('etagere')} />
+                <SidebarItem icon="♡" label="Wishlist" panelId="wishlist" active={activePanel === 'wishlist'} onClick={() => switchPanel('wishlist')} />
+                <SidebarItem icon="★" label="Favoris" panelId="favoris" active={activePanel === 'favoris'} onClick={() => switchPanel('favoris')} />
               </>
             )}
             {role === 'voyageur' && (
@@ -237,7 +237,7 @@ export default function Bordero({ initialPanel }) {
                 onCloseCommande={closeCommande}
               />
             )}
-            {activePanel === 'etagere' && <PanelEtagere />}
+            {['etagere', 'wishlist', 'favoris'].includes(activePanel) && <PanelEtagere initialTab={activePanel === 'wishlist' ? 'wishlist' : activePanel === 'favoris' ? 'favoris' : 'bibliotheque'} />}
             {activePanel === 'accueil-voyageur' && <PanelAccueilVoyageur />}
             {activePanel === 'missions' && <PanelMissions />}
             {isRelaisPanel && !isRelaisValidated && <RelaisAccessNotice status={currentUser?.relais_validation_status} onBack={() => switchPanel('profil')} />}

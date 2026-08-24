@@ -45,13 +45,15 @@ export default function BottomNav({ role, relaisValidated = true, activePanel, o
 
   const NavItem = ({ panelId, icon, label, badge }) => {
     const active = activePanel === panelId;
+    const featured = role === 'lecteur' && panelId === 'etagere';
+    const labelStyles = labelStyle(active);
     return (
-      <div style={{ ...itemStyle(active), borderRight: '1px dashed rgba(26,16,8,0.2)' }} onClick={() => onSwitch(panelId)}>
+      <div style={{ ...itemStyle(active), borderRight: '1px dashed rgba(26,16,8,0.2)', ...(featured ? { marginTop: -10, background: active ? 'var(--bordeaux)' : '#4B1E1E', border: '1px solid #C8A165', boxShadow: '0 -5px 18px rgba(75,30,30,0.25)' } : {}) }} onClick={() => onSwitch(panelId)}>
         {active && (
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'var(--bordeaux)' }} />
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: featured ? '#C8A165' : 'var(--bordeaux)' }} />
         )}
-        <span style={{ fontSize: 22, marginBottom: 3 }}>{icon}</span>
-        <span style={labelStyle(active)}>{label}</span>
+        <span style={{ fontSize: featured ? 26 : 22, marginBottom: 3 }}>{icon}</span>
+        <span style={{ ...labelStyles, color: featured ? '#F5E6CC' : labelStyles.color }}>{label}</span>
         {badge && (
           <span style={{
             position: 'absolute', top: 6, right: 'calc(50% - 18px)',
@@ -69,10 +71,10 @@ export default function BottomNav({ role, relaisValidated = true, activePanel, o
     <nav style={navStyle}>
       {role === 'lecteur' && (
         <>
-          <NavItem panelId="catalogue" icon="🔍" label={t('nav_catalogue')} />
-          <NavItem panelId="etagere" icon="📚" label={t('nav_etagere')} />
-          <NavItem panelId="wallet" icon="💳" label={t('nav_wallet')} />
-          <NavItem panelId="aide" icon="❓" label={t('nav_aide')} />
+          <NavItem panelId="catalogue" icon="🏠" label="Accueil" />
+          <NavItem panelId="etagere" icon="📚" label="Bibliothèque" />
+          <NavItem panelId="wishlist" icon="♡" label="Wishlist" />
+          <NavItem panelId="favoris" icon="★" label="Favoris" />
         </>
       )}
       {role === 'voyageur' && (

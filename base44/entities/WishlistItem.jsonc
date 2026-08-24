@@ -1,0 +1,86 @@
+{
+  "name": "WishlistItem",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email du lecteur propri\u00e9taire de cette envie"
+    },
+    "title": {
+      "type": "string",
+      "description": "Titre du livre souhait\u00e9"
+    },
+    "author": {
+      "type": "string",
+      "description": "Auteur du livre"
+    },
+    "price": {
+      "type": "number",
+      "default": 0,
+      "description": "Prix estim\u00e9 ou constat\u00e9"
+    },
+    "popularity": {
+      "type": "number",
+      "default": 0,
+      "description": "Score de popularit\u00e9 pour le tri"
+    },
+    "cover_url": {
+      "type": "string",
+      "description": "URL de couverture du livre"
+    }
+  },
+  "required": [
+    "user_email",
+    "title"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

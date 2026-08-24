@@ -58,6 +58,9 @@ const AuthenticatedApp = () => {
           <Route path="/" element={<Bordero />} />
           <Route path="/catalogue" element={<Bordero initialPanel="catalogue" />} />
           <Route path="/etagere" element={<Bordero initialPanel="etagere" />} />
+          <Route path="/bibliotheque" element={<Bordero initialPanel="etagere" />} />
+          <Route path="/wishlist" element={<Bordero initialPanel="wishlist" />} />
+          <Route path="/favoris" element={<Bordero initialPanel="favoris" />} />
           <Route path="/missions" element={<Bordero initialPanel="missions" />} />
           <Route path="/accueil-voyageur" element={<Bordero initialPanel="accueil-voyageur" />} />
           <Route path="/stock" element={<Bordero initialPanel="stock" />} />
