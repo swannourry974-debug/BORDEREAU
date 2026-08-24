@@ -23,7 +23,7 @@ export default function BibliothequeHeroStats({ owned, read, favorites, level })
           <h1 className="bordero-title mt-5 text-4xl leading-tight" style={{ color: LIBRARY_COLORS.cream }}>Ma bibliothèque</h1>
           <p className="bordero-body mt-3 text-lg leading-snug" style={{ color: 'rgba(245,230,204,0.78)' }}>Chaque livre acheté prend sa place sur votre étagère. Collectionnez, lisez, revivez.</p>
         </div>
-        <div className="grid grid-cols-2 rounded-[16px] border sm:grid-cols-4" style={{ borderColor: 'rgba(200,161,101,0.32)', background: 'rgba(46,17,17,0.74)' }}>
+        <div className="grid grid-cols-2 rounded-[16px] border sm:grid-cols-4" style={{ borderColor: 'rgba(200,161,101,0.32)', background: 'rgba(128,0,32,0.74)' }}>
           <Stat icon="▰" value={owned} label="Livres possédés" />
           <Stat icon="▣" value={read} label="Livres lus" />
           <Stat icon="★" value={favorites} label="Favoris" />
