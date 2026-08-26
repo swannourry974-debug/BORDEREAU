@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import GoogleBooksPreview from './GoogleBooksPreview';
 import { BtnCoupon } from '../bordereau/shared';
+import { useBookEnrichment } from '@/hooks/useBookEnrichment';
 
 function Tag({ type, children }) {
   const styles = {
@@ -17,6 +18,9 @@ function Tag({ type, children }) {
 
 export default function BookDetail({ book, onOrder, onClose }) {
   const [showPreview, setShowPreview] = useState(false);
+  const { enrichment, loading: enrichmentLoading } = useBookEnrichment(book);
+  const displayedPrice = enrichment?.priceLabel || book.price;
+  const availability = enrichment?.availability || book.dispo;
 
   const coverUrl = book.coverId
     ? `https://covers.openlibrary.org/b/id/${book.coverId}-M.jpg`
@@ -69,11 +73,14 @@ export default function BookDetail({ book, onOrder, onClose }) {
             <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.6)', marginBottom: 8 }}>{book.author}</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
               <Tag type="type">{book.type}</Tag>
-              <Tag type="price">{book.price}</Tag>
-              <Tag type="dispo">{book.dispo}</Tag>
+              <Tag type="price">{enrichmentLoading ? 'Prix neuf…' : displayedPrice}</Tag>
+              <Tag type="dispo">{availability}</Tag>
             </div>
             {book.year && (
               <div style={{ fontSize: 10, color: 'rgba(26,16,8,0.4)', letterSpacing: 1 }}>{book.year}</div>
+            )}
+            {enrichment?.publisher && (
+              <div style={{ fontSize: 10, color: 'rgba(26,16,8,0.48)', letterSpacing: 1 }}>Éditeur : {enrichment.publisher}</div>
             )}
             {book.poidsEstime && (
               <div style={{ fontSize: 10, color: 'rgba(26,16,8,0.4)', letterSpacing: 1 }}>⚖ {book.poidsEstime}</div>
@@ -104,6 +111,11 @@ export default function BookDetail({ book, onOrder, onClose }) {
           {showPreview && (
             <div style={{ marginTop: 10, border: '1px solid rgba(26,16,8,0.15)' }}>
               <GoogleBooksPreview isbn={book.isbn} title={book.title} />
+            </div>
+          )}
+          {enrichment?.buyLink && (
+            <div style={{ marginTop: 10 }}>
+              <BtnCoupon onClick={() => window.open(enrichment.buyLink, '_blank', 'noopener,noreferrer')}>Acheter neuf</BtnCoupon>
             </div>
           )}
         </div>
