@@ -126,7 +126,7 @@ export default function LandingRelais() {
         {checking && <div className="font-fell" style={{ textAlign: 'center', fontStyle: 'italic', color: 'rgba(26,16,8,0.45)' }}>Chargement…</div>}
 
         {!checking && (user || entryMode === 'signup') && (
-          <form onSubmit={handleSubmit} style={{ background: 'var(--papier)', border: '2px solid rgba(26,16,8,0.18)', padding: 18, boxShadow: '5px 5px 0 rgba(26,16,8,0.10)' }}>
+          <form onSubmit={handleSubmit} style={{ background: 'var(--papier)', border: '2px solid rgba(26,16,8,0.18)', padding: 18, boxShadow: '5px 5px 0 rgba(26,16,8,0.10)', color: '#111111' }}>
             {[
               ['nom_enseigne', "Nom de l'enseigne", 'Librairie du quartier'],
               ['horaires', "Horaires d'ouverture", 'Lun-Sam 8h-19h'],
@@ -137,14 +137,14 @@ export default function LandingRelais() {
               ['telephone', 'Téléphone optionnel', '+33 6 00 00 00 00'],
             ].map(([field, label, placeholder]) => (
               <label key={field} style={{ display: 'block', marginBottom: 12 }}>
-                <span className="font-special" style={{ display: 'block', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.55)', marginBottom: 5 }}>{label}</span>
-                <input required={field !== 'telephone'} type={field === 'email' ? 'email' : 'text'} disabled={field === 'email' && !!user?.email} value={field === 'email' && user?.email ? user.email : form[field]} onChange={(e) => updateField(field, e.target.value)} placeholder={placeholder} style={{ width: '100%', background: field === 'email' && !!user?.email ? 'rgba(26,16,8,0.05)' : 'var(--creme)', border: '1.5px solid rgba(26,16,8,0.28)', padding: '11px 12px', fontSize: 13, color: 'var(--encre)' }} />
+                <span className="font-special" style={{ display: 'block', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: '#111111', marginBottom: 5 }}>{label}</span>
+                <input required={field !== 'telephone'} type={field === 'email' ? 'email' : 'text'} disabled={field === 'email' && !!user?.email} value={field === 'email' && user?.email ? user.email : form[field]} onChange={(e) => updateField(field, e.target.value)} placeholder={placeholder} style={{ width: '100%', background: field === 'email' && !!user?.email ? 'rgba(26,16,8,0.05)' : 'var(--creme)', border: '1.5px solid rgba(26,16,8,0.28)', padding: '11px 12px', fontSize: 13, color: '#111111' }} />
               </label>
             ))}
 
             <label style={{ display: 'block', marginBottom: 16 }}>
-              <span className="font-special" style={{ display: 'block', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.55)', marginBottom: 5 }}>Type de commerce</span>
-              <select required value={form.type_commerce} onChange={(e) => updateField('type_commerce', e.target.value)} style={{ width: '100%', background: 'var(--creme)', border: '1.5px solid rgba(26,16,8,0.28)', padding: '11px 12px', fontSize: 13, color: 'var(--encre)' }}>
+              <span className="font-special" style={{ display: 'block', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: '#111111', marginBottom: 5 }}>Type de commerce</span>
+              <select required value={form.type_commerce} onChange={(e) => updateField('type_commerce', e.target.value)} style={{ width: '100%', background: 'var(--creme)', border: '1.5px solid rgba(26,16,8,0.28)', padding: '11px 12px', fontSize: 13, color: '#111111' }}>
                 {TYPES_COMMERCE.map(type => <option key={type} value={type}>{type}</option>)}
               </select>
             </label>
