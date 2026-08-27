@@ -16,7 +16,7 @@ export default function LandingRelais() {
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(true);
   const [entryMode, setEntryMode] = useState('choice');
-  const [form, setForm] = useState({ nom_enseigne: '', email: '', ville: '', pays: 'France', adresse: '', type_commerce: 'Boulangerie', horaires: '', telephone: '' });
+  const [form, setForm] = useState({ nom_enseigne: '', identifiant_connexion: '', email: '', ville: '', pays: 'France', adresse: '', type_commerce: 'Boulangerie', horaires: '', telephone: '' });
   const [status, setStatus] = useState('idle');
   const [message, setMessage] = useState('');
 
@@ -29,6 +29,7 @@ export default function LandingRelais() {
         if (existing) {
           setForm({
             nom_enseigne: existing.nom || '',
+            identifiant_connexion: existing.identifiant_connexion || '',
             email: u.email,
             ville: existing.ville || '',
             pays: existing.pays_nom || existing.pays_code || 'France',
@@ -65,6 +66,7 @@ export default function LandingRelais() {
     try {
       const payload = {
         nom: form.nom_enseigne.trim(),
+        identifiant_connexion: form.identifiant_connexion.trim(),
         adresse: form.adresse,
         ville: form.ville,
         pays_code: paysCode(form.pays),
@@ -85,6 +87,7 @@ export default function LandingRelais() {
         relais_valide: false,
         point_relais_id: relais.id,
         relais_nom_boutique: payload.nom,
+        relais_identifiant_connexion: payload.identifiant_connexion,
         relais_adresse: form.adresse,
         relais_ville: form.ville,
         relais_pays: form.pays,
@@ -129,6 +132,7 @@ export default function LandingRelais() {
           <form onSubmit={handleSubmit} style={{ background: 'var(--papier)', border: '2px solid rgba(26,16,8,0.18)', padding: 18, boxShadow: '5px 5px 0 rgba(26,16,8,0.10)', color: '#111111' }}>
             {[
               ['nom_enseigne', "Nom de l'enseigne", 'Librairie du quartier'],
+              ['identifiant_connexion', 'Identifiant relais souhaité', 'librairie-quartier'],
               ['horaires', "Horaires d'ouverture", 'Lun-Sam 8h-19h'],
               ['adresse', 'Adresse postale', '12 rue des livres'],
               ['email', 'Adresse mail', 'contact@commerce.fr'],
@@ -148,6 +152,10 @@ export default function LandingRelais() {
                 {TYPES_COMMERCE.map(type => <option key={type} value={type}>{type}</option>)}
               </select>
             </label>
+
+            <div className="font-fell" style={{ background: 'rgba(128,0,32,0.06)', border: '1px dashed var(--bordeaux)', padding: 12, marginBottom: 14, fontSize: 12, lineHeight: 1.6, color: '#111111' }}>
+              Le mot de passe se crée et se réinitialise uniquement sur l’écran sécurisé de connexion Bordero. Utilisez le lien « mot de passe oublié » sur cet écran pour recevoir l’e-mail de réinitialisation.
+            </div>
 
             {message && <div style={{ background: status === 'error' ? 'rgba(180,20,20,0.08)' : 'rgba(45,106,45,0.08)', border: `1px solid ${status === 'error' ? '#b41414' : '#2d6a2d'}`, padding: 12, marginBottom: 14, fontSize: 12, lineHeight: 1.6, color: status === 'error' ? '#b41414' : '#2d6a2d' }}>{message}</div>}
 

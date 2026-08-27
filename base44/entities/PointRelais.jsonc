@@ -6,6 +6,10 @@
       "type": "string",
       "description": "Nom du commerce partenaire"
     },
+    "identifiant_connexion": {
+      "type": "string",
+      "description": "Identifiant relais souhait\u00e9 pour rep\u00e9rer le compte commerce"
+    },
     "adresse": {
       "type": "string"
     },
