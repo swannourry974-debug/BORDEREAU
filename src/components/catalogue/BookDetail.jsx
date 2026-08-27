@@ -36,14 +36,15 @@ export default function BookDetail({ book, onOrder, onClose }) {
     }}>
       {/* Header */}
       <div style={{
-        background: 'var(--bordeaux)',
+        background: 'var(--creme)',
+        borderBottom: '1px solid var(--bordeaux)',
         padding: '10px 14px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <span className="font-special" style={{ color: 'var(--creme)', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' }}>
+        <span className="font-special" style={{ color: 'var(--bordeaux)', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' }}>
           Fiche livre
         </span>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--creme)', fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>✕</button>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--bordeaux)', fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>✕</button>
       </div>
 
       <div style={{ padding: 16 }}>

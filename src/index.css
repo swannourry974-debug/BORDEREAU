@@ -25,10 +25,10 @@
     --safe-area-left: env(safe-area-inset-left, 0px);
     --safe-area-right: env(safe-area-inset-right, 0px);
     --foreground: 0 46% 12%;
-    --card: 345 100% 25%;
-    --card-foreground: 38 68% 88%;
-    --popover: 345 100% 25%;
-    --popover-foreground: 38 68% 88%;
+    --card: 38 68% 88%;
+    --card-foreground: 345 100% 25%;
+    --popover: 38 68% 88%;
+    --popover-foreground: 345 100% 25%;
     --primary: 345 100% 25%;
     --primary-foreground: 38 68% 88%;
     --secondary: 345 100% 18%;
@@ -55,8 +55,8 @@
     --sepia:         #C8A165;
     --bois-fonce:    #800020;
     --or-clair:      #D8B87A;
-    --papier:        rgba(128, 0, 32, 0.88);
-    --papier-fonce:  rgba(128, 0, 32, 0.92);
+    --papier:        rgba(245, 230, 204, 0.96);
+    --papier-fonce:  rgba(245, 230, 204, 0.98);
   }
 }
 
@@ -67,8 +67,8 @@
   body {
     @apply bg-background text-foreground;
     font-family: 'Cormorant Garamond', serif;
-    background-color: var(--bordeaux);
-    color: var(--creme);
+    background-color: var(--creme);
+    color: var(--bordeaux);
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -81,10 +81,10 @@
   :root {
     --background: 0 46% 12%;
     --foreground: 38 68% 88%;
-    --card: 345 100% 25%;
-    --card-foreground: 38 68% 88%;
-    --popover: 345 100% 25%;
-    --popover-foreground: 38 68% 88%;
+    --card: 38 68% 88%;
+    --card-foreground: 345 100% 25%;
+    --popover: 38 68% 88%;
+    --popover-foreground: 345 100% 25%;
     --primary: 345 100% 25%;
     --primary-foreground: 38 68% 88%;
     --secondary: 30 45% 24%;
@@ -109,8 +109,8 @@
     --sepia:         #D8B87A;
     --bois-fonce:    #800020;
     --or-clair:      #D8B87A;
-    --papier:        rgba(128, 0, 32, 0.94);
-    --papier-fonce:  rgba(128, 0, 32, 0.96);
+    --papier:        rgba(245, 230, 204, 0.94);
+    --papier-fonce:  rgba(245, 230, 204, 0.96);
   }
 }
 
@@ -177,11 +177,11 @@ button, select, nav, [role="tab"], [role="tablist"] {
   -webkit-tap-highlight-color: transparent;
 }
 .bordero-card {
-  background: var(--bordeaux);
-  border: 1px solid rgba(200, 161, 101, 0.42);
+  background: var(--creme);
+  border: 1px solid var(--bordeaux);
   border-radius: 16px;
-  box-shadow: 0 18px 45px rgba(46, 17, 17, 0.28);
-  color: var(--creme);
+  box-shadow: 0 18px 45px rgba(128, 0, 32, 0.18);
+  color: var(--bordeaux);
 }
 .bordero-button, button[style*="var(--bordeaux)"], button[class*="bg-bordeaux"], button[class*="bg-primary"], a[class*="bg-bordeaux"], a[class*="bg-primary"] {
   background-color: var(--cta-orange) !important;

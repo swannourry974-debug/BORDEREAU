@@ -83,8 +83,8 @@ module.exports = {
   			    bois: '#800020',
   			    or: '#D8B87A',
   			    papier: {
-  			      DEFAULT: '#800020',
-  			      fonce: '#800020',
+  			      DEFAULT: '#F5E6CC',
+  			      fonce: '#F5E6CC',
   			    },
   			    creme: '#F5E6CC',
   		},
