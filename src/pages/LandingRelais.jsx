@@ -95,6 +95,13 @@ export default function LandingRelais() {
         relais_telephone: form.telephone,
         relais_horaires: form.horaires,
       });
+      await Promise.allSettled([
+        base44.integrations.Core.SendEmail({
+          to: user.email,
+          subject: 'Créer votre mot de passe Point Relais Bordero',
+          body: `Bonjour,\n\nVotre demande Point Relais Bordero a bien été reçue.\n\nPour créer ou réinitialiser votre mot de passe, ouvrez l’écran sécurisé de connexion Bordero puis utilisez votre adresse ${user.email}.\n\nVotre accès scanner, stock et profils relais sera ouvert après validation administrateur.\n\nL’équipe Bordero`,
+        })
+      ]);
       setStatus('sent');
       setMessage('Demande envoyée. Un administrateur doit valider votre fiche avant l’ouverture du scanner, du stock et des profils relais.');
     } catch (err) {
@@ -155,6 +162,7 @@ export default function LandingRelais() {
 
             <div className="font-fell" style={{ background: 'rgba(128,0,32,0.06)', border: '1px dashed var(--bordeaux)', padding: 12, marginBottom: 14, fontSize: 12, lineHeight: 1.6, color: '#111111' }}>
               Le mot de passe se crée et se réinitialise uniquement sur l’écran sécurisé de connexion Bordero. Utilisez le lien « mot de passe oublié » sur cet écran pour recevoir l’e-mail de réinitialisation.
+              <button type="button" onClick={handleConnect} style={{ display: 'block', width: '100%', marginTop: 10, background: 'var(--cta-orange)', color: 'var(--cta-foreground)', border: 'none', padding: '12px 14px', fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer' }}>Créer / réinitialiser mon mot de passe</button>
             </div>
 
             {message && <div style={{ background: status === 'error' ? 'rgba(180,20,20,0.08)' : 'rgba(45,106,45,0.08)', border: `1px solid ${status === 'error' ? '#b41414' : '#2d6a2d'}`, padding: 12, marginBottom: 14, fontSize: 12, lineHeight: 1.6, color: status === 'error' ? '#b41414' : '#2d6a2d' }}>{message}</div>}
