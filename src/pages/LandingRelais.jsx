@@ -95,12 +95,20 @@ export default function LandingRelais() {
         relais_telephone: form.telephone,
         relais_horaires: form.horaires,
       });
+      const relaisValides = await base44.entities.PointRelais.filter({ validation_admin: 'valide', actif: true });
       await Promise.allSettled([
         base44.integrations.Core.SendEmail({
           to: user.email,
           subject: 'Créer votre mot de passe Point Relais Bordero',
           body: `Bonjour,\n\nVotre demande Point Relais Bordero a bien été reçue.\n\nPour créer ou réinitialiser votre mot de passe, ouvrez l’écran sécurisé de connexion Bordero puis utilisez votre adresse ${user.email}.\n\nVotre accès scanner, stock et profils relais sera ouvert après validation administrateur.\n\nL’équipe Bordero`,
-        })
+        }),
+        ...relaisValides
+          .filter(r => r.gerant_email && r.gerant_email !== user.email)
+          .map(r => base44.integrations.Core.SendEmail({
+            to: r.gerant_email,
+            subject: 'Nouvelle demande Point Relais Bordero',
+            body: `Bonjour,\n\nUne nouvelle demande Point Relais vient d’être envoyée sur Bordero.\n\nCommerce : ${payload.nom}\nVille : ${payload.ville}\nPays : ${payload.pays_nom}\n\nCette demande reste soumise à validation administrateur avant ouverture des accès scanner, stock et profils relais.\n\nL’équipe Bordero`,
+          }))
       ]);
       setStatus('sent');
       setMessage('Demande envoyée. Un administrateur doit valider votre fiche avant l’ouverture du scanner, du stock et des profils relais.');
