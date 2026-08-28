@@ -19,10 +19,47 @@
       "format": "date",
       "description": "Date du vol"
     },
+    "confirmation_vol_url": {
+      "type": "string",
+      "description": "Justificatif transmis par le voyageur : email, PDF ou capture de confirmation du vol futur"
+    },
+    "confirmation_vol_nom": {
+      "type": "string",
+      "description": "Nom du fichier justificatif transmis"
+    },
+    "validation_admin": {
+      "type": "string",
+      "enum": [
+        "en_attente",
+        "valide",
+        "suspendu",
+        "bloque"
+      ],
+      "default": "en_attente",
+      "description": "Statut de validation administrateur du voyageur pour ce vol"
+    },
+    "tentative_validation": {
+      "type": "number",
+      "default": 1,
+      "description": "Num\u00e9ro de tentative de validation du voyageur"
+    },
+    "admin_notes": {
+      "type": "string",
+      "description": "Notes administrateur sur la validation ou la suspension"
+    },
+    "fraude_signalee": {
+      "type": "boolean",
+      "default": false,
+      "description": "Indique une tentative consid\u00e9r\u00e9e comme frauduleuse"
+    },
+    "validation_date": {
+      "type": "string",
+      "description": "Date ISO de d\u00e9cision administrateur"
+    },
     "actif": {
       "type": "boolean",
-      "default": true,
-      "description": "Indique si le vol est toujours actif"
+      "default": false,
+      "description": "Indique si le vol est valid\u00e9 et utilisable pour accepter des missions"
     }
   },
   "required": [
@@ -35,7 +72,17 @@
     "create": {
       "$or": [
         {
-          "data.voyageur_email": "{{user.email}}"
+          "$and": [
+            {
+              "data.voyageur_email": "{{user.email}}"
+            },
+            {
+              "data.validation_admin": "en_attente"
+            },
+            {
+              "data.actif": false
+            }
+          ]
         },
         {
           "user_condition": {
@@ -62,16 +109,9 @@
       ]
     },
     "update": {
-      "$or": [
-        {
-          "data.voyageur_email": "{{user.email}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     },
     "delete": {
       "$or": [

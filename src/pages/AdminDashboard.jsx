@@ -7,6 +7,7 @@ import { buildAdminStats, searchAdminData } from '@/components/admin/dashboard/a
 const TABS = [
   { id: 'dashboard', label: 'Accueil' },
   { id: 'validation-relais', label: 'Validation relais' },
+  { id: 'validation-voyageurs', label: 'Validation voyageurs' },
   { id: 'activite', label: "Activité de l'appli" },
   { id: 'villes', label: 'Achats par villes' },
   { id: 'livraisons', label: 'Livraisons & États' },
@@ -52,7 +53,7 @@ export default function AdminDashboard() {
   }, []);
 
   const isAgentBordeur = user?.role === 'admin_secondaire';
-  const visibleTabs = isAgentBordeur ? TABS.filter(t => t.id !== 'validation-relais') : TABS;
+  const visibleTabs = isAgentBordeur ? TABS.filter(t => !['validation-relais', 'validation-voyageurs'].includes(t.id)) : TABS;
   const stats = useMemo(() => buildAdminStats({ ...data, selectedCountry, selectedRelay }), [data, selectedCountry, selectedRelay]);
   const searchResults = useMemo(() => searchAdminData(query, data), [query, data]);
   const openOfficialLogin = () => base44.auth.logout('/admin');

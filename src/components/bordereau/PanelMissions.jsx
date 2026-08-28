@@ -161,6 +161,7 @@ export default function PanelMissions() {
   const [newBadge, setNewBadge] = useState(null);
   const [user, setUser] = useState(null);
   const [voyageActif, setVoyageActif] = useState(null);
+  const [voyageurValidationStatus, setVoyageurValidationStatus] = useState('aucune');
   const [showFormVol, setShowFormVol] = useState(false);
   const [filtreVille, setFiltreVille] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -178,8 +179,11 @@ export default function PanelMissions() {
     base44.auth.me().then(async (u) => {
       setUser(u);
       if (!u) return;
-      const voyages = await base44.entities.Voyage.filter({ voyageur_email: u.email, actif: true });
-      if (voyages.length > 0) setVoyageActif(voyages[0]);
+      const voyages = await base44.entities.Voyage.filter({ voyageur_email: u.email });
+      const dernierVoyage = voyages[0];
+      setVoyageurValidationStatus(u.voyageur_validation_status || dernierVoyage?.validation_admin || 'aucune');
+      const voyageValide = voyages.find(v => v.actif && v.validation_admin === 'valide');
+      if (voyageValide) setVoyageActif(voyageValide);
       await loadAvailableMissions();
     }).catch(() => {});
   }, []);
@@ -212,6 +216,8 @@ export default function PanelMissions() {
 
   const missionsActives = engagees.filter(m => m.status !== 'livree');
   const missionsArchivees = engagees.filter(m => m.status === 'livree');
+  const validationBloquee = user?.voyageur_bloque || voyageurValidationStatus === 'bloque';
+  const validationEnAttente = ['en_attente', 'suspendu'].includes(voyageurValidationStatus);
 
   // Calcul poids total engagé (en grammes)
   const poidsEngageG = missionsActives.reduce((sum, m) => {
@@ -238,7 +244,7 @@ export default function PanelMissions() {
   const missionsFiltered = availableExpress.filter(m => {
     const matchVoyage = voyageActif
       ? m.ville.toLowerCase().includes(voyageActif.arrivee_ville.toLowerCase())
-      : true;
+      : false;
     const matchFiltre = filtreVille
       ? (m.zone_id === filtreVille || m.ville === filtreVille)
       : true;
@@ -439,6 +445,12 @@ export default function PanelMissions() {
       <SectionTitle>Missions disponibles</SectionTitle>
       <FiltreVille filtre={filtreVille} onFiltre={setFiltreVille} missions={availableExpress} />
 
+      {!voyageActif && (
+        <div style={{ background: validationBloquee ? 'rgba(180,20,20,0.08)' : 'rgba(128,0,32,0.08)', border: `1px dashed ${validationBloquee ? '#b41414' : 'var(--bordeaux)'}`, padding: '12px 16px', marginBottom: 16, fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: validationBloquee ? '#b41414' : 'var(--bordeaux)', lineHeight: 1.6 }}>
+          {validationBloquee ? '⛔ Profil voyageur bloqué : accès aux missions fermé.' : validationEnAttente ? '⏳ Votre justificatif de vol est en cours de validation admin.' : '🔒 Déclarez un vol futur avec justificatif, puis attendez la validation admin pour accéder aux missions.'}
+        </div>
+      )}
+
       {limitAtteinte && (
         <div style={{
           background: 'rgba(128,0,32,0.08)',
@@ -510,13 +522,13 @@ export default function PanelMissions() {
           <div className="font-fell" style={{ fontSize: 13, color: 'rgba(26,16,8,0.5)', marginBottom: 14, fontStyle: 'italic' }}>
             {voyageActif ? 'Déclarer un autre voyage ?' : 'Vous avez un voyage prévu ?'}
           </div>
-          <BtnCoupon onClick={() => setShowFormVol(true)}>+ Déclarer un vol</BtnCoupon>
+          <BtnCoupon onClick={() => setShowFormVol(true)} disabled={validationBloquee}>{validationBloquee ? 'Profil bloqué' : '+ Déclarer un vol'}</BtnCoupon>
         </div>
       ) : (
         <FormulaireVol
           user={user}
           onVolDeclare={(voyage) => {
-            setVoyageActif(voyage);
+            setVoyageurValidationStatus(voyage.validation_admin || 'en_attente');
             setShowFormVol(false);
           }}
         />

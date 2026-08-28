@@ -86,6 +86,46 @@
       "type": "string",
       "description": "Horaires d'ouverture de la boutique candidate Point Relais"
     },
+    "voyageur_valide": {
+      "type": "boolean",
+      "default": false,
+      "description": "Indique si l'administrateur a valid\u00e9 le profil voyageur"
+    },
+    "voyageur_validation_status": {
+      "type": "string",
+      "enum": [
+        "aucune",
+        "en_attente",
+        "valide",
+        "suspendu",
+        "bloque"
+      ],
+      "default": "aucune",
+      "description": "Statut de validation administrateur pour le r\u00f4le Voyageur"
+    },
+    "voyageur_validation_notes": {
+      "type": "string",
+      "description": "Notes administrateur li\u00e9es \u00e0 la validation voyageur"
+    },
+    "voyageur_valide_le": {
+      "type": "string",
+      "description": "Date ISO de validation du voyageur"
+    },
+    "voyageur_tentatives_validation": {
+      "type": "number",
+      "default": 0,
+      "description": "Nombre de justificatifs de vol soumis pour validation"
+    },
+    "voyageur_bloque": {
+      "type": "boolean",
+      "default": false,
+      "description": "Indique si le voyageur est bloqu\u00e9 apr\u00e8s fraude ou trop de tentatives"
+    },
+    "voyageur_fraude_signalee": {
+      "type": "boolean",
+      "default": false,
+      "description": "Indique une tentative frauduleuse signal\u00e9e par l'administrateur"
+    },
     "ville_destination": {
       "type": "string",
       "description": "Ville de destination pr\u00e9f\u00e9r\u00e9e (pour lecteurs)"
