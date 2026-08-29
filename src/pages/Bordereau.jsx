@@ -10,6 +10,7 @@ import PanelEtagere from '../components/bordereau/PanelEtagere.jsx';
 import PanelMissions from '../components/bordereau/PanelMissions';
 import PanelStock from '../components/bordereau/PanelStockReal';
 import PanelAccueilVoyageur from '../components/voyageur/PanelAccueilVoyageur';
+import PanelScannerVoyageur from '../components/voyageur/PanelScannerVoyageur';
 import PanelScanner from '../components/relais/PanelScannerReal';
 import PanelProfils from '../components/relais/PanelProfils';
 import RelaisAccessNotice from '../components/relais/RelaisAccessNotice';
@@ -120,7 +121,7 @@ export default function Bordero({ initialPanel }) {
   const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/bibliotheque': 'etagere', '/wishlist': 'wishlist', '/favoris': 'favoris', '/missions': 'missions', '/stock': 'stock', '/Stock': 'stock', '/accueil-voyageur': 'accueil-voyageur', '/scanner': 'scanner', '/profils': 'profils', '/profil': 'profil', '/PanelProfil': 'profil', '/panel-profil': 'profil', '/wallet': 'wallet', '/aide': 'aide' };
   const activePanel = pathToPanel[location.pathname] || initialPanel || 'catalogue';
   const isRelaisValidated = currentUser?.role === 'admin' || (currentUser?.role === 'relais' && currentUser?.relais_valide === true);
-  const isRelaisPanel = ['stock', 'scanner', 'profils'].includes(activePanel);
+  const isRelaisPanel = role === 'relais' && ['stock', 'scanner', 'profils'].includes(activePanel);
 
   const markRolePromptSeen = () => {
     if (currentUser) {
@@ -225,9 +226,8 @@ export default function Bordero({ initialPanel }) {
             {role === 'voyageur' && (
               <>
                 <SidebarItem icon="🏠" label="Accueil" panelId="accueil-voyageur" active={activePanel === 'accueil-voyageur'} onClick={() => switchPanel('accueil-voyageur')} />
-                <SidebarItem icon="🗺️" label="Missions" panelId="missions" active={activePanel === 'missions'} onClick={() => switchPanel('missions')} />
-                <SidebarItem icon="💳" label="Wallet" panelId="wallet" active={activePanel === 'wallet'} onClick={() => switchPanel('wallet')} />
-                <SidebarItem icon="❓" label="Aide" panelId="aide" active={activePanel === 'aide'} onClick={() => switchPanel('aide')} />
+                <SidebarItem icon="🗺️" label="Mission" panelId="missions" active={activePanel === 'missions'} onClick={() => switchPanel('missions')} />
+                <SidebarItem icon="📷" label="Scanner" panelId="scanner" active={activePanel === 'scanner'} onClick={() => switchPanel('scanner')} />
               </>
             )}
             {role === 'relais' && (
@@ -271,9 +271,10 @@ export default function Bordero({ initialPanel }) {
             {['etagere', 'wishlist', 'favoris'].includes(activePanel) && <PanelEtagere initialTab={activePanel === 'wishlist' ? 'wishlist' : activePanel === 'favoris' ? 'favoris' : 'bibliotheque'} />}
             {activePanel === 'accueil-voyageur' && <PanelAccueilVoyageur />}
             {activePanel === 'missions' && <PanelMissions />}
+            {activePanel === 'scanner' && role === 'voyageur' && <PanelScannerVoyageur />}
             {isRelaisPanel && !isRelaisValidated && <RelaisAccessNotice status={currentUser?.relais_validation_status} onBack={() => switchPanel('profil')} />}
             {activePanel === 'stock' && isRelaisValidated && <PanelStock />}
-            {activePanel === 'scanner' && isRelaisValidated && <PanelScanner />}
+            {activePanel === 'scanner' && role === 'relais' && isRelaisValidated && <PanelScanner />}
             {activePanel === 'profils' && isRelaisValidated && <PanelProfils />}
             {activePanel === 'profil' && <PanelProfil />}
             {activePanel === 'wallet' && (role === 'lecteur' ? <PanelWalletLecteur /> : role === 'voyageur' ? <PanelAccueilVoyageur /> : <PanelWalletAdmin />)}

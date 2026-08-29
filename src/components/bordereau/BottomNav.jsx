@@ -80,9 +80,8 @@ export default function BottomNav({ role, relaisValidated = true, activePanel, o
       {role === 'voyageur' && (
         <>
           <NavItem panelId="accueil-voyageur" icon="🏠" label={t('nav_accueil')} />
-          <NavItem panelId="missions" icon="🗺️" label={t('nav_missions')} />
-          <NavItem panelId="wallet" icon="💳" label={t('nav_wallet')} />
-          <NavItem panelId="aide" icon="❓" label={t('nav_aide')} />
+          <NavItem panelId="missions" icon="🗺️" label="Mission" />
+          <NavItem panelId="scanner" icon="📷" label={t('nav_scanner')} />
         </>
       )}
       {role === 'relais' && (

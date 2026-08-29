@@ -6,6 +6,8 @@ import BadgeShowcase from '../missions/BadgeShowcase';
 import PullToRefresh from '../shared/PullToRefresh';
 import ScanValidation from '../missions/ScanValidation';
 import FormulaireVol from '../missions/FormulaireVol';
+import CalendrierVoyageur from '@/components/voyageur/CalendrierVoyageur';
+import CalculatriceRevenus from '@/components/voyageur/CalculatriceRevenus';
 import QuotaJauge from '@/components/voyageur/QuotaJauge';
 import FiltreVille from '@/components/missions/FiltreVille';
 import { BADGES_CONFIG, getBadgesDebloques } from '@/lib/badges';
@@ -37,6 +39,7 @@ function formatMissionRecord(record) {
     poids: record.poids || '200g',
     zone_id: record.zone_id || 'international',
     mode_livraison: record.mode_livraison || 'express',
+    date_limite: record.date_limite,
     commission: record.commission,
   };
 }
@@ -160,8 +163,10 @@ export default function PanelMissions() {
   const [scanMission, setScanMission] = useState(null);
   const [newBadge, setNewBadge] = useState(null);
   const [user, setUser] = useState(null);
+  const [voyages, setVoyages] = useState([]);
   const [voyageActif, setVoyageActif] = useState(null);
   const [voyageurValidationStatus, setVoyageurValidationStatus] = useState('aucune');
+  const [modeLivraison, setModeLivraison] = useState('express');
   const [showFormVol, setShowFormVol] = useState(false);
   const [filtreVille, setFiltreVille] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -171,7 +176,7 @@ export default function PanelMissions() {
   const [wallet] = useState({ soldeDisponible: 12.50, gainsPrevisionnels: 5.00, virementSuspendu: false });
 
   const loadAvailableMissions = async () => {
-    const missions = await base44.entities.MissionVoyageur.filter({ mode_livraison: 'express', statut: 'disponible' }, '-created_date', 50);
+    const missions = await base44.entities.MissionVoyageur.filter({ statut: 'disponible' }, '-created_date', 80);
     setAvailable(missions?.length ? missions.map(formatMissionRecord) : []);
   };
 
@@ -180,6 +185,7 @@ export default function PanelMissions() {
       setUser(u);
       if (!u) return;
       const voyages = await base44.entities.Voyage.filter({ voyageur_email: u.email });
+      setVoyages(voyages || []);
       const dernierVoyage = voyages[0];
       setVoyageurValidationStatus(u.voyageur_validation_status || dernierVoyage?.validation_admin || 'aucune');
       const voyageValide = voyages.find(v => v.actif && v.validation_admin === 'valide');
@@ -239,9 +245,8 @@ export default function PanelMissions() {
     paysVisites: 2,
   };
 
-  // Filtrer les missions : les voyageurs voient uniquement les missions express
-  const availableExpress = available.filter(m => m.mode_livraison === 'express');
-  const missionsFiltered = availableExpress.filter(m => {
+  const missionsMode = available.filter(m => m.mode_livraison === modeLivraison);
+  const missionsFiltered = missionsMode.filter(m => {
     const matchVoyage = voyageActif
       ? m.ville.toLowerCase().includes(voyageActif.arrivee_ville.toLowerCase())
       : false;
@@ -368,13 +373,6 @@ export default function PanelMissions() {
         </div>
       )}
 
-      {/* Wallet */}
-      <WalletCard
-        soldeDisponible={wallet.soldeDisponible}
-        gainsPrevisionnels={wallet.gainsPrevisionnels}
-        virementSuspendu={wallet.virementSuspendu}
-      />
-
       {/* Quota douanier par zone */}
       <QuotaJauge zone={zoneVoyage} poidsActuelG={poidsEngageG} nbLivres={livresActifs} />
 
@@ -441,9 +439,24 @@ export default function PanelMissions() {
         </>
       )}
 
+      <SectionTitle>Choix du mode de livraison</SectionTitle>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
+        {[['express', 'Express'], ['collectif', 'Collectif']].map(([id, label]) => (
+          <button key={id} onClick={() => { setModeLivraison(id); setFiltreVille(null); }} className="font-special" style={{ minHeight: 44, background: modeLivraison === id ? 'var(--bordeaux)' : 'var(--papier)', color: modeLivraison === id ? 'var(--creme)' : 'var(--encre)', border: modeLivraison === id ? 'none' : '1.5px solid rgba(26,16,8,0.2)', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' }}>{label}</button>
+        ))}
+      </div>
+
+      <SectionTitle>Calendrier</SectionTitle>
+      <CalendrierVoyageur missions={engagees} voyages={voyages} />
+      <PerfoStrip />
+
+      <SectionTitle>Calculateur de revenus</SectionTitle>
+      <CalculatriceRevenus />
+      <PerfoStrip />
+
       {/* Missions disponibles */}
-      <SectionTitle>Missions disponibles</SectionTitle>
-      <FiltreVille filtre={filtreVille} onFiltre={setFiltreVille} missions={availableExpress} />
+      <SectionTitle>Choix des livres</SectionTitle>
+      <FiltreVille filtre={filtreVille} onFiltre={setFiltreVille} missions={missionsMode} />
 
       {!voyageActif && (
         <div style={{ background: validationBloquee ? 'rgba(180,20,20,0.08)' : 'rgba(128,0,32,0.08)', border: `1px dashed ${validationBloquee ? '#b41414' : 'var(--bordeaux)'}`, padding: '12px 16px', marginBottom: 16, fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: validationBloquee ? '#b41414' : 'var(--bordeaux)', lineHeight: 1.6 }}>
@@ -463,9 +476,9 @@ export default function PanelMissions() {
         </div>
       )}
 
-      {availableExpress.length === 0 && !limitAtteinte && (
+      {missionsMode.length === 0 && !limitAtteinte && (
         <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))', textAlign: 'center', padding: 20 }}>
-          Aucune mission disponible pour ce trajet.
+          Aucune mission {modeLivraison} disponible pour ce trajet.
         </div>
       )}
 
@@ -501,12 +514,6 @@ export default function PanelMissions() {
           />
         );
       })}
-
-      <PerfoStrip />
-
-      {/* Palmarès Voyageur */}
-      <SectionTitle>Palmarès</SectionTitle>
-      <BadgeShowcase stats={statsActuelles} />
 
       <PerfoStrip />
 
