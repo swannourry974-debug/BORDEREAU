@@ -108,8 +108,9 @@ export default function Bordero({ initialPanel }) {
           setRole(user.role);
         }
       }
+      const promptSeenKey = activeUser?.email ? `bordero_role_prompt_seen_${activeUser.email}` : '';
       setCurrentUser(activeUser);
-      if (!activeUser.role_prompt_seen && !['relais', 'voyageur'].includes(activeUser.role)) {
+      if (!activeUser.role_prompt_seen && !['relais', 'voyageur'].includes(activeUser.role) && localStorage.getItem(promptSeenKey) !== 'true') {
         setRolePromptOpen(true);
       }
     }).catch(() => {});
@@ -122,6 +123,7 @@ export default function Bordero({ initialPanel }) {
 
   const markRolePromptSeen = () => {
     if (currentUser) {
+      localStorage.setItem(`bordero_role_prompt_seen_${currentUser.email}`, 'true');
       base44.auth.updateMe({ role_prompt_seen: true }).then(updatedUser => {
         setCurrentUser(updatedUser || { ...currentUser, role_prompt_seen: true });
       }).catch(() => {});
@@ -135,6 +137,7 @@ export default function Bordero({ initialPanel }) {
     setRolePromptOpen(false);
     setCommandeOpen(false);
     if (currentUser) {
+      localStorage.setItem(`bordero_role_prompt_seen_${currentUser.email}`, 'true');
       const updates = newRole === 'relais'
         ? {
             role: newRole,
