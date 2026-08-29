@@ -79,12 +79,28 @@ export default function Bordero({ initialPanel }) {
   const [commandeBook, setCommandeBook] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(user => {
-      setCurrentUser(user);
-      if (['lecteur', 'voyageur', 'relais'].includes(user?.role)) {
-        setRole(user.role);
+    base44.auth.me().then(async user => {
+      if (!user) return;
+      let activeUser = user;
+      const relais = (await base44.entities.PointRelais.filter({ gerant_email: user.email }, '-updated_date', 1))[0];
+      if (relais?.validation_admin === 'valide' && relais?.actif === true) {
+        const updates = {
+          role: 'relais',
+          relais_valide: true,
+          relais_validation_status: 'valide',
+          point_relais_id: relais.id,
+        };
+        activeUser = user.role === 'relais' && user.relais_valide === true ? user : { ...user, ...updates };
+        if (activeUser !== user) {
+          base44.auth.updateMe(updates).then(updated => setCurrentUser(updated || activeUser)).catch(() => setCurrentUser(activeUser));
+        }
+        setRole('relais');
+        if (['/', '/catalogue'].includes(location.pathname)) navigate('/stock', { replace: true });
+      } else {
+        if (['lecteur', 'voyageur', 'relais'].includes(user.role)) setRole(user.role);
       }
-      if (user && !user.role_prompt_seen) {
+      setCurrentUser(activeUser);
+      if (!activeUser.role_prompt_seen && activeUser.role !== 'relais') {
         setRolePromptOpen(true);
       }
     }).catch(() => {});
