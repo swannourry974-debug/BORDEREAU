@@ -97,10 +97,19 @@ export default function Bordero({ initialPanel }) {
         setRole('relais');
         if (['/', '/catalogue'].includes(location.pathname)) navigate('/stock', { replace: true });
       } else {
-        if (['lecteur', 'voyageur', 'relais'].includes(user.role)) setRole(user.role);
+        const requestedRole = new URLSearchParams(location.search).get('role');
+        if (requestedRole === 'voyageur') {
+          const updates = { role: 'voyageur', role_prompt_seen: true };
+          activeUser = { ...activeUser, ...updates };
+          setRole('voyageur');
+          base44.auth.updateMe(updates).then(updated => setCurrentUser(updated || activeUser)).catch(() => setCurrentUser(activeUser));
+          navigate('/accueil-voyageur', { replace: true });
+        } else if (['lecteur', 'voyageur', 'relais'].includes(user.role)) {
+          setRole(user.role);
+        }
       }
       setCurrentUser(activeUser);
-      if (!activeUser.role_prompt_seen && activeUser.role !== 'relais') {
+      if (!activeUser.role_prompt_seen && !['relais', 'voyageur'].includes(activeUser.role)) {
         setRolePromptOpen(true);
       }
     }).catch(() => {});
