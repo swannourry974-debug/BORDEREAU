@@ -25,12 +25,17 @@ const AuthenticatedApp = () => {
   const publicRoutes = ['/landing-lecteur', '/landing-voyageur', '/landing-relais', '/LandingRelais', '/LandingRelais/', '/relais'];
   const isPublicRoute = publicRoutes.includes(location.pathname);
   const shouldOpenAdminConsole = user?.role === 'admin' && location.pathname !== '/admin' && (location.pathname === '/' || isPublicRoute);
+  const shouldOpenRelayStock = user?.role === 'relais' && user?.relais_valide === true && location.pathname !== '/stock' && (location.pathname === '/' || location.pathname === '/catalogue' || isPublicRoute);
 
   useEffect(() => {
     if (!isLoadingPublicSettings && !isLoadingAuth && shouldOpenAdminConsole) {
       navigate('/admin', { replace: true });
+      return;
     }
-  }, [isLoadingPublicSettings, isLoadingAuth, shouldOpenAdminConsole, navigate]);
+    if (!isLoadingPublicSettings && !isLoadingAuth && shouldOpenRelayStock) {
+      navigate('/stock', { replace: true });
+    }
+  }, [isLoadingPublicSettings, isLoadingAuth, shouldOpenAdminConsole, shouldOpenRelayStock, navigate]);
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -41,7 +46,7 @@ const AuthenticatedApp = () => {
     );
   }
 
-  if (shouldOpenAdminConsole) return null;
+  if (shouldOpenAdminConsole || shouldOpenRelayStock) return null;
 
   // Handle authentication errors
   if (authError && !isPublicRoute) {
