@@ -102,6 +102,7 @@ export default function Bordero({ initialPanel }) {
           const updates = { role: 'voyageur', role_prompt_seen: true };
           activeUser = { ...activeUser, ...updates };
           setRole('voyageur');
+          localStorage.setItem(`bordero_role_prompt_seen_${activeUser.email}`, 'true');
           base44.auth.updateMe(updates).then(updated => setCurrentUser(updated || activeUser)).catch(() => setCurrentUser(activeUser));
           navigate('/accueil-voyageur', { replace: true });
         } else if (['lecteur', 'voyageur', 'relais'].includes(user.role)) {

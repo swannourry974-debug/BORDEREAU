@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import MesLivres from '@/components/profil/MesLivres';
+import VoyageurDestinationCard from '@/components/profil/VoyageurDestinationCard';
 import LangSwitcher from '@/components/shared/LangSwitcher';
 import { useLang } from '@/lib/LangContext';
 
@@ -22,6 +23,8 @@ export default function PanelProfil() {
   const [relaisForm, setRelaisForm] = useState({ nom: '', adresse: '', ville: '', horaires: '' });
   const [relaisSaving, setRelaisSaving] = useState(false);
   const [relaisMessage, setRelaisMessage] = useState('');
+  const [destinationSaving, setDestinationSaving] = useState(false);
+  const [destinationMessage, setDestinationMessage] = useState('');
 
   useEffect(() => {
     base44.auth.me().then(async (u) => {
@@ -62,6 +65,20 @@ export default function PanelProfil() {
       alert('Erreur lors de la suppression. Contactez le support.');
       setDeleteLoading(false);
     }
+  };
+
+  const handleDestinationSave = async (destination) => {
+    setDestinationSaving(true);
+    setDestinationMessage('');
+    const updates = { role: 'voyageur', voyageur_destination: destination, ville_destination: destination, voyageur_profile_complete: true, role_prompt_seen: true };
+    try {
+      const updated = await base44.auth.updateMe(updates);
+      setUser(updated || { ...user, ...updates });
+      setDestinationMessage('Destination voyageur enregistrée.');
+    } catch (e) {
+      setDestinationMessage('Impossible d’enregistrer la destination pour le moment.');
+    }
+    setDestinationSaving(false);
   };
 
   const handleRelaisSubmit = async (e) => {
@@ -112,6 +129,17 @@ export default function PanelProfil() {
             {user?.email || '—'}
           </div>
         </div>
+
+        {user?.role === 'voyageur' && (
+          <div style={sectionStyle}>
+            <VoyageurDestinationCard user={user} onSave={handleDestinationSave} saving={destinationSaving} />
+            {destinationMessage && (
+              <div className="font-fell" style={{ marginTop: 10, fontSize: 12, fontStyle: 'italic', color: 'var(--bordeaux)', lineHeight: 1.5 }}>
+                {destinationMessage}
+              </div>
+            )}
+          </div>
+        )}
 
         {showRelaisRegistration && (
           <div style={sectionStyle}>
