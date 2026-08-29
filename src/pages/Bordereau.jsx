@@ -120,7 +120,7 @@ export default function Bordero({ initialPanel }) {
     setRolePromptOpen(false);
   };
 
-  const switchRole = (newRole) => {
+  const switchRole = (newRole, profileData = {}) => {
     setRole(newRole);
     setRoleSwitcherOpen(false);
     setRolePromptOpen(false);
@@ -132,8 +132,9 @@ export default function Bordero({ initialPanel }) {
             role_prompt_seen: true,
             relais_valide: currentUser.relais_valide === true,
             relais_validation_status: currentUser.relais_valide === true ? 'valide' : (currentUser.relais_validation_status || 'aucune'),
+            ...profileData,
           }
-        : { role: newRole, role_prompt_seen: true };
+        : { role: newRole, role_prompt_seen: true, ...profileData };
       base44.auth.updateMe(updates).then(updatedUser => {
         setCurrentUser(updatedUser || { ...currentUser, ...updates });
       }).catch(() => {});
@@ -174,6 +175,7 @@ export default function Bordero({ initialPanel }) {
       <RoleOnboardingPrompt
         open={rolePromptOpen}
         currentRole={role}
+        currentUser={currentUser}
         onSelect={switchRole}
         onClose={markRolePromptSeen}
       />

@@ -29,6 +29,44 @@
       "default": false,
       "description": "Indique si l'utilisateur a d\u00e9j\u00e0 vu le choix de r\u00f4le"
     },
+    "nom": {
+      "type": "string",
+      "description": "Nom de famille de l'utilisateur"
+    },
+    "prenom": {
+      "type": "string",
+      "description": "Pr\u00e9nom de l'utilisateur"
+    },
+    "telephone": {
+      "type": "string",
+      "description": "Num\u00e9ro de t\u00e9l\u00e9phone de contact"
+    },
+    "identifiant_connexion": {
+      "type": "string",
+      "description": "Identifiant choisi pour retrouver facilement son compte"
+    },
+    "position_gps": {
+      "type": "string",
+      "description": "Position GPS d\u00e9clar\u00e9e par le lecteur"
+    },
+    "lecteur_profile_complete": {
+      "type": "boolean",
+      "default": false,
+      "description": "Indique si la fiche d'acc\u00e8s lecteur est compl\u00e9t\u00e9e"
+    },
+    "voyageur_destination": {
+      "type": "string",
+      "description": "Destination principale choisie par le voyageur"
+    },
+    "adresse_mail_contact": {
+      "type": "string",
+      "description": "Adresse mail de contact confirm\u00e9e pour le profil"
+    },
+    "voyageur_profile_complete": {
+      "type": "boolean",
+      "default": false,
+      "description": "Indique si la fiche d'acc\u00e8s voyageur est compl\u00e9t\u00e9e"
+    },
     "relais_valide": {
       "type": "boolean",
       "default": false,
