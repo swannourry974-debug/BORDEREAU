@@ -1,14 +1,11 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 
 // Envoie un rappel email aux voyageurs dont la date limite de livraison approche (J-3, J-1)
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
-
-    const user = await base44.auth.me().catch(() => null);
-    if (!user || user.role !== 'admin') {
-      return Response.json({ error: 'Forbidden' }, { status: 403 });
-    }
+    const payload = await req.json().catch(() => ({}));
+    const dryRun = payload?.dry_run === true;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -35,10 +32,11 @@ Deno.serve(async (req) => {
       const jourTexte = diffJours === 1 ? 'demain' : 'dans 3 jours';
 
       try {
-        await base44.asServiceRole.integrations.Core.SendEmail({
-          to: cmd.voyageur_email,
-          subject: `${urgence}Livraison "${cmd.livre_titre}" attendue ${jourTexte}`,
-          body: `
+        if (!dryRun) {
+          await base44.asServiceRole.integrations.Core.SendEmail({
+            to: cmd.voyageur_email,
+            subject: `${urgence}Livraison "${cmd.livre_titre}" attendue ${jourTexte}`,
+            body: `
 Bonjour,
 
 Vous avez accepté de transporter le livre suivant pour Bordero :
@@ -56,11 +54,12 @@ Pour rappel, votre commission sera versée dès confirmation de la réception pa
 Merci de votre ponctualité !
 
 L'équipe Bordero
-          `.trim(),
-          from_name: 'Bordero · Rappel Livraison',
-        });
+            `.trim(),
+            from_name: 'Bordero · Rappel Livraison',
+          });
+        }
         envois++;
-        console.log(`Rappel J-${diffJours} envoyé à ${cmd.voyageur_email} pour "${cmd.livre_titre}"`);
+        console.log(`${dryRun ? 'Simulation' : 'Rappel'} J-${diffJours} pour ${cmd.voyageur_email} — "${cmd.livre_titre}"`);
       } catch (e) {
         erreurs.push({ commandeId: cmd.id, error: e.message });
         console.error(`Erreur envoi rappel pour commande ${cmd.id}:`, e.message);
@@ -69,6 +68,7 @@ L'équipe Bordero
 
     return Response.json({
       ok: true,
+      dry_run: dryRun,
       commandes_scannees: commandes.length,
       rappels_envoyes: envois,
       erreurs,
@@ -77,4 +77,4 @@ L'équipe Bordero
     console.error('Erreur rappelVoyageurs:', error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}
