@@ -15,6 +15,7 @@ import Bordero from './pages/Bordero.jsx';
 import LandingLecteur from './pages/LandingLecteur';
 import LandingVoyageur from './pages/LandingVoyageur';
 import LandingRelais from './pages/LandingRelais';
+import LandingPresentation from './pages/LandingPresentation';
 import PanelProfil from './pages/PanelProfil';
 import AdminDashboard from './pages/AdminDashboard';
 
@@ -22,7 +23,7 @@ const AuthenticatedApp = () => {
   const { user, isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const publicRoutes = ['/landing-lecteur', '/landing-voyageur', '/landing-relais', '/LandingRelais', '/LandingRelais/', '/relais'];
+  const publicRoutes = ['/', '/landing-lecteur', '/landing-voyageur', '/landing-relais', '/LandingRelais', '/LandingRelais/', '/relais'];
   const isPublicRoute = publicRoutes.includes(location.pathname);
   const shouldOpenAdminConsole = user?.role === 'admin' && location.pathname !== '/admin' && (location.pathname === '/' || isPublicRoute);
   const shouldOpenRelayStock = user?.role === 'relais' && user?.relais_valide === true && location.pathname !== '/stock' && (location.pathname === '/' || location.pathname === '/catalogue' || isPublicRoute);
@@ -70,7 +71,7 @@ const AuthenticatedApp = () => {
         transition={{ duration: 0.22, ease: 'easeOut' }}
       >
         <Routes location={location}>
-          <Route path="/" element={<Bordero />} />
+          <Route path="/" element={user ? <Bordero /> : <LandingPresentation />} />
           <Route path="/catalogue" element={<Bordero initialPanel="catalogue" />} />
           <Route path="/etagere" element={<Bordero initialPanel="etagere" />} />
           <Route path="/bibliotheque" element={<Bordero initialPanel="etagere" />} />
