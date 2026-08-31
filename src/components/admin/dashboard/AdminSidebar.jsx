@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, LogOut } from 'lucide-react';
 
 export default function AdminSidebar({ tabs, activeTab, onTabChange, isAgentBordeur, onOfficialLogin }) {
   return (
@@ -23,6 +23,14 @@ export default function AdminSidebar({ tabs, activeTab, onTabChange, isAgentBord
         })}
       </nav>
       <a href="/" className="m-3 mt-auto min-h-[44px] inline-flex items-center justify-center rounded-lg border border-creme/25 text-creme/80 font-ui text-[12px] tracking-[2px] uppercase">← App</a>
+      <button
+        type="button"
+        onClick={onOfficialLogin}
+        className="mx-3 mb-3 min-h-[44px] inline-flex items-center justify-center gap-2 rounded-lg bg-cta px-4 py-3 font-ui text-[12px] font-bold uppercase tracking-[2px] text-cta-foreground shadow-lg shadow-black/15 transition hover:bg-cta-dark"
+      >
+        <LogOut size={15} />
+        Déconnexion
+      </button>
     </aside>
   );
 }
