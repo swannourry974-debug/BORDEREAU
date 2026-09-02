@@ -7,6 +7,7 @@ import TransitOptions from './TransitOptions';
 import JaugeBlock from './JaugeBlock';
 import { useCart } from '@/lib/CartContext';
 import { getComparativeSavings } from '@/lib/comparativeRates';
+import { formatEuro, getBookPriceInfo } from '@/lib/bookPricing';
 import { toast } from 'sonner';
 
 const FORFAITS_MAP = {
@@ -25,17 +26,21 @@ export default function AddToCartForm({ book, selectedCity, selectedRelay, initi
     if (book) setTransit(initialTransit);
   }, [book?.id, initialTransit]);
 
-  const prixVal = FORFAITS_MAP[forfait]?.[transit] ?? 8.90;
+  const prixLivraison = FORFAITS_MAP[forfait]?.[transit] ?? 8.90;
+  const prixLivreInfo = getBookPriceInfo(book);
+  const prixLivre = prixLivreInfo.value;
+  const prixLivreARembourser = !prixLivreInfo.available;
+  const prixVal = prixLivre + prixLivraison;
   const relayLabel = selectedRelay?.name ? `${selectedRelay.name}, ${selectedCity?.label || ''}` : '';
   const destinationLabel = adresse || relayLabel || selectedCity?.label || 'Miami, FL — USA';
-  const comparative = getComparativeSavings(destinationLabel, prixVal);
+  const comparative = getComparativeSavings(destinationLabel, prixLivraison);
 
   const handleForfaitSelect = (f) => setForfait(f.id);
 
   const handleAddToCart = async () => {
-    await addItem({ book, forfait, transit, adresse: destinationLabel, selectedCity, selectedRelay, prixVal, comparative });
+    await addItem({ book, forfait, transit, adresse: destinationLabel, selectedCity, selectedRelay, prixLivre, prixLivraison, prixLivreARembourser, prixVal, comparative });
     toast.success(`"${book.title}" ajouté au panier !`, {
-      description: `Forfait ${forfait} · ${transit === 'express' ? 'Express' : 'Collectif'} · économie estimée ${comparative.savings.toFixed(0)} €`,
+      description: `${prixLivreARembourser ? 'Livraison seule' : `Livre ${formatEuro(prixLivre)}`} + livraison ${formatEuro(prixLivraison)}`,
     });
     onClose();
     onItemAdded?.();
@@ -84,18 +89,25 @@ export default function AddToCartForm({ book, selectedCity, selectedRelay, initi
             </div>
 
             {/* Total */}
-            <div className="flex justify-between items-center border-t-[1.5px] border-dashed border-foreground/30 pt-[14px] mt-[14px]">
-              <div>
-                <div className="text-[11px] tracking-[1.5px] uppercase font-typewriter">Total séquestre</div>
-                <div className="text-[9px] text-foreground/40 mt-[2px] italic font-fell">Libéré à la réception</div>
+            <div className="border-t-[1.5px] border-dashed border-foreground/30 pt-[14px] mt-[14px]">
+              <div className="space-y-2 font-typewriter text-[11px] tracking-[1.2px]">
+                <div className="flex justify-between"><span>Prix du livre</span><strong>{prixLivreARembourser ? '0,00 €' : formatEuro(prixLivre)}</strong></div>
+                <div className="flex justify-between"><span>Livraison Bordero</span><strong>{formatEuro(prixLivraison)}</strong></div>
+                {prixLivreARembourser && <div className="font-fell italic text-[11px] tracking-normal text-foreground/55">Prix Google indisponible : le livre sera régularisé sur justificatif.</div>}
               </div>
-              <div className="font-serif text-[28px] font-bold text-bordeaux">{prixVal.toFixed(2)} €</div>
+              <div className="flex justify-between items-center mt-[14px]">
+                <div>
+                  <div className="text-[11px] tracking-[1.5px] uppercase font-typewriter">Total séquestre</div>
+                  <div className="text-[9px] text-foreground/40 mt-[2px] italic font-fell">Livre + livraison, libéré selon validation</div>
+                </div>
+                <div className="font-serif text-[28px] font-bold text-bordeaux">{formatEuro(prixVal)}</div>
+              </div>
             </div>
 
             <div className="mt-3 bg-[#fff7ed] border border-[#C2410C]/40 px-3 py-2 text-[11px] text-encre">
               <div className="font-typewriter uppercase tracking-[1.5px] text-[#C2410C] mb-1">Gain comparatif</div>
               <div className="font-fell italic leading-relaxed">
-                Économie estimée de <strong>{comparative.savings.toFixed(0)} €</strong> vs la solution classique la moins chère pour {comparative.destination}.
+                Économie estimée de <strong>{comparative.savings.toFixed(0)} €</strong> sur la livraison vs la solution classique la moins chère pour {comparative.destination}.
               </div>
               <div className="font-typewriter text-[9px] text-foreground/45 mt-1">
                 Référence lot 20 kg : Colissimo {comparative.colissimo.toFixed(2)} €, DHL dès {comparative.dhlMin} €, fret dès {comparative.fretMin} €.

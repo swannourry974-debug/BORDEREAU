@@ -12,7 +12,10 @@ const toCartItem = (record) => ({
   adresse: record.adresse,
   selectedCity: record.selectedCity,
   selectedRelay: record.selectedRelay,
-  prixVal: record.prixVal || 0,
+  prixLivre: record.prixLivre || 0,
+  prixLivraison: record.prixLivraison ?? record.prixVal ?? 0,
+  prixLivreARembourser: record.prixLivreARembourser === true,
+  prixVal: record.prixVal ?? ((record.prixLivre || 0) + (record.prixLivraison || 0)),
   comparative: record.comparative,
 });
 
@@ -44,6 +47,9 @@ export function CartProvider({ children }) {
           adresse: item.adresse,
           selectedCity: item.selectedCity,
           selectedRelay: item.selectedRelay,
+          prixLivre: item.prixLivre || 0,
+          prixLivraison: item.prixLivraison || 0,
+          prixLivreARembourser: item.prixLivreARembourser === true,
           prixVal: item.prixVal,
           comparative: item.comparative,
         });
@@ -80,7 +86,7 @@ export function CartProvider({ children }) {
     }
   };
 
-  const total = items.reduce((sum, i) => sum + (i.prixVal || 0), 0);
+  const total = items.reduce((sum, i) => sum + (i.prixVal ?? ((i.prixLivre || 0) + (i.prixLivraison || 0))), 0);
 
   return (
     <CartContext.Provider value={{ items, addItem, removeItem, clearCart, total }}>

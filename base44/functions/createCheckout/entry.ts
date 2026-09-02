@@ -1,31 +1,5 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import Stripe from 'npm:stripe@14.21.0';
-
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY"));
-
-/**
- * BORDERO — Tunnel de paiement Stripe (Escrow)
- * Architecture tarifaire officielle :
- *   EXPRESS  : Europe 14,99€ | International 24,99€ | Grand Export 49,99€
- *   COLLECTIF: Coût moyen par livre selon malle
- * Code secret 3 chiffres généré et stocké sur la commande.
- */
-
-// Grille tarifaire officielle (en centimes)
-const TARIFS = {
-  europe:       { express: 1499, collectif: 197 },
-  international: { express: 2499, collectif: 497 },
-  grand_export:  { express: 4999, collectif: 797 },
-  maghreb:       { express: 2499, collectif: 497 },
-};
-
-// Ventilation express (pour métadonnées)
-const VENTILATION_EXPRESS = {
-  europe:       { part_voyageur: 6.00, part_relais: 3.00, part_admin: 5.99 },
-  international: { part_voyageur: 10.00, part_relais: 5.00, part_admin: 9.99 },
-  grand_export:  { part_voyageur: 20.00, part_relais: 10.00, part_admin: 19.99 },
-  maghreb:       { part_voyageur: 10.00, part_relais: 5.00, part_admin: 9.99 },
-};
 
 function genererCodeSecret() {
   const bytes = new Uint32Array(1);
@@ -55,13 +29,17 @@ function getComparativeRate(destination = '') {
   return COMPARATIVE_RATES.miami;
 }
 
-Deno.serve(async (req) => {
+export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Non autorisé' }, { status: 401 });
 
-    const { book, zone_id, zone_nom, mode_livraison, transit, adresse, prix_livre, suivi_facturation_mode } = await req.json();
+    const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY');
+    if (!stripeSecret) return Response.json({ error: 'Stripe non configuré' }, { status: 500 });
+    const stripe = new Stripe(stripeSecret);
+
+    const { book, zone_id, zone_nom, mode_livraison, transit, adresse, prix_livre, frais_livraison, prix_livre_a_rembourser, suivi_facturation_mode } = await req.json();
 
     const modeInput = String(mode_livraison || transit || 'express').toLowerCase();
     if (!['express', 'collectif', 'collecte'].includes(modeInput)) {
@@ -76,9 +54,8 @@ Deno.serve(async (req) => {
       || zones.find(z => normalize(z.pays_nom) && requested.includes(normalize(z.pays_nom)))
       || zones.find(z => normalize(z.pays_code) && requested.includes(normalize(z.pays_code)));
 
-    if (!zone) {
-      return Response.json({ error: 'Zone tarifaire invalide' }, { status: 400 });
-    }
+    if (!zone) return Response.json({ error: 'Zone tarifaire invalide' }, { status: 400 });
+
     const adresseNorm = normalize(adresse);
     const zoneNomNorm = normalize(zone.zone_nom);
     if (adresseNorm && zoneNomNorm && !adresseNorm.includes(zoneNomNorm) && !zoneNomNorm.includes(adresseNorm)) {
@@ -86,27 +63,27 @@ Deno.serve(async (req) => {
     }
 
     const isExpress = modeInput === 'express';
-    const totalEuros = isExpress ? Number(zone.frais_lecteur_express) : Number(zone.frais_lecteur_collectif);
+    const fallbackLivraison = isExpress ? Number(zone.frais_lecteur_express) : Number(zone.frais_lecteur_collectif);
+    const prixLivraison = Number.isFinite(Number(frais_livraison)) && Number(frais_livraison) > 0 ? Number(frais_livraison) : fallbackLivraison;
+    const prixLivre = Math.max(0, Number(prix_livre || 0));
+    const totalEuros = prixLivre + prixLivraison;
+
     if (!Number.isFinite(totalEuros) || totalEuros <= 0) {
       return Response.json({ error: 'Tarif indisponible pour cette zone' }, { status: 400 });
     }
     const totalCents = Math.round(totalEuros * 100);
 
-    // Générer le code secret de validation (remise physique), conservé uniquement côté serveur/Stripe.
     const codeSecret = genererCodeSecret();
-
-    // Calcul économies vs solutions classiques selon la grille comparative 20 kg
     const comparative = getComparativeRate(`${zone.zone_nom || ''} ${zone.pays_nom || ''} ${adresse || ''}`);
     const fraisPortRef = Math.min(comparative.colissimo, comparative.dhlMin, comparative.fretMin);
-    const economiRealisee = Math.max(0, fraisPortRef - totalEuros);
+    const economieRealisee = Math.max(0, fraisPortRef - prixLivraison);
 
-    // Description dynamique
     const modeLabel = isExpress ? 'Express (Voyageur)' : 'Collectif (Malle)';
     const zoneKey = zone.id;
     const zoneLabel = zone.zone_nom || zone_nom || 'International';
     const partVoyageur = isExpress ? Number(zone.part_voyageur_express || 0) : 0;
-    const partRelais = isExpress ? Number(zone.part_relais || 0) : 0;
-    const partAdmin = Math.max(0, totalEuros - partVoyageur - partRelais);
+    const partRelais = isExpress ? Number(zone.part_relais || 0) : Number(zone.part_relais || 0);
+    const partAdmin = Math.max(0, prixLivraison - partVoyageur - partRelais);
 
     const session = await stripe.checkout.sessions.create({
       automatic_payment_methods: { enabled: true },
@@ -115,7 +92,7 @@ Deno.serve(async (req) => {
           currency: 'eur',
           product_data: {
             name: `📚 ${book?.title || 'Livre'}`,
-            description: `${modeLabel} · Zone ${zoneLabel}${adresse ? ` · ${adresse}` : ''}`,
+            description: `${modeLabel} · Livre ${prixLivre.toFixed(2)}€ + livraison ${prixLivraison.toFixed(2)}€ · Zone ${zoneLabel}${adresse ? ` · ${adresse}` : ''}`,
           },
           unit_amount: totalCents,
         },
@@ -125,7 +102,7 @@ Deno.serve(async (req) => {
       success_url: `${req.headers.get('origin') || 'https://app.base44.com'}/?payment=success`,
       cancel_url: `${req.headers.get('origin') || 'https://app.base44.com'}/?payment=cancel`,
       metadata: {
-        base44_app_id: Deno.env.get("BASE44_APP_ID"),
+        base44_app_id: Deno.env.get('BASE44_APP_ID'),
         user_email: user.email,
         book_title: book?.title || '',
         book_author: book?.author || '',
@@ -136,14 +113,16 @@ Deno.serve(async (req) => {
         suivi_active: 'true',
         facture_reference: `BORD-${new Date().getFullYear()}-${codeSecret}`,
         adresse: adresse || '',
-        prix_livre: String(prix_livre || 0),
+        prix_livre: String(prixLivre),
+        frais_livraison: String(prixLivraison),
+        prix_livre_a_rembourser: prix_livre_a_rembourser ? 'true' : 'false',
+        montant_total: String(totalEuros),
         code_secret: codeSecret,
-        // Ventilation express
         part_voyageur: String(partVoyageur),
         part_relais: String(partRelais),
         part_admin: String(partAdmin),
-        frais_port_ref: String(fraisPortRef),
-        economie_realisee: String(economiRealisee),
+        frais_port_ref: String(prixLivraison),
+        economie_realisee: String(economieRealisee),
         destination_comparative: comparative.destination,
         ref_colissimo: String(comparative.colissimo),
         ref_dhl_express: String(comparative.dhlMin),
@@ -151,15 +130,17 @@ Deno.serve(async (req) => {
       },
     });
 
-    console.log(`[createCheckout] Session créée: ${session.id} | Zone: ${zoneLabel} | Mode: ${modeLabel} | Total: ${totalEuros}€`);
+    console.log(`[createCheckout] Session créée: ${session.id} | Livre: ${prixLivre}€ | Livraison: ${prixLivraison}€ | Total: ${totalEuros}€`);
 
     return Response.json({
       url: session.url,
       total_euros: totalEuros,
+      prix_livre: prixLivre,
+      frais_livraison: prixLivraison,
       zone_id: zoneKey,
     });
   } catch (error) {
     console.error('[createCheckout] Erreur:', error.message);
     return Response.json({ error: error.message }, { status: 500 });
   }
-});
+}

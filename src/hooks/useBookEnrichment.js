@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { extractGoogleBookPrice } from '@/lib/bookPricing';
 
 function formatGooglePrice(price) {
   if (!price?.amount || !price?.currencyCode) return null;
@@ -26,8 +27,12 @@ function normalizeVolume(item) {
   if (!item) return null;
   const saleInfo = item.saleInfo || {};
   const volumeInfo = item.volumeInfo || {};
+  const googlePrice = extractGoogleBookPrice(saleInfo);
   return {
-    priceLabel: formatGooglePrice(saleInfo.retailPrice || saleInfo.listPrice),
+    priceLabel: googlePrice.label || formatGooglePrice(saleInfo.retailPrice || saleInfo.listPrice),
+    priceValue: googlePrice.value,
+    priceAvailable: googlePrice.available,
+    priceSource: googlePrice.source,
     availability: availabilityLabel(saleInfo.saleability),
     buyLink: saleInfo.buyLink || null,
     publisher: volumeInfo.publisher || null,

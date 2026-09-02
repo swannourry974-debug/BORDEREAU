@@ -5,6 +5,8 @@ import CouponButton from '@/components/shared/CouponButton';
 import SuiviFacturationChoice from '@/components/catalogue/SuiviFacturationChoice';
 import { base44 } from '@/api/base44Client';
 import { getComparativeSavings } from '@/lib/comparativeRates';
+import { formatEuro } from '@/lib/bookPricing';
+import { getZoneById } from '@/lib/tarifsConfig';
 import { toast } from 'sonner';
 
 const FORFAITS_STRIPE = { S: 'poche', M: 'broche', L: 'bd' };
@@ -44,7 +46,14 @@ export default function PanierCheckout({ onClose }) {
     const codeSecret = String(Math.floor(100 + Math.random() * 900));
     const created = await base44.entities.Commande.bulkCreate(items.map((item, index) => {
       const itemSecret = index === 0 ? codeSecret : String(Math.floor(100 + Math.random() * 900));
-      const itemTotal = Math.max(0, item.prixVal - (couponDiscount / items.length));
+      const prixLivre = Number(item.prixLivre || 0);
+      const prixLivraison = Number(item.prixLivraison ?? item.prixVal ?? 0);
+      const itemTotal = Math.max(0, prixLivre + prixLivraison - (couponDiscount / items.length));
+      const modeLivraison = item.transit === 'collecte' ? 'collectif' : 'express';
+      const zone = getZoneById(item.selectedCity?.zone_id || 'international');
+      const partVoyageur = modeLivraison === 'express' ? Number(zone.express?.part_voyageur || 0) : 0;
+      const partRelais = modeLivraison === 'express' ? Number(zone.express?.part_relais || 0) : Number(zone.collectif?.part_relais || 0);
+      const partAdmin = Math.max(0, prixLivraison - partVoyageur - partRelais);
       return {
         lecteur_email: user?.email || '',
         livre_titre: item.book?.title || 'Livre',
@@ -52,8 +61,16 @@ export default function PanierCheckout({ onClose }) {
         livre_type: FORFAITS_STRIPE[item.forfait] === 'broche' ? 'Broché' : FORFAITS_STRIPE[item.forfait] === 'bd' ? 'BD' : 'Poche',
         zone_id: item.selectedCity?.zone_id || 'international',
         zone_nom: item.selectedCity?.label || item.adresse || 'International',
-        mode_livraison: item.transit === 'collecte' ? 'collectif' : 'express',
+        mode_livraison: modeLivraison,
         montant_paye: itemTotal,
+        prix_livre_neuf: prixLivre,
+        frais_port_ref: prixLivraison,
+        frais_bordereau: prixLivraison,
+        prix_livre_a_rembourser: item.prixLivreARembourser === true,
+        remboursement_livre_libere: false,
+        part_voyageur: partVoyageur,
+        part_relais: partRelais,
+        part_admin: partAdmin,
         statut,
         suivi_facturation_mode: suiviMode,
         suivi_active: true,
@@ -94,7 +111,9 @@ export default function PanierCheckout({ onClose }) {
           zone_nom: first.selectedCity?.label || first.adresse || '',
           mode_livraison: first.transit === 'collecte' ? 'collectif' : 'express',
           suivi_facturation_mode: suiviMode,
-          prix_livre: first.book?.priceVal || 0,
+          prix_livre: first.prixLivre || 0,
+          frais_livraison: first.prixLivraison ?? first.prixVal ?? 0,
+          prix_livre_a_rembourser: first.prixLivreARembourser === true,
         });
       } catch (paymentError) {
         console.warn('Paiement indisponible, passage en simulation test:', paymentError);
@@ -173,8 +192,12 @@ export default function PanierCheckout({ onClose }) {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: 16, color: 'var(--bordeaux)' }}>
-                    {item.prixVal.toFixed(2)} €
+                  <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 1, color: 'rgba(26,16,8,0.45)', lineHeight: 1.7 }}>
+                    Livre {formatEuro(item.prixLivre || 0)}<br />Livraison {formatEuro(item.prixLivraison ?? item.prixVal ?? 0)}
+                  </div>
+                  {item.prixLivreARembourser && <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 10, color: '#C2410C', marginTop: 3 }}>À régulariser</div>}
+                  <div style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: 16, color: 'var(--bordeaux)', marginTop: 4 }}>
+                    {formatEuro(item.prixVal ?? ((item.prixLivre || 0) + (item.prixLivraison || 0)))}
                   </div>
                   <button
                     onClick={() => removeItem(item.cartId)}
@@ -255,12 +278,12 @@ export default function PanierCheckout({ onClose }) {
                   </div>
                   {couponApplied && (
                     <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, opacity: 0.5, marginTop: 2 }}>
-                      Sous-total {total.toFixed(2)} € − code {couponDiscount} €
+                      Sous-total {formatEuro(total)} − code {formatEuro(couponDiscount)}
                     </div>
                   )}
                 </div>
                 <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 28, fontWeight: 700, color: '#f0c040' }}>
-                  {totalFinal.toFixed(2)} €
+                  {formatEuro(totalFinal)}
                 </div>
               </div>
               <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 10, opacity: 0.45, marginTop: 4 }}>
@@ -269,7 +292,7 @@ export default function PanierCheckout({ onClose }) {
             </div>
 
             <CouponButton onClick={handlePay} disabled={loading} className="w-full py-4 text-center">
-              {loading ? '⟳ Chargement...' : isTestPreview ? `✦ Simuler l’achat test ${totalFinal.toFixed(2)} €` : `✦ Payer par carte ou PayPal ${totalFinal.toFixed(2)} €`}
+              {loading ? '⟳ Chargement...' : isTestPreview ? `✦ Simuler l’achat test ${formatEuro(totalFinal)}` : `✦ Payer par carte ou PayPal ${formatEuro(totalFinal)}`}
             </CouponButton>
           </>
         )}

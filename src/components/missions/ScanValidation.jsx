@@ -10,6 +10,7 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
   const [showScanner, setShowScanner] = useState(false);
   const [ticketFile, setTicketFile] = useState(null);
   const [ticketPreview, setTicketPreview] = useState(null);
+  const [ticketAmount, setTicketAmount] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const ticketRef = useRef();
@@ -34,6 +35,9 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
     setLoading(true);
     setError('');
 
+    const montantTicket = Number(String(ticketAmount).replace(',', '.')) || 0;
+    if (montantTicket <= 0) { setLoading(false); setError('Veuillez saisir le montant du ticket de caisse'); return; }
+
     // Upload du ticket
     const { file_url } = await base44.integrations.Core.UploadFile({ file: ticketFile });
 
@@ -43,12 +47,18 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
     const commande = commandes[0];
 
     if (commande) {
+      const prixAttendu = Number(commande.prix_livre_neuf || 0);
+      const ecartPrix = prixAttendu > 0 ? Math.round((montantTicket - prixAttendu) * 100) / 100 : 0;
+      const alertePrix = prixAttendu > 0 && Math.abs(ecartPrix) > 2;
       await base44.entities.Commande.update(commande.id, {
         code_barre_isbn: isbn,
         ticket_caisse_url: file_url,
+        ticket_montant: montantTicket,
+        ecart_prix_ticket: ecartPrix,
+        alerte_prix_livre: alertePrix ? `Écart ticket ${ecartPrix.toFixed(2)} € par rapport au prix Google.` : '',
         scan_valide_par_voyageur: true,
         voyageur_email: (await base44.auth.me())?.email,
-        validation_admin: 'en_attente',
+        validation_admin: alertePrix ? 'en_attente' : 'validee',
         statut: 'payee',
       });
     } else {
@@ -59,6 +69,11 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
         mode_livraison: 'express',
         code_barre_isbn: isbn,
         ticket_caisse_url: file_url,
+        ticket_montant: montantTicket,
+        prix_livre_neuf: 0,
+        prix_livre_a_rembourser: true,
+        ecart_prix_ticket: 0,
+        alerte_prix_livre: 'Prix Google indisponible : remboursement achat à régulariser sur justificatif.',
         scan_valide_par_voyageur: true,
         voyageur_email: (await base44.auth.me())?.email,
         validation_admin: 'en_attente',
@@ -236,11 +251,24 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
               </div>
             )}
 
+            <label className="font-special" style={{ display: 'block', fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 6 }}>
+              Montant payé sur le ticket
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={ticketAmount}
+              onChange={e => setTicketAmount(e.target.value)}
+              placeholder="Ex : 12.90"
+              style={{ width: '100%', padding: '10px 14px', border: '1.5px solid hsl(var(--border))', background: 'hsl(var(--background))', color: 'hsl(var(--foreground))', fontFamily: "'Special Elite', monospace", fontSize: 14, marginBottom: 12, boxSizing: 'border-box' }}
+            />
+
             {error && <div style={{ color: 'var(--bordeaux)', fontSize: 12, marginBottom: 8 }}>{error}</div>}
 
             <div style={{ display: 'flex', gap: 12 }}>
               <BtnCoupon secondary onClick={() => setStep('isbn')}>← Retour</BtnCoupon>
-              <BtnCoupon onClick={() => { if (!ticketFile) { setError('Veuillez photographier le ticket'); return; } setError(''); setStep('confirming'); }}>
+              <BtnCoupon onClick={() => { if (!ticketFile) { setError('Veuillez photographier le ticket'); return; } if (!(Number(String(ticketAmount).replace(',', '.')) > 0)) { setError('Veuillez saisir le montant du ticket'); return; } setError(''); setStep('confirming'); }}>
                 Continuer →
               </BtnCoupon>
             </div>
@@ -260,6 +288,7 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
                   <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 4 }}>Livre</div>
                   <div className="font-playfair" style={{ fontWeight: 700 }}>{mission.livre || mission.livre_titre}</div>
                   <div style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))' }}>ISBN : {isbn}</div>
+                  <div style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))' }}>Ticket : {Number(String(ticketAmount).replace(',', '.')).toFixed(2)} €</div>
                 </div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 4 }}>Ticket</div>

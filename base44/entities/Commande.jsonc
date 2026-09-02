@@ -174,6 +174,18 @@
     "ticket_caisse_url": {
       "type": "string"
     },
+    "ticket_montant": {
+      "type": "number",
+      "description": "Montant pay\u00e9 par le voyageur sur le ticket de caisse"
+    },
+    "ecart_prix_ticket": {
+      "type": "number",
+      "description": "\u00c9cart entre le prix Google s\u00e9questr\u00e9 et le montant du ticket"
+    },
+    "alerte_prix_livre": {
+      "type": "string",
+      "description": "Alerte admin si le prix du ticket diff\u00e8re du prix s\u00e9questr\u00e9 ou si le prix Google est absent"
+    },
     "scan_valide_par_voyageur": {
       "type": "boolean",
       "default": false
@@ -195,10 +207,32 @@
       "default": false
     },
     "prix_livre_neuf": {
-      "type": "number"
+      "type": "number",
+      "default": 0,
+      "description": "Prix du livre neuf factur\u00e9 au lecteur depuis Google Books, hors livraison"
+    },
+    "prix_livre_a_rembourser": {
+      "type": "boolean",
+      "default": false,
+      "description": "Prix Google absent : achat du livre \u00e0 r\u00e9gulariser sur justificatif"
+    },
+    "remboursement_livre_libere": {
+      "type": "boolean",
+      "default": false,
+      "description": "Indique si le prix du livre en s\u00e9questre a \u00e9t\u00e9 lib\u00e9r\u00e9 au voyageur"
+    },
+    "remboursement_livre_libere_le": {
+      "type": "string",
+      "description": "Date ISO de lib\u00e9ration du remboursement livre au voyageur"
+    },
+    "montant_rembourse_voyageur": {
+      "type": "number",
+      "default": 0,
+      "description": "Montant cr\u00e9dit\u00e9 au wallet voyageur lors du d\u00e9p\u00f4t relais"
     },
     "frais_port_ref": {
-      "type": "number"
+      "type": "number",
+      "description": "Montant de livraison factur\u00e9 au lecteur, hors prix du livre"
     },
     "frais_bordereau": {
       "type": "number"

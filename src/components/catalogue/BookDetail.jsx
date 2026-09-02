@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import GoogleBooksPreview from './GoogleBooksPreview';
 import { BtnCoupon } from '../bordereau/shared';
 import { useBookEnrichment } from '@/hooks/useBookEnrichment';
+import { getBookPriceInfo } from '@/lib/bookPricing';
 
 function Tag({ type, children }) {
   const styles = {
@@ -19,7 +20,15 @@ function Tag({ type, children }) {
 export default function BookDetail({ book, onOrder, onClose }) {
   const [showPreview, setShowPreview] = useState(false);
   const { enrichment, loading: enrichmentLoading } = useBookEnrichment(book);
-  const displayedPrice = enrichment?.priceLabel || book.price;
+  const enrichedBook = enrichment ? {
+    ...book,
+    price: enrichment.priceLabel,
+    priceVal: enrichment.priceValue,
+    prixLivreDisponible: enrichment.priceAvailable,
+    prixLivreSource: enrichment.priceSource,
+  } : book;
+  const priceInfo = getBookPriceInfo(enrichedBook);
+  const displayedPrice = priceInfo.label;
   const availability = enrichment?.availability || book.dispo;
 
   const coverUrl = book.coverId
@@ -127,7 +136,7 @@ export default function BookDetail({ book, onOrder, onClose }) {
             background: 'transparent', border: '1px dashed rgba(26,16,8,0.3)',
             color: 'rgba(26,16,8,0.5)', fontSize: 9, letterSpacing: 2, padding: '6px 14px', cursor: 'pointer',
           }}>Fermer</button>
-          <BtnCoupon onClick={() => onOrder(book)}>Commander →</BtnCoupon>
+          <BtnCoupon onClick={() => onOrder(enrichedBook)}>Commander →</BtnCoupon>
         </div>
       </div>
     </div>

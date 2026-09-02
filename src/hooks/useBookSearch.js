@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+import { extractGoogleBookPrice } from '@/lib/bookPricing';
 
 /**
  * Hook de recherche de livres avec debounce et stratégie Open Library en priorité.
@@ -50,8 +51,10 @@ export function useBookSearch() {
           year: doc.publish_year?.[0] || null,
           poidsEstime: pages ? `~${Math.round(pages * 1.2)}g` : null,
           type: pages > 400 ? 'Broché' : 'Poche',
-          price: pages > 400 ? '24,00 €' : '9,90 €',
-          priceVal: pages > 400 ? 24.0 : 9.9,
+          price: 'Livre remboursé sur justificatif',
+          priceVal: 0,
+          prixLivreDisponible: false,
+          prixLivreSource: 'livraison_seule',
           dispo: '1 voyageur',
           source: 'openlibrary',
           _score: (doc.cover_i ? 2 : 0) + (pages ? 1 : 0) + (doc.author_name ? 1 : 0),
@@ -76,6 +79,7 @@ export function useBookSearch() {
       const gbBooks = (gbData.items || []).map((item, i) => {
         const info = item.volumeInfo;
         const pages = info.pageCount || null;
+        const googlePrice = extractGoogleBookPrice(item.saleInfo || {});
         return {
           id: item.id || `gb-${i}`,
           title: info.title,
@@ -89,8 +93,10 @@ export function useBookSearch() {
           year: info.publishedDate?.slice(0, 4) || null,
           poidsEstime: pages ? `~${Math.round(pages * 1.2)}g` : null,
           type: pages > 400 ? 'Broché' : 'Poche',
-          price: pages > 400 ? '24,00 €' : '9,90 €',
-          priceVal: pages > 400 ? 24.0 : 9.9,
+          price: googlePrice.label,
+          priceVal: googlePrice.value,
+          prixLivreDisponible: googlePrice.available,
+          prixLivreSource: googlePrice.source,
           dispo: '1 voyageur',
           source: 'google',
           _score: (info.imageLinks ? 2 : 0) + (pages ? 1 : 0) + (info.authors ? 1 : 0),

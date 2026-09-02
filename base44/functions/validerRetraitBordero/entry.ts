@@ -14,6 +14,30 @@ async function fail(base44, commande, raison) {
   return Response.json({ valide: false, raison: `${SECURITY_FAILURE} ${raison}` }, { status: 400 });
 }
 
+async function libererSequestreVoyageur(base44, commande) {
+  if (!commande?.voyageur_email || commande.remboursement_livre_libere) return 0;
+  const prixLivre = Number(commande.prix_livre_neuf || 0);
+  const commission = Number(commande.part_voyageur || 0);
+  const montant = Math.max(0, prixLivre + commission);
+  if (montant <= 0) return 0;
+
+  const wallets = await base44.asServiceRole.entities.VoyageurWallet.filter({ user_email: commande.voyageur_email }, '-updated_date', 1);
+  if (wallets?.[0]) {
+    await base44.asServiceRole.entities.VoyageurWallet.update(wallets[0].id, {
+      solde_disponible: Number(wallets[0].solde_disponible || 0) + montant,
+      gains_previsionnels: Math.max(0, Number(wallets[0].gains_previsionnels || 0) - commission),
+    });
+  } else {
+    await base44.asServiceRole.entities.VoyageurWallet.create({
+      user_email: commande.voyageur_email,
+      solde_disponible: montant,
+      gains_previsionnels: 0,
+      livres_actifs: 0,
+    });
+  }
+  return montant;
+}
+
 export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
@@ -61,10 +85,15 @@ export default async function(req: Request): Promise<Response> {
       derniere_alerte_securite: '',
     };
 
+    let montantRembourse = 0;
     if (action === 'reception_relais') {
       const dateLimite = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      montantRembourse = await libererSequestreVoyageur(base44, commande);
       updates.date_arrivee_relais = now.toISOString();
       updates.date_limite_collecte = dateLimite;
+      updates.remboursement_livre_libere = montantRembourse > 0;
+      updates.remboursement_livre_libere_le = montantRembourse > 0 ? now.toISOString() : '';
+      updates.montant_rembourse_voyageur = montantRembourse;
     } else {
       updates.date_retrait = now.toISOString();
     }
@@ -79,7 +108,7 @@ export default async function(req: Request): Promise<Response> {
       }).catch(() => null);
     }
 
-    return Response.json({ valide: true, action, recu: receipt, commande: updated, visuel });
+    return Response.json({ valide: true, action, recu: receipt, commande: updated, visuel, montant_rembourse_voyageur: montantRembourse });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
