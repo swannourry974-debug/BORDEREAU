@@ -14,6 +14,7 @@ const TABS = [
   { id: 'litiges', label: 'Tableau litiges' },
   { id: 'collectif', label: 'Commandes collectif' },
   { id: 'relais', label: 'Réseau Points Relais' },
+  { id: 'dossier-canvas', label: 'Dossier Canvas' },
 ];
 
 export default function AdminDashboard() {
