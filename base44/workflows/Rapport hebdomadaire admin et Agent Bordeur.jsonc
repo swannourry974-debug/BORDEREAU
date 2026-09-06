@@ -1,0 +1,44 @@
+{
+  "name": "Rapport hebdomadaire admin et Agent Bordeur",
+  "description": "Envoie chaque lundi matin un r\u00e9sum\u00e9 des commandes, livraisons, points relais et envois prioritaires \u00e0 l'administrateur et \u00e0 l'Agent Bordeur.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 6 * * 1",
+      "one_time_date": null,
+      "timezone": "UTC",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "rapport_hebdomadaire_admin_et_agent_bordeur",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "rapportHebdoAdmin",
+            "args": {}
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "rapportHebdoAdmin"
+  }
+}
