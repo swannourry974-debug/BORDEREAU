@@ -115,7 +115,7 @@ export default function BookValidation({ book, zone: zoneProp, onConfirm, onCanc
               Format : {book?.type || format}
             </span>
             <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', padding: '3px 7px', border: '1px solid var(--bordeaux)', color: 'var(--bordeaux)' }}>
-              Prix estimé : {book?.price || (prix ? `${String(prix).replace('.', ',')} €` : '—')}
+              Prix Google : {book?.price || (prix ? `${String(prix).replace('.', ',')} €` : '—')}
             </span>
           </div>
         </div>
@@ -278,7 +278,7 @@ export default function BookValidation({ book, zone: zoneProp, onConfirm, onCanc
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
           <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 11, color: 'hsl(var(--muted-foreground))', letterSpacing: 1 }}>
-            Frais de service ({modeLivraison === 'express' ? 'Express' : 'Collectif'})
+            Frais de livraison ({modeLivraison === 'express' ? 'Express' : 'Collectif'}) {comparative ? `(gain estimé ${comparative.savings.toFixed(0)} €)` : ''}
           </span>
           <span style={{ fontFamily: 'Playfair Display, serif', fontSize: 13 }}>{fraisService.toFixed(2)} €</span>
         </div>

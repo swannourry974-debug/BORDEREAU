@@ -16,6 +16,7 @@ import { useBookSearch } from '@/hooks/useBookSearch';
 import { useCart } from '@/lib/CartContext';
 import { toast } from 'sonner';
 import { getZoneById } from '@/lib/tarifsConfig';
+import { formatEuro, extractGoogleBookPrice } from '@/lib/bookPricing';
 import { useSearchParams } from 'react-router-dom';
 
 const DEFAULT_BOOKS_BASE = [];
@@ -29,6 +30,17 @@ async function fetchCoverUrl(title, author) {
     return thumb ? thumb.replace('http://', 'https://').replace('&edge=curl', '') : null;
   } catch {
     return null;
+  }
+}
+
+async function fetchGooglePriceByIsbn(isbn) {
+  try {
+    const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}&maxResults=1&langRestrict=fr`);
+    const data = await res.json();
+    const price = extractGoogleBookPrice(data?.items?.[0]?.saleInfo || {});
+    return price.available ? price : { value: 0, label: 'Livre remboursé sur justificatif', available: false, source: 'livraison_seule' };
+  } catch {
+    return { value: 0, label: 'Livre remboursé sur justificatif', available: false, source: 'livraison_seule' };
   }
 }
 
@@ -112,7 +124,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
           if (book) {
             const pages = book.number_of_pages || null;
             const type = pages > 400 ? 'Broché' : 'Poche';
-            const priceVal = type === 'Broché' ? 24.0 : 9.9;
+            const googlePrice = await fetchGooglePriceByIsbn(isbn);
             formatted = {
               id: isbn,
               title: book.title,
@@ -122,8 +134,10 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
               coverUrl: `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`,
               pages,
               type,
-              price: `${priceVal.toFixed(2).replace('.', ',')} €`,
-              priceVal,
+              price: googlePrice.available ? formatEuro(googlePrice.value) : googlePrice.label,
+              priceVal: googlePrice.value,
+              prixLivreDisponible: googlePrice.available,
+              prixLivreSource: googlePrice.source,
             };
           }
         } catch {}
@@ -137,7 +151,7 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
             if (item) {
               const pages = item.pageCount || null;
               const type = pages > 400 ? 'Broché' : 'Poche';
-              const priceVal = type === 'Broché' ? 24.0 : 9.9;
+              const googlePrice = extractGoogleBookPrice(gbData?.items?.[0]?.saleInfo || {});
               formatted = {
                 id: isbn,
                 title: item.title,
@@ -147,8 +161,10 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
                 coverUrl: item.imageLinks?.thumbnail?.replace('http://', 'https://') || null,
                 pages,
                 type,
-                price: `${priceVal.toFixed(2).replace('.', ',')} €`,
-                priceVal,
+                price: googlePrice.available ? formatEuro(googlePrice.value) : googlePrice.label,
+                priceVal: googlePrice.value,
+                prixLivreDisponible: googlePrice.available,
+                prixLivreSource: googlePrice.source,
               };
             }
           } catch {}

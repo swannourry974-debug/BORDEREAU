@@ -61,52 +61,65 @@ export function useBookSearch() {
         };
       });
 
-      // Si Open Library retourne assez de résultats, on s'arrête là (plus rapide)
-      if (olBooks.length >= 6) {
-        const sorted = olBooks.sort((a, b) => b._score - a._score);
-        setResults(sorted);
-        setLoading(false);
-        return;
+      // Complément Google Books pour récupérer prix neuf, disponibilité et couvertures
+      // même quand Open Library fournit déjà assez de résultats.
+      let gbBooks = [];
+      try {
+        const gbRes = await fetch(
+          `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=8&langRestrict=fr`,
+          { signal }
+        );
+        const gbData = await gbRes.json();
+
+        gbBooks = (gbData.items || []).map((item, i) => {
+          const info = item.volumeInfo;
+          const pages = info.pageCount || null;
+          const googlePrice = extractGoogleBookPrice(item.saleInfo || {});
+          return {
+            id: item.id || `gb-${i}`,
+            title: info.title,
+            author: info.authors?.[0] || 'Auteur inconnu',
+            isbn: info.industryIdentifiers?.find(x => x.type === 'ISBN_13')?.identifier
+              || info.industryIdentifiers?.find(x => x.type === 'ISBN_10')?.identifier
+              || null,
+            coverId: null,
+            coverUrl: info.imageLinks?.thumbnail?.replace('http://', 'https://').replace('&edge=curl', '') || null,
+            pages,
+            year: info.publishedDate?.slice(0, 4) || null,
+            poidsEstime: pages ? `~${Math.round(pages * 1.2)}g` : null,
+            type: pages > 400 ? 'Broché' : 'Poche',
+            price: googlePrice.label,
+            priceVal: googlePrice.value,
+            prixLivreDisponible: googlePrice.available,
+            prixLivreSource: googlePrice.source,
+            dispo: '1 voyageur',
+            source: 'google',
+            _score: (info.imageLinks ? 2 : 0) + (pages ? 1 : 0) + (info.authors ? 1 : 0),
+          };
+        });
+      } catch (googleError) {
+        gbBooks = [];
       }
 
-      // Complément Google Books si moins de 6 résultats Open Library
-      const gbRes = await fetch(
-        `https://www.googleapis.com/books/v1/volumes?q=${q}&maxResults=8&langRestrict=fr`,
-        { signal }
-      );
-      const gbData = await gbRes.json();
-
-      const gbBooks = (gbData.items || []).map((item, i) => {
-        const info = item.volumeInfo;
-        const pages = info.pageCount || null;
-        const googlePrice = extractGoogleBookPrice(item.saleInfo || {});
+      const googleByIsbn = new Map(gbBooks.map(b => [b.isbn, b]).filter(([isbn]) => Boolean(isbn)));
+      const googleByTitle = new Map(gbBooks.map(b => [b.title?.toLowerCase(), b]).filter(([title]) => Boolean(title)));
+      const enrichedOlBooks = olBooks.map(book => {
+        const googleMatch = (book.isbn && googleByIsbn.get(book.isbn)) || googleByTitle.get(book.title?.toLowerCase());
+        if (!googleMatch?.prixLivreDisponible) return book;
         return {
-          id: item.id || `gb-${i}`,
-          title: info.title,
-          author: info.authors?.[0] || 'Auteur inconnu',
-          isbn: info.industryIdentifiers?.find(x => x.type === 'ISBN_13')?.identifier
-            || info.industryIdentifiers?.find(x => x.type === 'ISBN_10')?.identifier
-            || null,
-          coverId: null,
-          coverUrl: info.imageLinks?.thumbnail?.replace('http://', 'https://').replace('&edge=curl', '') || null,
-          pages,
-          year: info.publishedDate?.slice(0, 4) || null,
-          poidsEstime: pages ? `~${Math.round(pages * 1.2)}g` : null,
-          type: pages > 400 ? 'Broché' : 'Poche',
-          price: googlePrice.label,
-          priceVal: googlePrice.value,
-          prixLivreDisponible: googlePrice.available,
-          prixLivreSource: googlePrice.source,
-          dispo: '1 voyageur',
-          source: 'google',
-          _score: (info.imageLinks ? 2 : 0) + (pages ? 1 : 0) + (info.authors ? 1 : 0),
+          ...book,
+          price: googleMatch.price,
+          priceVal: googleMatch.priceVal,
+          prixLivreDisponible: true,
+          prixLivreSource: 'google',
+          source: `${book.source}+google`,
         };
       });
 
       // Fusionner en dédoublonnant par ISBN
-      const merged = [...olBooks];
-      const existingIsbns = new Set(olBooks.map(b => b.isbn).filter(Boolean));
-      const existingTitles = new Set(olBooks.map(b => b.title?.toLowerCase()));
+      const merged = [...enrichedOlBooks];
+      const existingIsbns = new Set(enrichedOlBooks.map(b => b.isbn).filter(Boolean));
+      const existingTitles = new Set(enrichedOlBooks.map(b => b.title?.toLowerCase()));
 
       for (const b of gbBooks) {
         if (b.isbn && existingIsbns.has(b.isbn)) continue;

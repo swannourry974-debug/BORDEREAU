@@ -91,8 +91,8 @@ export default function AddToCartForm({ book, selectedCity, selectedRelay, initi
             {/* Total */}
             <div className="border-t-[1.5px] border-dashed border-foreground/30 pt-[14px] mt-[14px]">
               <div className="space-y-2 font-typewriter text-[11px] tracking-[1.2px]">
-                <div className="flex justify-between"><span>Prix du livre</span><strong>{prixLivreARembourser ? '0,00 €' : formatEuro(prixLivre)}</strong></div>
-                <div className="flex justify-between"><span>Livraison Bordero</span><strong>{formatEuro(prixLivraison)}</strong></div>
+                <div className="flex justify-between"><span>Prix du livre Google</span><strong>{prixLivreARembourser ? 'Indisponible' : formatEuro(prixLivre)}</strong></div>
+                <div className="flex justify-between"><span>Livraison Bordero <span className="text-[#2d6a2d]">(gain estimé {comparative.savings.toFixed(0)} €)</span></span><strong>{formatEuro(prixLivraison)}</strong></div>
                 {prixLivreARembourser && <div className="font-fell italic text-[11px] tracking-normal text-foreground/55">Prix Google indisponible : le livre sera régularisé sur justificatif.</div>}
               </div>
               <div className="flex justify-between items-center mt-[14px]">

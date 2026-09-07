@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import CouponButton from '@/components/shared/CouponButton';
 import { useCart } from '@/lib/CartContext';
 import { getComparativeSavings } from '@/lib/comparativeRates';
+import PriceBreakdownLine from '@/components/catalogue/PriceBreakdownLine';
 
 export default function CatalogueOrderStep({ selectedCity, selectedRelay, deliveryMode, onBack, onPay }) {
   const { items, total, removeItem } = useCart();
@@ -36,7 +37,7 @@ export default function CatalogueOrderStep({ selectedCity, selectedRelay, delive
                     <div className="font-serif text-[15px] font-bold text-encre break-words">{item.book.title}</div>
                     <div className="font-fell italic text-[12px] text-foreground/55">{item.book.author}</div>
                     <div className="font-typewriter text-[9px] tracking-[1px] uppercase text-foreground/45 mt-1">Forfait {item.forfait} · {item.transit === 'express' ? 'Express' : 'Collectif'}</div>
-                    <div className="text-[11px] text-[#2d6a2d] mt-2">Gain colis : <strong>{comparative.savings.toFixed(0)} €</strong></div>
+                    <PriceBreakdownLine book={{ ...item.book, prixLivre: item.prixLivre, prixLivreDisponible: item.prixLivre > 0, prixLivreSource: item.prixLivre > 0 ? 'google' : 'livraison_seule' }} deliveryPrice={item.prixLivraison} destination={item.adresse} className="mt-2 text-[11px] text-foreground/65" />
                   </div>
                   <div className="text-right flex-shrink-0">
                     <div className="font-serif text-[17px] font-bold text-bordeaux">{item.prixVal.toFixed(2)} €</div>
@@ -53,8 +54,8 @@ export default function CatalogueOrderStep({ selectedCity, selectedRelay, delive
         <div className="bg-papier border-[1.5px] border-encre/25 p-4">
           <div className="font-typewriter text-[10px] tracking-[2px] uppercase text-bordeaux mb-3">Facture</div>
           <div className="space-y-2 text-[13px]">
-            <div className="flex justify-between"><span>Sous-total livraison</span><strong>{total.toFixed(2)} €</strong></div>
-            <div className="flex justify-between text-[#2d6a2d]"><span>Économies estimées</span><strong>{savings.toFixed(0)} €</strong></div>
+            <div className="flex justify-between"><span>Livres + livraisons</span><strong>{total.toFixed(2)} €</strong></div>
+            <div className="flex justify-between text-[#2d6a2d]"><span>Gains livraison estimés</span><strong>({savings.toFixed(0)} €)</strong></div>
             <div className="border-t border-dashed border-encre/25 pt-2 flex justify-between font-serif text-[20px] font-bold text-bordeaux"><span>Total</span><span>{total.toFixed(2)} €</span></div>
           </div>
         </div>

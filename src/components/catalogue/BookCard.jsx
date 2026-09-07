@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import BookSavingsBadge from '@/components/catalogue/BookSavingsBadge';
+import PriceBreakdownLine from '@/components/catalogue/PriceBreakdownLine';
 
 const COVER_COLORS = [
   'bg-gradient-to-br from-bordeaux to-bordeaux-dark',
@@ -53,14 +54,14 @@ export default function BookCard({ book, index, onClick, destination, deliveryPr
             <span className="text-[11px] tracking-[1.5px] uppercase px-[9px] py-[2px] border border-bordeaux text-bordeaux bg-bordeaux/5 font-bold">
               {book.price}
             </span>
-            {showSavings ? (
-              <BookSavingsBadge destination={destination} price={deliveryPrice} />
-            ) : (
+            {!showSavings && (
               <span className="text-[9px] tracking-[1.5px] uppercase px-[7px] py-[2px] border border-[#2d6a2d] text-[#2d6a2d] bg-[#2d6a2d]/5">
                 {book.availability}
               </span>
             )}
           </div>
+          <PriceBreakdownLine book={book} deliveryPrice={deliveryPrice} destination={destination} className="mt-2 font-typewriter text-[10px] uppercase tracking-[1px] text-foreground/55" />
+          {showSavings && <BookSavingsBadge destination={destination} price={deliveryPrice} />}
         </div>
       </div>
     </motion.div>
