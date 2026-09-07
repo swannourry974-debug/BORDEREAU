@@ -86,7 +86,8 @@
         "en_transit",
         "au_relais",
         "livree",
-        "litige"
+        "litige",
+        "annulee"
       ],
       "default": "en_attente_paiement"
     },
