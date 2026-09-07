@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { requireAdmin } from '../../shared/adminAuth.ts';
 
 /**
  * Déclenché par automation Entity sur Commande quand statut passe à "livree".
@@ -7,24 +8,21 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
-    const payload = await req.json();
+    const auth = await requireAdmin(base44);
+    if (auth.response) return auth.response;
+
+    const payload = await req.json().catch(() => ({}));
     const event = payload.event || {};
 
     if (event.entity_name !== 'Commande' || event.type !== 'update') {
       return Response.json({ skipped: true, raison: 'Evenement non concerne' });
     }
 
-    if (payload.old_data?.statut === 'livree') {
-      return Response.json({ skipped: true, raison: 'Livraison deja traitee' });
+    if (!event.entity_id) {
+      return Response.json({ skipped: true, raison: 'Commande non identifiee' });
     }
 
-    if (payload.data && payload.data.statut !== 'livree') {
-      return Response.json({ skipped: true, raison: 'Statut non livree' });
-    }
-
-    const commande = event.entity_id
-      ? await base44.asServiceRole.entities.Commande.get(event.entity_id)
-      : payload.data;
+    const commande = await base44.asServiceRole.entities.Commande.get(event.entity_id).catch(() => null);
 
     if (!commande || commande.statut !== 'livree') {
       return Response.json({ skipped: true, raison: 'Statut non livree' });

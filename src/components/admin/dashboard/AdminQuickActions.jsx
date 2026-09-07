@@ -13,9 +13,9 @@ export default function AdminQuickActions({ query, onQueryChange, results, users
     if (!message.trim()) return;
     setSending(true); setFeedback('');
     try {
-      const recipients = users.map(u => u.email).filter(Boolean);
-      await Promise.all(recipients.map(to => base44.integrations.Core.SendEmail({ to, subject: 'Alerte Bordero', body: message.trim() })));
-      setFeedback(`Alerte envoyée à ${recipients.length} utilisateur${recipients.length > 1 ? 's' : ''}.`);
+      const response = await base44.functions.invoke('envoyerAlerteAdmin', { message: message.trim() });
+      const recipients = response.data?.recipients || 0;
+      setFeedback(`Alerte envoyée à ${recipients} utilisateur${recipients > 1 ? 's' : ''}.`);
       setMessage('');
     } catch {
       setFeedback("Impossible d’envoyer l’alerte pour le moment.");

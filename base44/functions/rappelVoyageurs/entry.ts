@@ -1,9 +1,13 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { requireAdmin } from '../../shared/adminAuth.ts';
 
 // Envoie un rappel email aux voyageurs dont la date limite de livraison approche (J-3, J-1)
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
+    const auth = await requireAdmin(base44);
+    if (auth.response) return auth.response;
+
     const payload = await req.json().catch(() => ({}));
     const dryRun = payload?.dry_run === true;
 

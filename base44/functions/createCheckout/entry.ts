@@ -2,10 +2,30 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import Stripe from 'npm:stripe@14.21.0';
 
 function genererCodeSecret() {
-  const bytes = new Uint32Array(1);
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const bytes = new Uint32Array(6);
   crypto.getRandomValues(bytes);
-  return String(100 + (bytes[0] % 900));
+  return Array.from(bytes, value => alphabet[value % alphabet.length]).join('');
 }
+
+async function getTrustedBookPrice(book = {}) {
+  const isbn = book?.isbn || book?.industryIdentifiers?.find?.(i => i.type?.includes('ISBN'))?.identifier || '';
+  const title = String(book?.title || '').trim();
+  const author = String(book?.author || book?.authors?.[0] || '').trim();
+  const query = isbn ? `isbn:${isbn}` : [title, author].filter(Boolean).join(' ');
+  if (!query) return 0;
+
+  const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=1&printType=books`);
+  if (!response.ok) return 0;
+  const data = await response.json();
+  const saleInfo = data?.items?.[0]?.saleInfo || {};
+  const price = saleInfo.retailPrice || saleInfo.listPrice;
+  if (!price || price.currencyCode !== 'EUR') return 0;
+  const amount = Number(price.amount);
+  return Number.isFinite(amount) && amount > 0 ? amount : 0;
+}
+
+const APP_BASE_URL = 'https://bordero.base44.app';
 
 const COMPARATIVE_RATES = {
   conakry: { destination: 'Conakry', colissimo: 256.89, dhlMin: 380, fretMin: 250 },
@@ -39,7 +59,7 @@ export default async function(req) {
     if (!stripeSecret) return Response.json({ error: 'Stripe non configuré' }, { status: 500 });
     const stripe = new Stripe(stripeSecret);
 
-    const { book, zone_id, zone_nom, mode_livraison, transit, adresse, prix_livre, frais_livraison, prix_livre_a_rembourser, suivi_facturation_mode } = await req.json();
+    const { book, zone_id, zone_nom, mode_livraison, transit, adresse, suivi_facturation_mode } = await req.json();
 
     const modeInput = String(mode_livraison || transit || 'express').toLowerCase();
     if (!['express', 'collectif', 'collecte'].includes(modeInput)) {
@@ -63,9 +83,9 @@ export default async function(req) {
     }
 
     const isExpress = modeInput === 'express';
-    const fallbackLivraison = isExpress ? Number(zone.frais_lecteur_express) : Number(zone.frais_lecteur_collectif);
-    const prixLivraison = Number.isFinite(Number(frais_livraison)) && Number(frais_livraison) > 0 ? Number(frais_livraison) : fallbackLivraison;
-    const prixLivre = Math.max(0, Number(prix_livre || 0));
+    const prixLivraison = isExpress ? Number(zone.frais_lecteur_express) : Number(zone.frais_lecteur_collectif);
+    const prixLivre = await getTrustedBookPrice(book);
+    const prixLivreARembourser = prixLivre <= 0;
     const totalEuros = prixLivre + prixLivraison;
 
     if (!Number.isFinite(totalEuros) || totalEuros <= 0) {
@@ -99,8 +119,8 @@ export default async function(req) {
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: `${req.headers.get('origin') || 'https://app.base44.com'}/?payment=success`,
-      cancel_url: `${req.headers.get('origin') || 'https://app.base44.com'}/?payment=cancel`,
+      success_url: `${APP_BASE_URL}/?payment=success`,
+      cancel_url: `${APP_BASE_URL}/?payment=cancel`,
       metadata: {
         base44_app_id: Deno.env.get('BASE44_APP_ID'),
         user_email: user.email,
@@ -115,7 +135,7 @@ export default async function(req) {
         adresse: adresse || '',
         prix_livre: String(prixLivre),
         frais_livraison: String(prixLivraison),
-        prix_livre_a_rembourser: prix_livre_a_rembourser ? 'true' : 'false',
+        prix_livre_a_rembourser: prixLivreARembourser ? 'true' : 'false',
         montant_total: String(totalEuros),
         code_secret: codeSecret,
         part_voyageur: String(partVoyageur),
