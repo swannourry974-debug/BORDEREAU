@@ -1,16 +1,6 @@
 {
   "name": "Notifier suivi commande",
-  "description": "Informe le lecteur quand le statut de sa commande change et active le suivi/facture selon son choix.",
-  "trigger": {
-    "condition": "${ ((.trigger.changed_fields | index(\"statut\") != null) and (.trigger.data.suivi_active == true)) }",
-    "config": {
-      "trigger_type": "entity",
-      "events": [
-        "update"
-      ],
-      "entity_name": "Commande"
-    }
-  },
+  "description": "Informe le lecteur par email quand sa commande change de statut, avec emails automatiques pour les \u00e9tapes cl\u00e9s de la Collecte.",
   "definition": {
     "document": {
       "dsl": "1.0.0",
@@ -30,6 +20,16 @@
         }
       }
     ]
+  },
+  "trigger": {
+    "condition": "${ (.trigger.changed_fields | index(\"statut\") != null) and ((.trigger.data.suivi_active == true) or (.trigger.data.mode_livraison == \"collectif\")) and ((.trigger.data.mode_livraison != \"collectif\") or (.trigger.data.statut | IN(\"payee\", \"en_preparation\", \"en_transit\", \"au_relais\", \"livree\"))) }",
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "update"
+      ],
+      "entity_name": "Commande"
+    }
   },
   "x-base44-migrated-from-automation": {
     "legacy_payload_function": "notifierSuiviCommande"
