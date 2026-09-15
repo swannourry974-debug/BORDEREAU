@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useLang } from '@/lib/LangContext';
 
-const ROOT_PANELS = ['/', '/catalogue', '/etagere', '/missions', '/accueil-voyageur', '/stock'];
+const ROOT_PANELS = ['/', '/catalogue', '/etagere', '/progression-collecte', '/missions', '/accueil-voyageur', '/stock'];
 
 export default function AppHeader({ role, roleSwitcherOpen, onToggleRoleSwitcher }) {
   const location = useLocation();

@@ -75,6 +75,7 @@ export default function BottomNav({ role, relaisValidated = true, activePanel, o
           <NavItem panelId="etagere" icon="▥" label="Bibliothèque" />
           <NavItem panelId="wishlist" icon="♡" label="Wishlist" />
           <NavItem panelId="favoris" icon="★" label="Favoris" />
+          <NavItem panelId="progression-collecte" icon="⚖️" label="Collecte" />
         </>
       )}
       {role === 'voyageur' && (
@@ -89,6 +90,7 @@ export default function BottomNav({ role, relaisValidated = true, activePanel, o
           <NavItem panelId="scanner" icon="⬡" label={t('nav_scanner')} />
           <NavItem panelId="stock" icon="📦" label={t('nav_stock')} />
           <NavItem panelId="profils" icon="📊" label={t('nav_profils')} />
+          <NavItem panelId="progression-collecte" icon="⚖️" label="Collecte" />
           <NavItem panelId="aide" icon="❓" label={t('nav_aide')} />
         </>
       )}

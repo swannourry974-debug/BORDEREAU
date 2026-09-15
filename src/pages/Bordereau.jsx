@@ -18,6 +18,7 @@ import PanelProfil from './PanelProfil';
 import PanelWalletLecteur from '../components/wallet/PanelWalletLecteur';
 import PanelWalletAdmin from '../components/wallet/PanelWalletAdmin';
 import PanelAide from '../components/aide/PanelAide';
+import PanelProgressionCollecte from '@/components/collecte/PanelProgressionCollecte';
 import AppFooter from '../components/bordereau/AppFooter';
 
 function SidebarItem({ icon, label, active, onClick, badge }) {
@@ -118,7 +119,7 @@ export default function Bordero({ initialPanel }) {
     }).catch(() => {});
   }, []);
 
-  const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/bibliotheque': 'etagere', '/wishlist': 'wishlist', '/favoris': 'favoris', '/missions': 'missions', '/stock': 'stock', '/Stock': 'stock', '/accueil-voyageur': 'accueil-voyageur', '/scanner': 'scanner', '/profils': 'profils', '/profil': 'profil', '/PanelProfil': 'profil', '/panel-profil': 'profil', '/wallet': 'wallet', '/aide': 'aide' };
+  const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/bibliotheque': 'etagere', '/wishlist': 'wishlist', '/favoris': 'favoris', '/progression-collecte': 'progression-collecte', '/missions': 'missions', '/stock': 'stock', '/Stock': 'stock', '/accueil-voyageur': 'accueil-voyageur', '/scanner': 'scanner', '/profils': 'profils', '/profil': 'profil', '/PanelProfil': 'profil', '/panel-profil': 'profil', '/wallet': 'wallet', '/aide': 'aide' };
   const activePanel = pathToPanel[location.pathname] || initialPanel || 'catalogue';
   const isRelaisValidated = currentUser?.role === 'admin' || (currentUser?.role === 'relais' && currentUser?.relais_valide === true);
   const isRelaisPanel = role === 'relais' && ['stock', 'scanner', 'profils'].includes(activePanel);
@@ -221,6 +222,7 @@ export default function Bordero({ initialPanel }) {
                 <SidebarItem icon="▥" label="Bibliothèque" panelId="etagere" active={activePanel === 'etagere'} onClick={() => switchPanel('etagere')} />
                 <SidebarItem icon="♡" label="Wishlist" panelId="wishlist" active={activePanel === 'wishlist'} onClick={() => switchPanel('wishlist')} />
                 <SidebarItem icon="★" label="Favoris" panelId="favoris" active={activePanel === 'favoris'} onClick={() => switchPanel('favoris')} />
+                <SidebarItem icon="⚖️" label="Collecte" panelId="progression-collecte" active={activePanel === 'progression-collecte'} onClick={() => switchPanel('progression-collecte')} />
               </>
             )}
             {role === 'voyageur' && (
@@ -235,6 +237,7 @@ export default function Bordero({ initialPanel }) {
                 <SidebarItem icon="⬡" label="Scanner" panelId="scanner" active={activePanel === 'scanner'} onClick={() => switchPanel('scanner')} />
                 <SidebarItem icon="📦" label="Stock" panelId="stock" active={activePanel === 'stock'} onClick={() => switchPanel('stock')} />
                 <SidebarItem icon="📊" label="Profils" panelId="profils" active={activePanel === 'profils'} onClick={() => switchPanel('profils')} />
+                <SidebarItem icon="⚖️" label="Collecte" panelId="progression-collecte" active={activePanel === 'progression-collecte'} onClick={() => switchPanel('progression-collecte')} />
                 <SidebarItem icon="❓" label="Aide" panelId="aide" active={activePanel === 'aide'} onClick={() => switchPanel('aide')} />
               </>
             )}
@@ -277,6 +280,7 @@ export default function Bordero({ initialPanel }) {
             {activePanel === 'scanner' && role === 'relais' && isRelaisValidated && <PanelScanner />}
             {activePanel === 'profils' && isRelaisValidated && <PanelProfils />}
             {activePanel === 'profil' && <PanelProfil />}
+            {activePanel === 'progression-collecte' && <PanelProgressionCollecte role={role} currentUser={currentUser} />}
             {activePanel === 'wallet' && (role === 'lecteur' ? <PanelWalletLecteur /> : role === 'voyageur' ? <PanelAccueilVoyageur /> : <PanelWalletAdmin />)}
             {activePanel === 'aide' && <PanelAide role={role} />}
           </div>
