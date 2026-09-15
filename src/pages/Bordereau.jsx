@@ -97,7 +97,7 @@ export default function Bordero({ initialPanel }) {
           base44.auth.updateMe(updates).then(updated => setCurrentUser(updated || activeUser)).catch(() => setCurrentUser(activeUser));
         }
         setRole('relais');
-        if (['/', '/catalogue'].includes(location.pathname)) navigate('/stock', { replace: true });
+        if (!['/stock', '/scanner', '/profils', '/profil', '/aide', '/progression-collecte'].includes(location.pathname)) navigate('/stock', { replace: true });
       } else {
         const requestedRole = new URLSearchParams(location.search).get('role');
         if (requestedRole === 'voyageur') {

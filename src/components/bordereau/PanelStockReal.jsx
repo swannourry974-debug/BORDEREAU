@@ -138,13 +138,14 @@ export default function PanelStock() {
           Statut & inventaire relais
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-          <div style={{
-            background: relayActive ? '#2d6a2d' : 'var(--bordeaux)', color: 'var(--creme)',
+          <button type="button" onClick={toggleRelayActive} aria-label={relayActive ? 'Désactiver le relais' : 'Activer le relais'} style={{
+            background: relayActive ? '#2d6a2d' : '#6E1E2E', color: 'var(--creme)',
             border: 'none', padding: '12px 10px', fontFamily: 'Special Elite, monospace',
             fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            cursor: 'pointer',
           }}>
-            {relayActive ? '✓ Relais validé' : '⏸ Relais inactif'}
-          </div>
+            {relayActive ? '✓ Relais actif — désactiver' : '⏸ Relais inactif — activer'}
+          </button>
           <button type="button" aria-label="Notifier les changements d'inventaire" onClick={notifyInventoryChange} disabled={notificationStatus === 'sending'} style={{
             background: 'var(--encre)', color: 'var(--creme)', border: 'none', padding: '12px 10px',
             cursor: notificationStatus === 'sending' ? 'wait' : 'pointer', fontFamily: 'Special Elite, monospace',
