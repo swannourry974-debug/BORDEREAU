@@ -10,7 +10,7 @@ export default async function(req) {
     const relais = (await base44.asServiceRole.entities.PointRelais.filter({ gerant_email: user.email }, '-created_date', 1))[0];
 
     const validated = user.role === 'admin' || (user.relais_valide === true && user.relais_validation_status === 'valide');
-    const relaisValidated = relais && relais.actif === true && relais.validation_admin === 'valide';
+    const relaisValidated = relais && relais.validation_admin === 'valide';
     if (!validated || !relaisValidated) {
       return Response.json({ error: 'Relais non validé par l’administrateur' }, { status: 403 });
     }
@@ -19,7 +19,7 @@ export default async function(req) {
     if (typeof payload.stock_actuel === 'number' && Number.isFinite(payload.stock_actuel)) {
       updates.stock_actuel = Math.max(0, Math.floor(payload.stock_actuel));
     }
-    if (user.role === 'admin' && typeof payload.actif === 'boolean') {
+    if (typeof payload.actif === 'boolean') {
       updates.actif = payload.actif;
     }
 

@@ -85,7 +85,7 @@ export default function Bordero({ initialPanel }) {
       if (!user) return;
       let activeUser = user;
       const relais = (await base44.entities.PointRelais.filter({ gerant_email: user.email }, '-updated_date', 1))[0];
-      if (relais?.validation_admin === 'valide' && relais?.actif === true) {
+      if (relais?.validation_admin === 'valide') {
         const updates = {
           role: 'relais',
           relais_valide: true,
