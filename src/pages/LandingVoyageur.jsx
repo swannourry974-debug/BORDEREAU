@@ -1,8 +1,17 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
 
 export default function LandingVoyageur() {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
   const handleConnect = () => {
+    if (isAuthenticated) {
+      navigate('/accueil-voyageur');
+      return;
+    }
     base44.auth.redirectToLogin(window.location.origin + '/?role=voyageur');
   };
 

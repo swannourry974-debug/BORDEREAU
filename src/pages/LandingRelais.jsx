@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 
 const TYPES_COMMERCE = ['Boulangerie', 'Café', 'Restaurant'];
@@ -13,6 +14,7 @@ const paysCode = (pays) => {
 };
 
 export default function LandingRelais() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(true);
   const [entryMode, setEntryMode] = useState('choice');
@@ -49,6 +51,10 @@ export default function LandingRelais() {
   }, []);
 
   const handleConnect = () => {
+    if (user) {
+      navigate('/stock');
+      return;
+    }
     base44.auth.redirectToLogin(window.location.origin + '/relais');
   };
 
