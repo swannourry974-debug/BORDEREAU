@@ -166,7 +166,6 @@ export default function PanelMissions() {
   const [voyages, setVoyages] = useState([]);
   const [voyageActif, setVoyageActif] = useState(null);
   const [voyageurValidationStatus, setVoyageurValidationStatus] = useState('aucune');
-  const [modeLivraison, setModeLivraison] = useState('express');
   const [showFormVol, setShowFormVol] = useState(false);
   const [filtreVille, setFiltreVille] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -176,7 +175,7 @@ export default function PanelMissions() {
   const [wallet] = useState({ soldeDisponible: 12.50, gainsPrevisionnels: 5.00, virementSuspendu: false });
 
   const loadAvailableMissions = async () => {
-    const missions = await base44.entities.MissionVoyageur.filter({ statut: 'disponible' }, '-created_date', 80);
+    const missions = await base44.entities.MissionVoyageur.filter({ statut: 'disponible', mode_livraison: 'express' }, '-created_date', 80);
     setAvailable(missions?.length ? missions.map(formatMissionRecord) : []);
   };
 
@@ -245,7 +244,7 @@ export default function PanelMissions() {
     paysVisites: 2,
   };
 
-  const missionsMode = available.filter(m => m.mode_livraison === modeLivraison);
+  const missionsMode = available.filter(m => m.mode_livraison === 'express');
   const missionsFiltered = missionsMode.filter(m => {
     const matchVoyage = voyageActif
       ? m.ville.toLowerCase().includes(voyageActif.arrivee_ville.toLowerCase())
@@ -439,11 +438,8 @@ export default function PanelMissions() {
         </>
       )}
 
-      <SectionTitle>Choix du mode de livraison</SectionTitle>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
-        {[['express', 'Express'], ['collectif', 'Collectif']].map(([id, label]) => (
-          <button key={id} onClick={() => { setModeLivraison(id); setFiltreVille(null); }} className="font-special" style={{ minHeight: 44, background: modeLivraison === id ? 'var(--bordeaux)' : 'var(--papier)', color: modeLivraison === id ? 'var(--creme)' : 'var(--encre)', border: modeLivraison === id ? 'none' : '1.5px solid rgba(26,16,8,0.2)', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' }}>{label}</button>
-        ))}
+      <div style={{ background: 'rgba(128,0,32,0.07)', border: '1px dashed var(--bordeaux)', padding: '12px 16px', marginBottom: 16, fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'var(--bordeaux)', lineHeight: 1.6 }}>
+        Les voyageurs interviennent uniquement sur les livraisons Express. Les commandes Collecte sont regroupées et acheminées par Bordero.
       </div>
 
       <SectionTitle>Calendrier</SectionTitle>
@@ -478,7 +474,7 @@ export default function PanelMissions() {
 
       {missionsMode.length === 0 && !limitAtteinte && (
         <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))', textAlign: 'center', padding: 20 }}>
-          Aucune mission {modeLivraison} disponible pour ce trajet.
+          Aucune mission Express disponible pour ce trajet.
         </div>
       )}
 

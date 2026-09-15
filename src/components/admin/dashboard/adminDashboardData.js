@@ -35,7 +35,7 @@ export function buildAdminStats({ commandes = [], relais = [], missions = [], us
   return { countries, visibleRelays, filteredCommandes, caJour, caMois, bloquees, litiges, profilsAttente, avgDelay, topRelais,
     logistics: {
       attente: filteredCommandes.filter(c => c.statut === 'en_attente_paiement').length,
-      preparation: filteredCommandes.filter(c => ['payee', 'en_transit', 'au_relais'].includes(c.statut)).length,
+      preparation: filteredCommandes.filter(c => ['payee', 'en_preparation', 'en_transit', 'au_relais'].includes(c.statut)).length,
       livrees: delivered.length,
     },
     voyageurs: {

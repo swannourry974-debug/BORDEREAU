@@ -12,7 +12,7 @@ const TABS = [
   { id: 'villes', label: 'Achats par villes' },
   { id: 'livraisons', label: 'Livraisons & États' },
   { id: 'litiges', label: 'Tableau litiges' },
-  { id: 'collectif', label: 'Commandes collectif' },
+  { id: 'collectif', label: 'Malles Collecte' },
   { id: 'relais', label: 'Réseau Points Relais' },
   { id: 'dossier-canvas', label: 'Dossier Canvas' },
 ];

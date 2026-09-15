@@ -38,6 +38,18 @@
     "point_relais_id": {
       "type": "string"
     },
+    "malle_id": {
+      "type": "string",
+      "description": "ID de la malle Collecte Bordero rattach\u00e9e \u00e0 cette commande"
+    },
+    "transporteur_assigne": {
+      "type": "string",
+      "description": "Transporteur assign\u00e9 \u00e0 la malle Collecte"
+    },
+    "reference_suivi_collecte": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence de suivi de la malle Collecte"
+    },
     "mode_livraison": {
       "type": "string",
       "enum": [
@@ -83,6 +95,7 @@
       "enum": [
         "en_attente_paiement",
         "payee",
+        "en_preparation",
         "en_transit",
         "au_relais",
         "livree",
@@ -289,7 +302,14 @@
           "data.lecteur_email": "{{user.email}}"
         },
         {
-          "data.voyageur_email": "{{user.email}}"
+          "$and": [
+            {
+              "data.voyageur_email": "{{user.email}}"
+            },
+            {
+              "data.mode_livraison": "express"
+            }
+          ]
         },
         {
           "$and": [
@@ -329,7 +349,14 @@
           "created_by": "{{user.email}}"
         },
         {
-          "data.voyageur_email": "{{user.email}}"
+          "$and": [
+            {
+              "data.voyageur_email": "{{user.email}}"
+            },
+            {
+              "data.mode_livraison": "express"
+            }
+          ]
         },
         {
           "$and": [

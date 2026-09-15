@@ -19,9 +19,10 @@ export function formatKg(value) {
 export function getCollecteStatus(order) {
   const labels = {
     en_attente_paiement: 'En attente',
-    payee: 'Acheté',
-    en_transit: 'En route',
-    au_relais: 'Au relais',
+    payee: 'Payée',
+    en_preparation: 'Malle en préparation',
+    en_transit: 'Malle en transit',
+    au_relais: 'Disponible au relais',
     livree: 'Remis',
     litige: 'Litige',
     annulee: 'Annulée',

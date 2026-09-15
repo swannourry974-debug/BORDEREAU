@@ -280,7 +280,12 @@ export default function Bordero({ initialPanel }) {
             {activePanel === 'scanner' && role === 'relais' && isRelaisValidated && <PanelScanner />}
             {activePanel === 'profils' && isRelaisValidated && <PanelProfils />}
             {activePanel === 'profil' && <PanelProfil />}
-            {activePanel === 'progression-collecte' && <PanelProgressionCollecte role={role} currentUser={currentUser} />}
+            {activePanel === 'progression-collecte' && role !== 'voyageur' && <PanelProgressionCollecte role={role} currentUser={currentUser} />}
+            {activePanel === 'progression-collecte' && role === 'voyageur' && (
+              <div style={{ background: 'var(--papier)', border: '1px dashed var(--bordeaux)', padding: 24, textAlign: 'center', color: 'var(--bordeaux)' }}>
+                La Collecte est gérée uniquement par Bordero. Votre espace voyageur reste dédié aux missions Express limitées à 10 livres.
+              </div>
+            )}
             {activePanel === 'wallet' && (role === 'lecteur' ? <PanelWalletLecteur /> : role === 'voyageur' ? <PanelAccueilVoyageur /> : <PanelWalletAdmin />)}
             {activePanel === 'aide' && <PanelAide role={role} />}
           </div>

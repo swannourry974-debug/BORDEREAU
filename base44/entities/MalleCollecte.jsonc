@@ -1,0 +1,104 @@
+{
+  "name": "MalleCollecte",
+  "type": "object",
+  "properties": {
+    "point_relais_id": {
+      "type": "string",
+      "description": "Point relais de destination de la malle Collecte"
+    },
+    "point_relais_nom": {
+      "type": "string",
+      "description": "Nom lisible du point relais de destination"
+    },
+    "statut": {
+      "type": "string",
+      "enum": [
+        "en_preparation",
+        "en_transit",
+        "arrivee_relais"
+      ],
+      "default": "en_preparation",
+      "description": "Statut logistique de la malle Collecte g\u00e9r\u00e9e par Bordero"
+    },
+    "transporteur_assigne": {
+      "type": "string",
+      "description": "Transporteur ou prestataire assign\u00e9 manuellement par l'admin Bordero"
+    },
+    "reference_suivi": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence de suivi du transporteur si disponible"
+    },
+    "poids_actuel_kg": {
+      "type": "number",
+      "default": 0,
+      "description": "Poids cumul\u00e9 de la malle Collecte"
+    },
+    "nombre_commandes": {
+      "type": "number",
+      "default": 0,
+      "description": "Nombre de commandes Collecte rattach\u00e9es \u00e0 cette malle"
+    },
+    "date_fermeture": {
+      "type": "string",
+      "description": "Date ISO de fermeture de la malle"
+    },
+    "date_depart": {
+      "type": "string",
+      "description": "Date ISO de d\u00e9part de la malle"
+    },
+    "date_arrivee_relais": {
+      "type": "string",
+      "description": "Date ISO d'arriv\u00e9e au point relais"
+    },
+    "notes_admin": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "point_relais_id",
+    "statut"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin_secondaire"
+          }
+        },
+        {
+          "$and": [
+            {
+              "data.point_relais_id": "{{user.data.point_relais_id}}"
+            },
+            {
+              "data.point_relais_id": {
+                "$ne": ""
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
