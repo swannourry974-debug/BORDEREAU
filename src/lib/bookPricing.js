@@ -4,7 +4,8 @@ export function formatEuro(amount) {
 }
 
 export function extractGoogleBookPrice(saleInfo = {}) {
-  const price = saleInfo.retailPrice || saleInfo.listPrice || null;
+  const info = saleInfo || {};
+  const price = info.retailPrice || info.listPrice || null;
   const amount = Number(price?.amount || 0);
   const currency = price?.currencyCode || 'EUR';
   const canCharge = Number.isFinite(amount) && amount > 0 && currency === 'EUR';
@@ -18,13 +19,14 @@ export function extractGoogleBookPrice(saleInfo = {}) {
 }
 
 export function getBookPriceInfo(book = {}) {
-  const value = Number(book.prixLivre ?? book.priceVal ?? 0);
-  const available = book.prixLivreDisponible === true || book.prixLivreSource === 'google';
+  const safeBook = book || {};
+  const value = Number(safeBook.prixLivre ?? safeBook.priceVal ?? 0);
+  const available = safeBook.prixLivreDisponible === true || safeBook.prixLivreSource === 'google';
 
   if (available && Number.isFinite(value) && value > 0) {
     return {
       value,
-      label: book.price || book.priceLabel || formatEuro(value),
+      label: safeBook.price || safeBook.priceLabel || formatEuro(value),
       available: true,
       source: 'google',
     };
