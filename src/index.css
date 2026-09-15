@@ -9,34 +9,34 @@
    Référence visuelle : bibliothèque vintage premium,
    carnet de voyage, billet ancien et application moderne.
 
-   Primary Burgundy : #800020
-   Dark Burgundy    : #5A0015
-   Vintage Cream    : #F5E6CC
-   Antique Gold     : #C8A165
+   Primary Burgundy : #6E1E2E
+   Dark Brown       : #3B2A23
+   Vintage Ivory    : #F3E8D2
+   Aged Gold        : #C7A15A
+   Ink Black        : #1E1A18
    Action Orange    : #C2410C
-   Dark Orange      : #9A3412
    ============================================================ */
 
 @layer base {
   :root {
-    --background: 38 68% 88%;
+    --background: 39 57% 89%;
     --safe-area-top: env(safe-area-inset-top, 0px);
     --safe-area-bottom: env(safe-area-inset-bottom, 0px);
     --safe-area-left: env(safe-area-inset-left, 0px);
     --safe-area-right: env(safe-area-inset-right, 0px);
-    --foreground: 0 46% 12%;
-    --card: 38 68% 88%;
-    --card-foreground: 345 100% 25%;
-    --popover: 38 68% 88%;
-    --popover-foreground: 345 100% 25%;
-    --primary: 345 100% 25%;
-    --primary-foreground: 38 68% 88%;
-    --secondary: 345 100% 18%;
-    --secondary-foreground: 38 68% 88%;
-    --muted: 32 28% 28%;
-    --muted-foreground: 38 34% 74%;
-    --accent: 39 46% 59%;
-    --accent-foreground: 0 43% 21%;
+    --foreground: 20 11% 11%;
+    --card: 39 57% 89%;
+    --card-foreground: 348 57% 27%;
+    --popover: 39 57% 89%;
+    --popover-foreground: 348 57% 27%;
+    --primary: 348 57% 27%;
+    --primary-foreground: 39 57% 89%;
+    --secondary: 20 26% 18%;
+    --secondary-foreground: 39 57% 89%;
+    --muted: 25 18% 34%;
+    --muted-foreground: 35 30% 48%;
+    --accent: 40 49% 57%;
+    --accent-foreground: 20 11% 11%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 60 33% 97%;
     --border: 39 46% 59%;
@@ -45,18 +45,18 @@
     --radius: 16px;
 
     /* — Theme Bordero officiel — */
-    --creme:         #F5E6CC;
-    --bordeaux:      #800020;
-    --bordeaux-dark: #800020;
+    --creme:         #F3E8D2;
+    --bordeaux:      #6E1E2E;
+    --bordeaux-dark: #4B1220;
     --cta-orange:    #C2410C;
     --cta-orange-dark:#9A3412;
     --cta-foreground:#FDFCF0;
-    --encre:         #800020;
-    --sepia:         #C8A165;
-    --bois-fonce:    #800020;
-    --or-clair:      #D8B87A;
-    --papier:        rgba(245, 230, 204, 0.96);
-    --papier-fonce:  rgba(245, 230, 204, 0.98);
+    --encre:         #1E1A18;
+    --sepia:         #C7A15A;
+    --bois-fonce:    #3B2A23;
+    --or-clair:      #D7BB78;
+    --papier:        rgba(243, 232, 210, 0.96);
+    --papier-fonce:  rgba(243, 232, 210, 0.98);
   }
 }
 
@@ -68,8 +68,11 @@
     @apply bg-background text-foreground;
     font-family: 'Cormorant Garamond', serif;
     background-color: var(--creme);
-    color: var(--bordeaux);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    color: var(--encre);
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(199, 161, 90, 0.16), transparent 28%),
+      radial-gradient(circle at 88% 18%, rgba(110, 30, 46, 0.10), transparent 32%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
     overscroll-behavior-y: none;
@@ -79,38 +82,38 @@
 /* Thème sombre WebView Android : charbon chaud, sépia lisible */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: 0 46% 12%;
-    --foreground: 38 68% 88%;
-    --card: 38 68% 88%;
-    --card-foreground: 345 100% 25%;
-    --popover: 38 68% 88%;
-    --popover-foreground: 345 100% 25%;
-    --primary: 345 100% 25%;
-    --primary-foreground: 38 68% 88%;
-    --secondary: 30 45% 24%;
-    --secondary-foreground: 38 68% 88%;
-    --muted: 30 28% 22%;
+    --background: 20 11% 11%;
+    --foreground: 39 57% 89%;
+    --card: 39 57% 89%;
+    --card-foreground: 348 57% 27%;
+    --popover: 39 57% 89%;
+    --popover-foreground: 348 57% 27%;
+    --primary: 348 57% 27%;
+    --primary-foreground: 39 57% 89%;
+    --secondary: 20 26% 18%;
+    --secondary-foreground: 39 57% 89%;
+    --muted: 20 18% 20%;
     --muted-foreground: 38 34% 74%;
-    --accent: 39 46% 59%;
-    --accent-foreground: 0 43% 21%;
+    --accent: 40 49% 57%;
+    --accent-foreground: 20 11% 11%;
     --destructive: 0 60% 42%;
     --destructive-foreground: 38 68% 88%;
     --border: 39 46% 59%;
     --input: 39 46% 59%;
     --ring: 39 46% 59%;
 
-    --creme:         #F5E6CC;
-    --bordeaux:      #800020;
-    --bordeaux-dark: #800020;
+    --creme:         #F3E8D2;
+    --bordeaux:      #6E1E2E;
+    --bordeaux-dark: #4B1220;
     --cta-orange:    #C2410C;
     --cta-orange-dark:#9A3412;
     --cta-foreground:#FDFCF0;
-    --encre:         #F5E6CC;
-    --sepia:         #D8B87A;
-    --bois-fonce:    #800020;
-    --or-clair:      #D8B87A;
-    --papier:        rgba(245, 230, 204, 0.94);
-    --papier-fonce:  rgba(245, 230, 204, 0.96);
+    --encre:         #F3E8D2;
+    --sepia:         #D7BB78;
+    --bois-fonce:    #3B2A23;
+    --or-clair:      #D7BB78;
+    --papier:        rgba(243, 232, 210, 0.94);
+    --papier-fonce:  rgba(243, 232, 210, 0.96);
   }
 }
 
@@ -177,11 +180,11 @@ button, select, nav, [role="tab"], [role="tablist"] {
   -webkit-tap-highlight-color: transparent;
 }
 .bordero-card {
-  background: var(--creme);
-  border: 1px solid var(--bordeaux);
+  background: linear-gradient(145deg, var(--papier-fonce), var(--papier));
+  border: 1px solid rgba(110, 30, 46, 0.42);
   border-radius: 16px;
-  box-shadow: 0 18px 45px rgba(128, 0, 32, 0.18);
-  color: var(--bordeaux);
+  box-shadow: 0 18px 45px rgba(59, 42, 35, 0.16), inset 0 1px 0 rgba(255,255,255,0.32);
+  color: var(--encre);
 }
 .bordero-button, button[style*="var(--bordeaux)"], button[class*="bg-bordeaux"], button[class*="bg-primary"], a[class*="bg-bordeaux"], a[class*="bg-primary"] {
   background-color: var(--cta-orange) !important;
@@ -193,6 +196,40 @@ button, select, nav, [role="tab"], [role="tablist"] {
   border-color: var(--cta-orange-dark) !important;
   transform: translateY(-1px);
 }
+::selection {
+  background: rgba(199, 161, 90, 0.45);
+  color: var(--encre);
+}
+
+a {
+  text-underline-offset: 4px;
+  transition: color 0.32s ease, opacity 0.32s ease;
+}
+
+h1, h2, h3, .bordero-title {
+  color: var(--bordeaux);
+  letter-spacing: -0.015em;
+}
+
+input, textarea, select {
+  background: rgba(243, 232, 210, 0.82) !important;
+  border-color: rgba(110, 30, 46, 0.36) !important;
+  color: var(--encre) !important;
+}
+
+input:focus, textarea:focus, select:focus, button:focus-visible, a:focus-visible {
+  outline: 2px solid rgba(199, 161, 90, 0.86) !important;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 5px rgba(199, 161, 90, 0.18) !important;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: rgba(243, 232, 210, 0.65); }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--sepia), var(--bordeaux));
+  border: 2px solid rgba(243, 232, 210, 0.85);
+}
+
 .font-special { font-family: 'Inter', sans-serif; }
 .font-playfair { font-family: 'Playfair Display', serif; }
 .font-fell { font-family: 'Cormorant Garamond', serif; }
