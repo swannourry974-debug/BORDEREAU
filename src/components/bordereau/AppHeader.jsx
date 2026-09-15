@@ -20,14 +20,14 @@ export default function AppHeader({ role, roleSwitcherOpen, onToggleRoleSwitcher
 
   return (
     <header className="px-3 sm:px-5" style={{
-      background: 'var(--bordeaux)',
+      background: 'linear-gradient(135deg, var(--bordeaux-dark), var(--bordeaux) 58%, var(--bois-fonce))',
       paddingTop: `calc(12px + env(safe-area-inset-top, 0px))`,
       paddingBottom: 10,
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      boxShadow: '0 3px 12px rgba(128,0,32,0.4)',
-      borderBottom: '2px solid var(--bordeaux-dark)',
+      boxShadow: '0 8px 24px rgba(46,17,17,0.28)',
+      borderBottom: '1px solid rgba(199,161,90,0.62)',
     }}>
       <div className="max-w-[1024px] mx-auto flex items-center justify-between gap-2">
         <div className="min-w-0 flex items-center gap-2 sm:gap-3" style={{ lineHeight: 1 }}>
@@ -42,12 +42,12 @@ export default function AppHeader({ role, roleSwitcherOpen, onToggleRoleSwitcher
           <div className="min-w-0">
           <div
             onDoubleClick={openOfficialLogin}
-            className="font-special text-[20px] sm:text-[28px]"
-            style={{ color: 'var(--creme)', letterSpacing: 'clamp(3px, 1.4vw, 6px)', textTransform: 'uppercase', userSelect: 'none', cursor: 'default' }}
+            className="font-playfair text-[21px] sm:text-[29px]"
+            style={{ color: 'var(--creme)', letterSpacing: 'clamp(3px, 1.4vw, 6px)', textTransform: 'uppercase', userSelect: 'none', cursor: 'default', textShadow: '0 1px 0 rgba(199,161,90,0.45)', lineHeight: 0.95 }}
           >
             BORDERO
           </div>
-          <span className="font-fell hidden sm:block truncate" style={{ fontStyle: 'italic', fontSize: 11, color: 'rgba(253,252,240,0.7)', letterSpacing: 1.5, marginTop: 2, userSelect: 'none', maxWidth: 180 }}>
+          <span className="font-fell hidden sm:block truncate" style={{ fontStyle: 'italic', fontSize: 12, color: 'rgba(243,232,210,0.78)', letterSpacing: 1.5, marginTop: 4, userSelect: 'none', maxWidth: 220 }}>
             {t('header_tagline')}
           </span>
           </div>
