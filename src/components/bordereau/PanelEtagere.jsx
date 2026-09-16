@@ -115,10 +115,48 @@ export default function PanelEtagere({ initialTab = 'bibliotheque' }) {
       <LibrarySegmentedTabs active={tab} onChange={setTab} />
       {tab === 'wishlist' ? (
         <WishlistPanel items={wishlist} onAdd={addWishlist} onDelete={deleteWishlist} onImport={importWishlist} />
+      ) : books.length === 0 && tab === 'bibliotheque' ? (
+        /* État vide engageant avec CTA vers le catalogue */
+        <div style={{
+          background: 'var(--papier)', border: '1.5px dashed rgba(128,0,32,0.3)',
+          padding: '40px 24px', textAlign: 'center',
+          margin: '8px 0',
+        }}>
+          <div style={{ fontSize: 52, marginBottom: 12 }}>📚</div>
+          <div style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: 20, color: 'var(--encre)', marginBottom: 8 }}>
+            Votre étagère est vide
+          </div>
+          <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 14, color: 'rgba(26,16,8,0.55)', lineHeight: 1.7, marginBottom: 24 }}>
+            Commandez votre premier livre depuis Paris —
+            un voyageur l’apportera jusqu’à vous.
+          </div>
+          <a
+            href="/catalogue"
+            style={{
+              display: 'inline-block',
+              background: 'var(--bordeaux)', color: 'var(--creme)',
+              padding: '10px 24px',
+              fontFamily: 'Special Elite, monospace', fontSize: 11,
+              letterSpacing: 2, textTransform: 'uppercase',
+              textDecoration: 'none',
+              outline: '2px dashed var(--bordeaux)', outlineOffset: 3,
+            }}
+          >
+            Parcourir le catalogue
+          </a>
+        </div>
       ) : (
         <WoodenShelf books={visibleBooks} selectedId={selectedBook?.id} addedBookId={addedBookId} onSelect={setSelectedBook} />
       )}
-      {tab === 'favoris' && favoriteBooks.length === 0 && <div className="text-center py-6 italic text-foreground/50">Aucun favori pour le moment.</div>}
+      {tab === 'favoris' && favoriteBooks.length === 0 && (
+        <div style={{
+          textAlign: 'center', padding: '32px 20px',
+          fontFamily: 'IM Fell English, serif', fontStyle: 'italic',
+          fontSize: 14, color: 'rgba(26,16,8,0.45)', lineHeight: 1.7,
+        }}>
+          ★ Marquez des livres en favoris pour les retrouver ici.
+        </div>
+      )}
       <BadgeProgressPanel count={books.length} />
     </div>
   );
