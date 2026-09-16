@@ -24,23 +24,35 @@ export default function CommandeForm({ book, onClose }) {
   const total = currentForfait ? currentForfait.price + '€' : '—';
 
   const confirmer = async () => {
-    // Bloquer si dans un iframe (preview)
     if (window.self !== window.top) {
       alert('⚠️ Le paiement ne fonctionne que depuis l\'application publiée, pas depuis la prévisualisation.');
       return;
     }
+    if (!adresse.trim()) {
+      alert('Veuillez renseigner une adresse de livraison.');
+      return;
+    }
     setLoading(true);
-    const res = await base44.functions.invoke('createCheckout', {
-      book,
-      forfait: selectedForfait,
-      transit: selectedTransit,
-      adresse,
-    });
-    setLoading(false);
-    if (res.data?.url) {
-      window.location.href = res.data.url;
-    } else {
-      alert('Erreur lors de la création du paiement.');
+    try {
+      const res = await base44.functions.invoke('createCheckout', {
+        book,
+        forfait: selectedForfait,
+        transit: selectedTransit,
+        adresse,
+        zone_id: book?.zone_id || null,
+        zone_nom: book?.zone_nom || adresse,
+        mode_livraison: selectedTransit,
+      });
+      if (res.data?.url) {
+        window.location.href = res.data.url;
+      } else {
+        const msg = res.data?.error || 'Erreur lors de la création du paiement.';
+        alert('❌ ' + msg);
+      }
+    } catch (e) {
+      alert('❌ Erreur réseau : ' + (e?.message || 'réessayez plus tard.'));
+    } finally {
+      setLoading(false);
     }
   };
 
