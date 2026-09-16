@@ -9,12 +9,8 @@
  *   URL : https://bordero.base44.app/api/functions/stripeWebhook
  *   Événements : checkout.session.completed
  */
-import { createServiceRoleClient } from 'npm:@base44/sdk@0.8.44';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import Stripe from 'npm:stripe@14.21.0';
-
-function genererQrToken(commandeId: string, lecteurEmail: string, format: string, secret: string): string {
-  return btoa(`${commandeId}:${lecteurEmail}:${format}:${secret}`).replace(/=/g, '');
-}
 
 export default async function(req: Request): Promise<Response> {
   const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY');
@@ -50,7 +46,9 @@ export default async function(req: Request): Promise<Response> {
   const session = event.data.object as Stripe.Checkout.Session;
   const meta = session.metadata || {};
 
-  const base44 = createServiceRoleClient();
+  // Le webhook n'a pas de cookie utilisateur — on crée un client à partir de la requête
+  // et on utilise asServiceRole pour les opérations d'écriture
+  const base44 = createClientFromRequest(req);
 
   // Idempotence : éviter de créer deux fois la même commande
   const existing = await base44.entities.Commande.filter({ stripe_session_id: session.id }, '-created_date', 1).catch(() => []);
