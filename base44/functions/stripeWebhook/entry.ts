@@ -51,7 +51,7 @@ export default async function(req: Request): Promise<Response> {
   const base44 = createClientFromRequest(req);
 
   // Idempotence : éviter de créer deux fois la même commande
-  const existing = await base44.entities.Commande.filter({ stripe_session_id: session.id }, '-created_date', 1).catch(() => []);
+  const existing = await base44.asServiceRole.entities.Commande.filter({ stripe_session_id: session.id }, '-created_date', 1).catch(() => []);
   if (existing?.length > 0) {
     console.log(`[stripeWebhook] Session ${session.id} déjà traitée — commande ${existing[0].id}`);
     return Response.json({ received: true, idempotent: true, commande_id: existing[0].id });
@@ -79,7 +79,7 @@ export default async function(req: Request): Promise<Response> {
   // Créer la commande en base avec statut "payee"
   let commande;
   try {
-    commande = await base44.entities.Commande.create({
+    commande = await base44.asServiceRole.entities.Commande.create({
       lecteur_email: userEmail,
       livre_titre: bookTitle,
       livre_auteur: bookAuthor,
@@ -117,7 +117,7 @@ export default async function(req: Request): Promise<Response> {
   console.log(`[stripeWebhook] ✅ Commande créée: ${commande.id} | ${bookTitle} | ${userEmail} | ${montantTotal}€`);
 
   // Déclencher la notification lecteur en arrière-plan (non bloquant)
-  base44.functions.invoke('notifierSuiviCommande', { commande_id: commande.id }).catch(e =>
+  base44.asServiceRole.functions.invoke('notifierSuiviCommande', { commande_id: commande.id }).catch(e =>
     console.warn('[stripeWebhook] Notification suivi échouée:', e.message)
   );
 
