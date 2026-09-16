@@ -100,7 +100,7 @@ const AuthenticatedApp = () => {
 };
 
 
-const IDLE_TIMEOUT = 120000; // 2 minutes
+const IDLE_TIMEOUT = 720000; // 12 minutes — suffisant pour lire et commander sans être déconnecté
 
 function App() {
   const [loadingDone, setLoadingDone] = useState(false);
