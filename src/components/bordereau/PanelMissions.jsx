@@ -258,6 +258,11 @@ export default function PanelMissions() {
   const acceptMission = (id, commission) => {
     const mission = available.find(m => m.id === id);
     if (!mission || limitAtteinte) return;
+    // Verrou critique : ne jamais autoriser l'acceptation sans vol validé
+    if (!voyageActif || user?.voyageur_bloque) {
+      alert('⛔ Vous devez avoir un vol validé par l\'administrateur avant d\'accepter des missions.');
+      return;
+    }
     const rang = livresActifs + 1;
     // Recalcul commission selon zone de la mission
     const missionZone = Object.values(ZONES).find(z => z.id === mission.zone_id) || zoneVoyage;
