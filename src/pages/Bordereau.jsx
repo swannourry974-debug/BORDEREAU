@@ -79,6 +79,21 @@ export default function Bordero({ initialPanel }) {
   const [rolePromptOpen, setRolePromptOpen] = useState(false);
   const [commandeOpen, setCommandeOpen] = useState(false);
   const [commandeBook, setCommandeBook] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState(null); // 'success' | 'cancel' | null
+
+  // Détecter le retour Stripe via query param
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const payment = params.get('payment');
+    if (payment === 'success' || payment === 'cancel') {
+      setPaymentStatus(payment);
+      // Nettoyer l'URL sans recharger la page
+      const clean = new URL(window.location.href);
+      clean.searchParams.delete('payment');
+      clean.searchParams.delete('session_id');
+      window.history.replaceState({}, '', clean.toString());
+    }
+  }, []);
 
   useEffect(() => {
     base44.auth.me().then(async user => {
@@ -175,6 +190,99 @@ export default function Bordero({ initialPanel }) {
 
   return (
     <div style={{ background: 'var(--creme)', minHeight: '100vh', overflowX: 'hidden' }}>
+      {/* Bandeau de confirmation paiement */}
+      {paymentStatus === 'success' && (
+        <div
+          onClick={() => setPaymentStatus(null)}
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(26,16,8,0.55)', zIndex: 9999,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+          }}
+        >
+          <div style={{
+            background: 'var(--creme)', border: '2px solid var(--bordeaux)',
+            padding: '32px 28px', maxWidth: 400, width: '100%',
+            boxShadow: '6px 6px 0 rgba(128,0,32,0.3)',
+            textAlign: 'center', position: 'relative',
+            animation: 'fadeSlideIn 0.3s ease',
+          }} onClick={e => e.stopPropagation()}>
+            {/* Tampon */}
+            <div style={{
+              position: 'absolute', top: 16, right: 16,
+              border: '2px solid #2d6a2d', color: '#2d6a2d',
+              fontFamily: 'Special Elite, monospace', fontSize: 9,
+              letterSpacing: 2, textTransform: 'uppercase', padding: '3px 8px',
+              transform: 'rotate(-8deg)', opacity: 0.8,
+            }}>CONFIRMÉ</div>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>📚</div>
+            <div className="font-playfair" style={{ fontSize: 22, fontWeight: 700, color: 'var(--bordeaux)', marginBottom: 8 }}>
+              Commande confirmée !
+            </div>
+            <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 14, color: 'rgba(26,16,8,0.65)', lineHeight: 1.7, marginBottom: 20 }}>
+              Votre paiement est sécurisé en séquestre.
+              Un voyageur va prendre en charge votre mission — vous recevrez une notification dès l’achat confirmé.
+            </div>
+            {/* Étapes */}
+            <div style={{ textAlign: 'left', borderTop: '1px dashed rgba(26,16,8,0.2)', paddingTop: 16, marginBottom: 20 }}>
+              {[
+                { icon: '✅', label: 'Paiement sécurisé', done: true },
+                { icon: '⏳', label: 'Voyageur en recherche du livre', done: false },
+                { icon: '✈️', label: 'Transport vers votre relais', done: false },
+                { icon: '📦', label: 'Retrait chez le partenaire', done: false },
+              ].map((step, i) => (
+                <div key={i} style={{
+                  display: 'flex', gap: 10, alignItems: 'center', padding: '6px 0',
+                  borderBottom: i < 3 ? '1px dashed rgba(26,16,8,0.1)' : 'none',
+                }}>
+                  <span style={{ fontSize: 16, width: 24, flexShrink: 0 }}>{step.icon}</span>
+                  <span className="font-special" style={{
+                    fontSize: 10, letterSpacing: 1, textTransform: 'uppercase',
+                    color: step.done ? '#2d6a2d' : 'rgba(26,16,8,0.45)',
+                  }}>{step.label}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => { setPaymentStatus(null); navigate('/etagere'); }}
+                style={{
+                  flex: 1, background: 'var(--bordeaux)', color: 'var(--creme)',
+                  border: 'none', padding: '10px 16px',
+                  fontFamily: 'Special Elite, monospace', fontSize: 11,
+                  letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
+                  outline: '2px dashed var(--bordeaux)', outlineOffset: 3,
+                }}
+              >
+                Voir mon étagère
+              </button>
+              <button
+                onClick={() => setPaymentStatus(null)}
+                style={{
+                  background: 'transparent', color: 'var(--bordeaux)',
+                  border: '1.5px dashed var(--bordeaux)', padding: '10px 14px',
+                  fontFamily: 'Special Elite, monospace', fontSize: 11,
+                  letterSpacing: 1, textTransform: 'uppercase', cursor: 'pointer',
+                }}
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {paymentStatus === 'cancel' && (
+        <div style={{
+          background: 'rgba(139,105,20,0.1)', borderBottom: '2px solid #8B6914',
+          padding: '10px 16px', textAlign: 'center',
+          fontFamily: 'IM Fell English, serif', fontStyle: 'italic',
+          fontSize: 13, color: '#8B6914', display: 'flex',
+          alignItems: 'center', justifyContent: 'center', gap: 10,
+        }}>
+          <span>⚠️ Paiement annulé — votre commande n’a pas été enregistrée.</span>
+          <button onClick={() => setPaymentStatus(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8B6914', fontSize: 18 }}>×</button>
+        </div>
+      )}
       <AppHeader
         role={role}
         roleSwitcherOpen={roleSwitcherOpen}
