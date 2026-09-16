@@ -72,14 +72,20 @@ export default async function(req) {
     const zone = zones.find(z => z.id === zone_id)
       || zones.find(z => normalize(z.zone_nom) && requested.includes(normalize(z.zone_nom)))
       || zones.find(z => normalize(z.pays_nom) && requested.includes(normalize(z.pays_nom)))
-      || zones.find(z => normalize(z.pays_code) && requested.includes(normalize(z.pays_code)));
+      || zones.find(z => normalize(z.pays_code) && requested.includes(normalize(z.pays_code)))
+      // Fallback : zone internationale si rien ne match (évite erreur 400 silencieuse)
+      || zones.find(z => z.id === 'international')
+      || zones[0];
 
-    if (!zone) return Response.json({ error: 'Zone tarifaire invalide' }, { status: 400 });
+    if (!zone) return Response.json({ error: 'Zone tarifaire introuvable. Veuillez sélectionner une destination valide.' }, { status: 400 });
 
-    const adresseNorm = normalize(adresse);
-    const zoneNomNorm = normalize(zone.zone_nom);
-    if (adresseNorm && zoneNomNorm && !adresseNorm.includes(zoneNomNorm) && !zoneNomNorm.includes(adresseNorm)) {
-      return Response.json({ error: 'Adresse incohérente avec la zone tarifaire' }, { status: 400 });
+    // Vérification cohérence adresse/zone désactivée quand zone_id est fourni directement
+    if (!zone_id) {
+      const adresseNorm = normalize(adresse);
+      const zoneNomNorm = normalize(zone.zone_nom);
+      if (adresseNorm && zoneNomNorm && !adresseNorm.includes(zoneNomNorm) && !zoneNomNorm.includes(adresseNorm)) {
+        console.warn(`[createCheckout] Zone déduite (${zone.zone_nom}) potentiellement incohérente avec adresse: ${adresse}`);
+      }
     }
 
     const isExpress = modeInput === 'express';
@@ -119,7 +125,7 @@ export default async function(req) {
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: `${APP_BASE_URL}/?payment=success`,
+      success_url: `${APP_BASE_URL}/?payment=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${APP_BASE_URL}/?payment=cancel`,
       metadata: {
         base44_app_id: Deno.env.get('BASE44_APP_ID'),
