@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { requireAdmin } from '../../shared/adminAuth.ts';
+import { escapeHtml } from '../../shared/html.ts';
 
 // Envoie un rappel email aux voyageurs dont la date limite de livraison approche (J-3, J-1)
 export default async function(req) {
@@ -34,6 +35,9 @@ export default async function(req) {
 
       const urgence = diffJours === 1 ? '🚨 URGENT — ' : '⚠️ Rappel — ';
       const jourTexte = diffJours === 1 ? 'demain' : 'dans 3 jours';
+      const livreTitre = escapeHtml(cmd.livre_titre || 'Livre');
+      const livreAuteur = escapeHtml(cmd.livre_auteur || '');
+      const zoneNom = escapeHtml(cmd.zone_nom || '—');
 
       try {
         if (!dryRun) {
@@ -45,8 +49,8 @@ Bonjour,
 
 Vous avez accepté de transporter le livre suivant pour Bordero :
 
-📚 ${cmd.livre_titre}${cmd.livre_auteur ? ` — ${cmd.livre_auteur}` : ''}
-📍 Destination : ${cmd.zone_nom || '—'}
+📚 ${livreTitre}${livreAuteur ? ` — ${livreAuteur}` : ''}
+📍 Destination : ${zoneNom}
 📦 Mode : ${cmd.mode_livraison === 'express' ? 'Express' : 'Collectif'}
 
 ⏰ Date limite de dépôt au relais : ${new Date(cmd.date_limite_collecte).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} (${jourTexte})

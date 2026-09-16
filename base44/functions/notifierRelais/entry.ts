@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { requireAdmin } from '../../shared/adminAuth.ts';
+import { escapeHtml } from '../../shared/html.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -32,7 +33,7 @@ Deno.serve(async (req) => {
       const relais = relaisList[0];
       if (relais) {
         relaisEmail = relais.gerant_email;
-        relaisNom = relais.nom;
+        relaisNom = escapeHtml(relais.nom || 'Point Relais');
       }
     }
 
@@ -40,6 +41,11 @@ Deno.serve(async (req) => {
       console.log('Aucun email de relais trouvé pour la commande', commande.id);
       return Response.json({ skipped: true, raison: 'Pas de relais email' });
     }
+
+    const livreTitre = escapeHtml(commande.livre_titre || '—');
+    const livreAuteur = escapeHtml(commande.livre_auteur || '—');
+    const lecteurEmail = escapeHtml(commande.lecteur_email || '—');
+    const dateLimiteCollecte = escapeHtml(commande.date_limite_collecte || '');
 
     // Construire le message selon le statut
     let sujet = '';
@@ -52,9 +58,9 @@ Bonjour ${relaisNom},
 
 Un nouveau livre est en attente de dépôt dans votre point relais.
 
-📖 Titre : ${commande.livre_titre || '—'}
-✍️ Auteur : ${commande.livre_auteur || '—'}
-👤 Lecteur : ${commande.lecteur_email || '—'}
+📖 Titre : ${livreTitre}
+✍️ Auteur : ${livreAuteur}
+👤 Lecteur : ${lecteurEmail}
 🚚 Mode : ${commande.mode_livraison === 'express' ? 'Express' : 'Collectif'}
 
 Veuillez vous préparer à réceptionner ce colis prochainement.
@@ -68,10 +74,10 @@ Bonjour ${relaisNom},
 
 Le livre suivant est désormais disponible au retrait dans votre point relais.
 
-📖 Titre : ${commande.livre_titre || '—'}
-✍️ Auteur : ${commande.livre_auteur || '—'}
-👤 Lecteur : ${commande.lecteur_email || '—'}
-${commande.date_limite_collecte ? `📅 Date limite de retrait : ${commande.date_limite_collecte}` : ''}
+📖 Titre : ${livreTitre}
+✍️ Auteur : ${livreAuteur}
+👤 Lecteur : ${lecteurEmail}
+${dateLimiteCollecte ? `📅 Date limite de retrait : ${dateLimiteCollecte}` : ''}
 
 Merci de prévenir le lecteur si ce n'est pas déjà fait.
 

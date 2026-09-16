@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { escapeHtml } from '../../shared/html.ts';
 
 /**
  * Tâche planifiée (1×/jour) — Vérifie toutes les commandes "au_relais"
@@ -54,6 +55,11 @@ Deno.serve(async (req) => {
               const dateLimiteDepassee = new Date(dateArrivee.getTime() + GRACE_JOURS * 24 * 60 * 60 * 1000)
                 .toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' });
 
+              const livreTitre = escapeHtml(cmd.livre_titre || 'Livre');
+              const livreAuteur = escapeHtml(cmd.livre_auteur || '');
+              const relaisNom = escapeHtml(relais.nom || 'Point relais');
+              const relaisVille = escapeHtml(relais.ville || '');
+
               await base44.asServiceRole.integrations.Core.SendEmail({
                 to: cmd.lecteur_email,
                 from_name: 'Bordero — Rappel Urgent',
@@ -62,8 +68,8 @@ Deno.serve(async (req) => {
 
 Votre livre est toujours au point relais depuis ${joursEcoules} jours.
 
-📖 ${cmd.livre_titre}${cmd.livre_auteur ? ` — ${cmd.livre_auteur}` : ''}
-🏪 Relais : ${relais.nom} · ${relais.ville}
+📖 ${livreTitre}${livreAuteur ? ` — ${livreAuteur}` : ''}
+🏪 Relais : ${relaisNom} · ${relaisVille}
 
 💸 Pénalité actuelle : ${penaliteTotale.toFixed(2)} € (${joursRetard} jour${joursRetard > 1 ? 's' : ''} × 0,50 €/jour)
 📅 Délai de grâce expiré le : ${dateLimiteDepassee}

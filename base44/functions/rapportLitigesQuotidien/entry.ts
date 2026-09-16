@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { escapeHtml } from '../../shared/html.ts';
 
 function formatDate(value) {
   if (!value) return 'date inconnue';
@@ -45,14 +46,14 @@ export default async function(req) {
       c => {
         const relaisInfo = relaisById.get(c.point_relais_id);
         const attente = daysSince(c.date_arrivee_relais || c.updated_date || c.created_date);
-        return `  • ${c.livre_titre || 'Livre'} — ${c.zone_nom || 'zone ?'} — ${relaisInfo?.nom || 'relais ?'} — attente ${attente} jours — lecteur ${c.lecteur_email || '?'}`;
+        return `  • ${escapeHtml(c.livre_titre || 'Livre')} — ${escapeHtml(c.zone_nom || 'zone ?')} — ${escapeHtml(relaisInfo?.nom || 'relais ?')} — attente ${attente} jours — lecteur ${escapeHtml(c.lecteur_email || '?')}`;
       },
       'Aucun colis en attente depuis plus de 3 jours en point relais.'
     );
 
     const lignesLitiges = listLines(
       litiges.slice(0, 20),
-      c => `  • ${c.livre_titre || 'Livre'} — ${c.zone_nom || 'zone ?'} — statut ${c.statut || '?'} — ${c.admin_notes || 'à vérifier'}`,
+      c => `  • ${escapeHtml(c.livre_titre || 'Livre')} — ${escapeHtml(c.zone_nom || 'zone ?')} — statut ${escapeHtml(c.statut || '?')} — ${escapeHtml(c.admin_notes || 'à vérifier')}`,
       'Aucun litige en cours.'
     );
 
