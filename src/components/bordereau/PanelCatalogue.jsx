@@ -319,7 +319,19 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
           )}
 
           {error && (
-            <div className="text-center py-4 text-destructive italic font-fell text-[13px]">{error}</div>
+            <div style={{
+              background: 'rgba(180,20,20,0.06)',
+              border: '1px dashed #b41414',
+              padding: '12px 16px',
+              marginBottom: 12,
+              display: 'flex', alignItems: 'flex-start', gap: 10,
+            }}>
+              <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
+              <div>
+                <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: '#b41414', marginBottom: 3 }}>Recherche impossible</div>
+                <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.65)', lineHeight: 1.6 }}>{error}</div>
+              </div>
+            </div>
           )}
 
           {!loading && !scannedBook && (
