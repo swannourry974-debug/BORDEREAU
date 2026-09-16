@@ -130,7 +130,14 @@ export function useBookSearch() {
       setResults(merged.sort((a, b) => b._score - a._score).slice(0, 12));
     } catch (e) {
       if (e.name === 'AbortError') return; // requête annulée volontairement
-      setError('Erreur de recherche');
+      // Message d'erreur lisible par l'utilisateur selon le type de problème
+      if (!navigator.onLine) {
+        setError('Pas de connexion internet. Vérifiez votre réseau et réessayez.');
+      } else if (e.message?.includes('Failed to fetch') || e.message?.includes('NetworkError')) {
+        setError('Impossible d’atteindre le catalogue. Réessayez dans quelques secondes.');
+      } else {
+        setError('Erreur de recherche — réessayez ou modifiez votre recherche.');
+      }
       setResults([]);
     } finally {
       setLoading(false);
