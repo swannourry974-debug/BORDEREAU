@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { requireAdmin } from '../../shared/adminAuth.ts';
+import { escapeHtml } from '../../shared/html.ts';
 
 const GENERIC_STATUS_MESSAGES = {
   payee: {
@@ -54,10 +55,10 @@ const COLLECTE_STATUS_MESSAGES = {
 
 function buildCollecteDetails(commande) {
   return [
-    commande.malle_id ? `📦 Malle Collecte : ${commande.malle_id}` : '',
-    commande.transporteur_assigne ? `🚚 Transporteur : ${commande.transporteur_assigne}` : '',
-    commande.reference_suivi_collecte ? `🔎 Suivi : ${commande.reference_suivi_collecte}` : '',
-    commande.visuel_bordero_serie ? `🎟️ Visuel Bordero : ${commande.visuel_bordero_serie}` : '',
+    commande.malle_id ? `📦 Malle Collecte : ${escapeHtml(commande.malle_id)}` : '',
+    commande.transporteur_assigne ? `🚚 Transporteur : ${escapeHtml(commande.transporteur_assigne)}` : '',
+    commande.reference_suivi_collecte ? `🔎 Suivi : ${escapeHtml(commande.reference_suivi_collecte)}` : '',
+    commande.visuel_bordero_serie ? `🎟️ Visuel Bordero : ${escapeHtml(commande.visuel_bordero_serie)}` : '',
   ].filter(Boolean).join('\n');
 }
 
@@ -88,7 +89,7 @@ export default async function(req) {
     }
 
     const message = messages[commande.statut];
-    const factureReference = commande.facture_reference || commande.id;
+    const factureReference = escapeHtml(commande.facture_reference || commande.id);
     const collecteDetails = isCollecte ? buildCollecteDetails(commande) : '';
 
     await base44.asServiceRole.integrations.Core.SendEmail({
@@ -101,8 +102,8 @@ ${message.title}
 
 ${message.detail}
 
-📖 Livre : ${commande.livre_titre || '—'}${commande.livre_auteur ? ` — ${commande.livre_auteur}` : ''}
-🌍 Destination : ${commande.zone_nom || '—'}
+📖 Livre : ${escapeHtml(commande.livre_titre || '—')}${commande.livre_auteur ? ` — ${escapeHtml(commande.livre_auteur)}` : ''}
+🌍 Destination : ${escapeHtml(commande.zone_nom || '—')}
 💶 Total facture : ${Number(commande.montant_paye || 0).toFixed(2)} €
 🧾 Référence facture : ${factureReference}${collecteDetails ? `\n${collecteDetails}` : ''}
 

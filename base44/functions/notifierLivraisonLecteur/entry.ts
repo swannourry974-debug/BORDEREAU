@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { requireAdmin } from '../../shared/adminAuth.ts';
+import { escapeHtml } from '../../shared/html.ts';
 
 /**
  * Déclenché par automation Entity sur Commande quand statut passe à "livree".
@@ -49,9 +50,9 @@ export default async function(req) {
 
 Votre livre a bien été remis entre vos mains ! Nous espérons que la lecture sera au rendez-vous. ✨
 
-📖 ${commande.livre_titre}${commande.livre_auteur ? ` — ${commande.livre_auteur}` : ''}
+📖 ${escapeHtml(commande.livre_titre || 'Livre')}${commande.livre_auteur ? ` — ${escapeHtml(commande.livre_auteur)}` : ''}
 📅 Remis le : ${dateJour}
-🌍 Destination : ${commande.zone_nom || '—'}
+🌍 Destination : ${escapeHtml(commande.zone_nom || '—')}
 
 Merci d'avoir fait confiance à Bordero pour voyager avec vos livres.
 

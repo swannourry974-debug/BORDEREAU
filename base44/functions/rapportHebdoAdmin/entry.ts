@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
+import { escapeHtml } from '../../shared/html.ts';
 
 function formatDate(dateValue) {
   if (!dateValue) return 'date inconnue';
@@ -40,27 +41,27 @@ export default async function(req) {
 
     const lignesCommandes = asList(
       nouvellesCommandes.slice(0, 10),
-      c => `  • ${c.livre_titre || 'Livre'} — ${c.zone_nom || 'zone ?'} — ${c.montant_paye ? `${c.montant_paye.toFixed(2)} €` : 'montant ?'}`,
+      c => `  • ${escapeHtml(c.livre_titre || 'Livre')} — ${escapeHtml(c.zone_nom || 'zone ?')} — ${c.montant_paye ? `${c.montant_paye.toFixed(2)} €` : 'montant ?'}`,
       'Aucune nouvelle commande cette semaine.'
     );
     const lignesLivraisons = asList(
       livraisonsSemaine.slice(0, 10),
-      c => `  • ${c.livre_titre || 'Livre'} — ${c.statut?.replace(/_/g, ' ')} — lecteur ${c.lecteur_email || '?'}`,
+      c => `  • ${escapeHtml(c.livre_titre || 'Livre')} — ${escapeHtml(c.statut?.replace(/_/g, ' ') || 'statut ?')} — lecteur ${escapeHtml(c.lecteur_email || '?')}`,
       'Aucune livraison mise à jour cette semaine.'
     );
     const lignesRelais = asList(
       relaisEnAttente.slice(0, 10),
-      r => `  • ${r.nom || 'Relais'} — ${r.ville || 'ville ?'} — gérant ${r.gerant_email || '?'}`,
+      r => `  • ${escapeHtml(r.nom || 'Relais')} — ${escapeHtml(r.ville || 'ville ?')} — gérant ${escapeHtml(r.gerant_email || '?')}`,
       'Aucune demande Point Relais en attente.'
     );
     const lignesPriorites = asList(
       envoisPrioritaires,
-      c => `  • ${c.livre_titre || 'Livre'} — ${c.zone_nom || 'zone ?'} — ${!c.voyageur_email ? 'voyageur à assigner' : 'à surveiller'}`,
+      c => `  • ${escapeHtml(c.livre_titre || 'Livre')} — ${escapeHtml(c.zone_nom || 'zone ?')} — ${!c.voyageur_email ? 'voyageur à assigner' : 'à surveiller'}`,
       'Aucun envoi prioritaire identifié.'
     );
     const lignesMissions = asList(
       missionsDisponibles,
-      m => `  • ${m.livre || 'Livre'} → ${m.ville_destination || 'destination ?'}${m.commission ? ` (+${m.commission.toFixed(2)} €)` : ''}`,
+      m => `  • ${escapeHtml(m.livre || 'Livre')} → ${escapeHtml(m.ville_destination || 'destination ?')}${m.commission ? ` (+${m.commission.toFixed(2)} €)` : ''}`,
       'Aucune mission disponible.'
     );
 

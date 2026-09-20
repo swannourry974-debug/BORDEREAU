@@ -19,6 +19,10 @@ export default async function(req: Request): Promise<Response> {
   if (!stripeSecret) {
     return Response.json({ error: 'Stripe non configuré' }, { status: 500 });
   }
+  if (!webhookSecret) {
+    console.error('[stripeWebhook] STRIPE_WEBHOOK_SECRET manquant — webhook refusé');
+    return Response.json({ error: 'Webhook Stripe non configuré' }, { status: 500 });
+  }
 
   const stripe = new Stripe(stripeSecret);
   const body = await req.text();
@@ -26,13 +30,7 @@ export default async function(req: Request): Promise<Response> {
 
   let event: Stripe.Event;
   try {
-    if (webhookSecret) {
-      event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
-    } else {
-      // Fallback sans vérification de signature (à éviter en production)
-      event = JSON.parse(body);
-      console.warn('[stripeWebhook] Signature non vérifiée — STRIPE_WEBHOOK_SECRET manquant');
-    }
+    event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
   } catch (err) {
     console.error('[stripeWebhook] Signature invalide:', err.message);
     return Response.json({ error: 'Signature invalide' }, { status: 400 });

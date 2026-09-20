@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+import { escapeHtml } from '../../shared/html.ts';
 
 Deno.serve(async (req) => {
   try {
@@ -33,7 +34,7 @@ Deno.serve(async (req) => {
       const voyageurUser = tousVoyageurs.find(u => u.email === email);
       if (!voyageurUser) continue;
 
-      const prenom = voyageurUser.full_name?.split(' ')[0] || 'Voyageur';
+      const prenom = escapeHtml(voyageurUser.full_name?.split(' ')[0] || 'Voyageur');
 
       // Missions de ce voyageur
       const mesMissions = toutesMissions.filter(m => m.voyageur_email === email);
@@ -66,20 +67,20 @@ Deno.serve(async (req) => {
 
       // Construire le corps de l'email
       const lignesEnCours = enCours.length > 0
-        ? enCours.map(m => `  • ${m.livre}${m.ville_destination ? ` → ${m.ville_destination}` : ''} (${m.statut === 'acceptee' ? 'à valider' : 'en cours'})`).join('\n')
+        ? enCours.map(m => `  • ${escapeHtml(m.livre || 'Livre')}${m.ville_destination ? ` → ${escapeHtml(m.ville_destination)}` : ''} (${m.statut === 'acceptee' ? 'à valider' : 'en cours'})`).join('\n')
         : '  Aucune mission en cours.';
 
       const lignesVols = mesVoyages.length > 0
         ? mesVoyages.map(v => {
             const d = new Date(v.date_vol).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'long' });
-            return `  • ${v.depart_ville} → ${v.arrivee_ville} — ${d}`;
+            return `  • ${escapeHtml(v.depart_ville || 'départ ?')} → ${escapeHtml(v.arrivee_ville || 'arrivée ?')} — ${d}`;
           }).join('\n')
         : '  Aucun vol programmé.';
 
       const lignesOpportunites = opportunites.length > 0
         ? opportunites.map(m => {
             const commission = m.commission ? ` (+${m.commission.toFixed(2)} €)` : '';
-            return `  • "${m.livre}"${m.ville_destination ? ` → ${m.ville_destination}` : ''}${commission}`;
+            return `  • "${escapeHtml(m.livre || 'Livre')}"${m.ville_destination ? ` → ${escapeHtml(m.ville_destination)}` : ''}${commission}`;
           }).join('\n')
         : '  Aucune nouvelle opportunité pour le moment.';
 

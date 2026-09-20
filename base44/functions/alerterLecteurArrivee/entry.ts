@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
 import { requireAdmin } from '../../shared/adminAuth.ts';
+import { escapeHtml } from '../../shared/html.ts';
 
 /**
  * Fonction appelée dès qu'un livre passe au statut "au_relais".
@@ -44,7 +45,7 @@ Deno.serve(async (req) => {
 
 🎉 Votre livre est arrivé à votre point relais !
 
-📖 ${commande.livre_titre}${commande.livre_auteur ? ` — ${commande.livre_auteur}` : ''}
+📖 ${escapeHtml(commande.livre_titre || 'Livre')}${commande.livre_auteur ? ` — ${escapeHtml(commande.livre_auteur)}` : ''}
 
 ⚠️ IMPORTANT : Merci de le récupérer sous 48h pour libérer de l'espace chez votre commerçant.
 
