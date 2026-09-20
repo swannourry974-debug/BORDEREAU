@@ -61,6 +61,7 @@ export default function PanierCheckout({ onClose }) {
         livre_type: FORFAITS_STRIPE[item.forfait] === 'broche' ? 'Broché' : FORFAITS_STRIPE[item.forfait] === 'bd' ? 'BD' : 'Poche',
         zone_id: item.selectedCity?.zone_id || 'international',
         zone_nom: item.selectedCity?.label || item.adresse || 'International',
+        point_relais_id: item.selectedRelay?.id || '',
         mode_livraison: modeLivraison,
         montant_paye: itemTotal,
         prix_livre_neuf: prixLivre,
@@ -174,6 +175,9 @@ export default function PanierCheckout({ onClose }) {
                   <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.5)', marginTop: 2 }}>
                     {item.book.author}
                   </div>
+                  <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 1, color: 'rgba(26,16,8,0.55)', marginTop: 5, lineHeight: 1.5 }}>
+                    Livre {formatEuro(item.prixLivre || 0)} + livraison {formatEuro(item.prixLivraison ?? item.prixVal ?? 0)}
+                  </div>
                   <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
                     <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 1, border: '1px solid rgba(26,16,8,0.3)', padding: '1px 6px' }}>
                       Forfait {item.forfait}
@@ -193,7 +197,7 @@ export default function PanierCheckout({ onClose }) {
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 1, color: 'rgba(26,16,8,0.45)', lineHeight: 1.7 }}>
-                    Livre {formatEuro(item.prixLivre || 0)}<br />Livraison {formatEuro(item.prixLivraison ?? item.prixVal ?? 0)}
+                    Ventilation<br />confirmée
                   </div>
                   {item.prixLivreARembourser && <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 10, color: '#C2410C', marginTop: 3 }}>À régulariser</div>}
                   <div style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: 16, color: 'var(--bordeaux)', marginTop: 4 }}>

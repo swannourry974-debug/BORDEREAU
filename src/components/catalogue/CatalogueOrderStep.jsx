@@ -4,7 +4,7 @@ import { useCart } from '@/lib/CartContext';
 import { getComparativeSavings } from '@/lib/comparativeRates';
 import PriceBreakdownLine from '@/components/catalogue/PriceBreakdownLine';
 
-export default function CatalogueOrderStep({ selectedCity, selectedRelay, deliveryMode, onBack, onPay }) {
+export default function CatalogueOrderStep({ onBack, onPay }) {
   const { items, total, removeItem } = useCart();
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState(['Bordero : Bonjour, nous suivons votre commande et vous préviendrons à chaque étape.']);
@@ -19,7 +19,7 @@ export default function CatalogueOrderStep({ selectedCity, selectedRelay, delive
         <div className="font-typewriter text-[9px] tracking-[3px] uppercase opacity-70 mb-2">Commande Bordero</div>
         <h2 className="font-serif text-[23px] font-bold leading-tight">Résumé, facture et suivi</h2>
         <p className="font-fell italic text-[12px] opacity-80 mt-2 leading-relaxed">
-          {deliveryMode === 'express' ? 'Express' : 'Collectif malle'} · {selectedCity?.emoji} {selectedCity?.label} · {selectedRelay?.name}
+          Chaque livre conserve sa destination, son mode de livraison et son point relais.
         </p>
       </div>
 

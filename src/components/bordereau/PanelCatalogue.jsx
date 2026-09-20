@@ -1,21 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import SectionTitle from '@/components/shared/SectionTitle';
 import SearchBlock from '@/components/catalogue/SearchBlock';
-import CatalogueWelcomeStep from '@/components/catalogue/CatalogueWelcomeStep';
 import CatalogueSearchIntro from '@/components/catalogue/CatalogueSearchIntro';
 import CatalogueOrderStep from '@/components/catalogue/CatalogueOrderStep';
 import CatalogueStepDots from '@/components/catalogue/CatalogueStepDots';
 import BookCard from '@/components/catalogue/BookCard';
 import AddToCartForm from '@/components/catalogue/AddToCartForm';
 import ISBNScanner from '@/components/catalogue/ISBNScanner';
-import BookValidation from '@/components/catalogue/BookValidation';
 import PullToRefresh from '@/components/shared/PullToRefresh';
 import PanierCheckout from '@/components/catalogue/PanierCheckout';
 import ConfirmationBordero from '@/components/catalogue/ConfirmationBordereau';
 import { useBookSearch } from '@/hooks/useBookSearch';
 import { useCart } from '@/lib/CartContext';
 import { toast } from 'sonner';
-import { getZoneById } from '@/lib/tarifsConfig';
 import { formatEuro, extractGoogleBookPrice } from '@/lib/bookPricing';
 import { useSearchParams } from 'react-router-dom';
 
@@ -44,20 +41,16 @@ async function fetchGooglePriceByIsbn(isbn) {
   }
 }
 
-export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenCommande, onCloseCommande }) {
+export default function PanelCatalogue() {
   const { results, loading, error, search, searchDebounced, reset } = useBookSearch();
   const { items } = useCart();
   const [hasSearched, setHasSearched] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
-  const [scannedBook, setScannedBook] = useState(null);
   const [isbnLoading, setIsbnLoading] = useState(false);
   const [orderingBook, setOrderingBook] = useState(null);
   const [panierOpen, setPanierOpen] = useState(false);
   const [confirmation, setConfirmation] = useState(null);
   const [defaultBooks, setDefaultBooks] = useState(DEFAULT_BOOKS_BASE);
-  const [selectedCity, setSelectedCity] = useState(null);
-  const [selectedRelay, setSelectedRelay] = useState(null);
-  const [deliveryMode, setDeliveryMode] = useState('express');
   const [catalogueStep, setCatalogueStep] = useState(1);
   const [searchParams, setSearchParams] = useSearchParams();
   const modalParam = searchParams.get('modal');
@@ -76,7 +69,6 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
     }
   };
 
-  // Enrichir les livres par défaut avec les couvertures via Google Books
   useEffect(() => {
     let cancelled = false;
     Promise.all(
@@ -101,8 +93,15 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
       setHasSearched(false);
       return;
     }
+    setCatalogueStep(1);
     setHasSearched(true);
     searchDebounced(query, 350);
+  };
+
+  const openBookChoice = (book) => {
+    setOrderingBook(book);
+    setCatalogueStep(2);
+    setModalParam('add-to-cart');
   };
 
   const handleISBNResult = async (isbn) => {
@@ -114,7 +113,6 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
       try {
         let formatted = null;
 
-        // 1) Open Library en priorité (fiable, sans quota, couverture mondiale)
         try {
           const olRes = await fetch(
             `https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`
@@ -142,7 +140,6 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
           }
         } catch {}
 
-        // 2) Google Books en fallback (si quota disponible)
         if (!formatted) {
           try {
             const gbRes = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
@@ -171,47 +168,30 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
         }
 
         if (formatted) {
-          setScannedBook(formatted);
+          openBookChoice(formatted);
         } else {
-          // ISBN non trouvé nulle part → formulaire manuel
-          setScannedBook({ id: isbn, title: '', author: '', isbn, coverUrl: null, pages: null, type: 'Poche', priceVal: '' });
-          toast('ISBN non trouvé — veuillez compléter les informations manuellement.');
+          toast('ISBN non trouvé — recherchez le titre manuellement pour continuer.');
         }
       } finally {
         setIsbnLoading(false);
       }
     } else {
-      // C'est un titre ou auteur → recherche normale
       setHasSearched(true);
-      search(isbn); // pas de debounce ici car déjà soumis manuellement
+      setCatalogueStep(1);
+      search(isbn);
     }
   };
 
-  const handleValidationConfirm = ({ book, total, commandeId, suiviMode }) => {
-    setScannedBook(null);
-    setConfirmation({ commandeId, bookTitle: book.title });
-    toast.success(`"${book.title}" ajouté à votre liste !`, {
-      description: `Total : ${total} € · facture et suivi activés (${suiviMode === 'email' ? 'e-mail' : 'application'})`,
-    });
-  };
-
   const displayBooks = hasSearched ? results : defaultBooks;
-  const deliveryPrice = deliveryMode === 'collecte' ? 6.90 : 8.90;
-
-  const handleWelcomeConfirm = ({ city, relay }) => {
-    setSelectedCity(city);
-    setSelectedRelay(relay);
-    setCatalogueStep(2);
-  };
 
   const handleRefresh = async () => {
     if (hasSearched) { reset(); setHasSearched(false); }
+    setCatalogueStep(1);
     await new Promise(r => setTimeout(r, 800));
   };
 
   return (
     <>
-      {/* Scanner plein écran */}
       {scannerOpen && (
         <ISBNScanner
           onResult={handleISBNResult}
@@ -219,38 +199,13 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
         />
       )}
 
-      {/* Panier checkout */}
       {panierOpen && <PanierCheckout onClose={() => { setPanierOpen(false); clearModalParam('panier'); }} />}
 
       <PullToRefresh onRefresh={handleRefresh}>
         <div>
           <CatalogueStepDots step={catalogueStep} />
 
-          {catalogueStep === 1 && (
-            <CatalogueWelcomeStep
-              deliveryMode={deliveryMode}
-              onSelectMode={setDeliveryMode}
-              selectedCity={selectedCity}
-              selectedRelay={selectedRelay}
-              onNext={handleWelcomeConfirm}
-            />
-          )}
-
-          {catalogueStep === 2 && (
-            <>
-              <CatalogueSearchIntro
-                deliveryMode={deliveryMode}
-                selectedCity={selectedCity}
-                selectedRelay={selectedRelay}
-                onChangeMode={() => setCatalogueStep(1)}
-                onChangeDestination={() => setCatalogueStep(1)}
-              />
-
-              <SectionTitle>Rechercher un livre</SectionTitle>
-              <SearchBlock onSearch={handleSearch} onScanOpen={() => setScannerOpen(true)} />
-
-          {/* Bouton panier flottant */}
-          {items.length > 0 && (
+          {items.length > 0 && catalogueStep !== 3 && (
             <button
               onClick={() => setCatalogueStep(3)}
               style={{
@@ -269,7 +224,6 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
             </button>
           )}
 
-          {/* QR Code confirmation après commande */}
           {confirmation && (
             <ConfirmationBordero
               commandeId={confirmation.commandeId}
@@ -278,96 +232,80 @@ export default function PanelCatalogue({ commandeOpen, commandeBook, onOpenComma
             />
           )}
 
-          {/* Chargement ISBN */}
-          {isbnLoading && (
-            <div style={{ textAlign: 'center', padding: '20px 0', fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))' }}>
-              Identification du livre en cours...
-            </div>
-          )}
-
-          {/* Validation livre scanné */}
-          {scannedBook && !isbnLoading && (
+          {catalogueStep === 1 && (
             <>
-              <SectionTitle>Valider la commande</SectionTitle>
-              <BookValidation
-                book={scannedBook}
-                zone={getZoneById(selectedCity?.zone_id)}
-                onConfirm={handleValidationConfirm}
-                onCancel={() => setScannedBook(null)}
-              />
+              <CatalogueSearchIntro />
+              <SectionTitle>Rechercher un livre</SectionTitle>
+              <SearchBlock onSearch={handleSearch} onScanOpen={() => setScannerOpen(true)} />
+
+              {isbnLoading && (
+                <div style={{ textAlign: 'center', padding: '20px 0', fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))' }}>
+                  Identification du livre en cours...
+                </div>
+              )}
+
+              <SectionTitle>{hasSearched ? 'Résultats de recherche' : 'Découverte catalogue'}</SectionTitle>
+
+              {loading && (
+                <div className="text-center py-8 text-foreground/40 italic font-fell text-[13px]">
+                  Recherche en cours...
+                </div>
+              )}
+
+              {error && (
+                <div style={{
+                  background: 'rgba(180,20,20,0.06)',
+                  border: '1px dashed #b41414',
+                  padding: '12px 16px',
+                  marginBottom: 12,
+                  display: 'flex', alignItems: 'flex-start', gap: 10,
+                }}>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
+                  <div>
+                    <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: '#b41414', marginBottom: 3 }}>Recherche impossible</div>
+                    <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.65)', lineHeight: 1.6 }}>{error}</div>
+                  </div>
+                </div>
+              )}
+
+              {!loading && (
+                <div className="pl-0 sm:pl-7">
+                  {displayBooks.map((book, i) => (
+                    <BookCard
+                      key={book.id}
+                      book={book}
+                      index={i}
+                      deliveryPrice={0}
+                      showSavings={false}
+                      onClick={() => openBookChoice(book)}
+                    />
+                  ))}
+                  {!hasSearched && displayBooks.length === 0 && (
+                    <div className="text-center py-8 text-foreground/40 italic font-fell text-[13px]">
+                      Recherchez un titre, un auteur ou scannez un ISBN pour choisir d'abord votre livre.
+                    </div>
+                  )}
+                  {hasSearched && displayBooks.length === 0 && (
+                    <div className="text-center py-8 text-foreground/40 italic font-fell text-[13px]">
+                      Aucun livre trouvé.
+                    </div>
+                  )}
+                </div>
+              )}
             </>
           )}
 
-          {/* Formulaire ajout au panier */}
-          {!scannedBook && (
+          {catalogueStep === 2 && (
             <AddToCartForm
               book={orderingBook}
-              selectedCity={selectedCity}
-              selectedRelay={selectedRelay}
-              initialTransit={deliveryMode}
               onItemAdded={() => setCatalogueStep(3)}
-              onClose={() => { setOrderingBook(null); clearModalParam('add-to-cart'); }}
+              onClose={() => { setOrderingBook(null); setCatalogueStep(1); clearModalParam('add-to-cart'); }}
             />
-          )}
-
-              <SectionTitle>{hasSearched ? 'Résultats de recherche' : 'Rechercher un livre'}</SectionTitle>
-
-          {loading && (
-            <div className="text-center py-8 text-foreground/40 italic font-fell text-[13px]">
-              Recherche en cours...
-            </div>
-          )}
-
-          {error && (
-            <div style={{
-              background: 'rgba(180,20,20,0.06)',
-              border: '1px dashed #b41414',
-              padding: '12px 16px',
-              marginBottom: 12,
-              display: 'flex', alignItems: 'flex-start', gap: 10,
-            }}>
-              <span style={{ fontSize: 18, flexShrink: 0 }}>⚠️</span>
-              <div>
-                <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: '#b41414', marginBottom: 3 }}>Recherche impossible</div>
-                <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.65)', lineHeight: 1.6 }}>{error}</div>
-              </div>
-            </div>
-          )}
-
-          {!loading && !scannedBook && (
-            <div className="pl-0 sm:pl-7">
-              {displayBooks.map((book, i) => (
-                <BookCard
-                  key={book.id}
-                  book={book}
-                  index={i}
-                  destination={selectedCity?.label}
-                  deliveryPrice={deliveryPrice}
-                  showSavings
-                  onClick={() => { setOrderingBook(book); setModalParam('add-to-cart'); }}
-                />
-              ))}
-              {!hasSearched && !loading && displayBooks.length === 0 && (
-                <div className="text-center py-8 text-foreground/40 italic font-fell text-[13px]">
-                  Recherchez un titre, un auteur ou scannez un ISBN pour afficher des livres.
-                </div>
-              )}
-              {hasSearched && !loading && displayBooks.length === 0 && (
-                <div className="text-center py-8 text-foreground/40 italic font-fell text-[13px]">
-                  Aucun livre trouvé.
-                </div>
-              )}
-            </div>
-          )}
-            </>
           )}
 
           {catalogueStep === 3 && (
             <CatalogueOrderStep
-              selectedCity={selectedCity}
-              selectedRelay={selectedRelay}
-              deliveryMode={deliveryMode}
-              onBack={() => setCatalogueStep(2)}
+              onBack={() => setCatalogueStep(1)}
               onPay={() => { setPanierOpen(true); setModalParam('panier'); }}
             />
           )}

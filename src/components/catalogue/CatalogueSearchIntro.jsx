@@ -1,17 +1,12 @@
 import React from 'react';
-import CouponButton from '@/components/shared/CouponButton';
 
-export default function CatalogueSearchIntro({ deliveryMode, selectedCity, selectedRelay, onChangeMode, onChangeDestination }) {
+export default function CatalogueSearchIntro() {
   return (
-    <div className="bg-bordeaux text-creme p-4 mb-5 relative overflow-hidden">
-      <div className="font-typewriter text-[9px] tracking-[3px] uppercase opacity-70 mb-2">Catalogue prêt</div>
-      <div className="font-serif text-[20px] font-bold leading-tight mb-2">Recherchez votre livre ou scannez son ISBN.</div>
-      <div className="font-fell italic text-[12px] opacity-80 leading-relaxed">
-        {deliveryMode === 'express' ? 'Express' : 'Collectif malle'} · {selectedCity?.emoji} {selectedCity?.label} · {selectedRelay?.name}
-      </div>
-      <div className="flex gap-2 mt-4">
-        <CouponButton secondary onClick={onChangeMode} className="flex-1 bg-creme/95">Mode</CouponButton>
-        <CouponButton secondary onClick={onChangeDestination} className="flex-1 bg-creme/95">Destination</CouponButton>
+    <div className="bg-bordeaux text-creme p-4 mb-5 relative overflow-hidden shadow-[3px_3px_0_rgba(26,16,8,0.18)]">
+      <div className="font-typewriter text-[9px] tracking-[3px] uppercase opacity-70 mb-2">Découverte lecteur</div>
+      <div className="font-serif text-[22px] font-bold leading-tight mb-2">Commencez par le livre qui vous manque.</div>
+      <div className="font-fell italic text-[13px] opacity-80 leading-relaxed">
+        Recherchez un titre ou scannez un ISBN. La destination, le mode de livraison et le point relais se choisissent ensuite pour ce livre précis.
       </div>
     </div>
   );

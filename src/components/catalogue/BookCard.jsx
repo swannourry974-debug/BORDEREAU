@@ -10,7 +10,7 @@ const COVER_COLORS = [
   'bg-gradient-to-br from-[#7a4a1a] to-[#4a2a08]',
 ];
 
-export default function BookCard({ book, index, onClick, destination, deliveryPrice = 8.90, showSavings = false }) {
+export default function BookCard({ book, index, onClick, destination, deliveryPrice = 0, showSavings = false }) {
   const coverClass = COVER_COLORS[index % COVER_COLORS.length];
 
   return (
