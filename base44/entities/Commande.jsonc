@@ -343,10 +343,14 @@
     "update": {
       "$or": [
         {
-          "created_by_id": "{{user.id}}"
-        },
-        {
-          "created_by": "{{user.email}}"
+          "$and": [
+            {
+              "created_by_id": "{{user.id}}"
+            },
+            {
+              "data.statut": "en_attente_paiement"
+            }
+          ]
         },
         {
           "$and": [
