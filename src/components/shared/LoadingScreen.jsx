@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import LoadingPassportTicket from './LoadingPassportTicket';
 
 const CITIES = ['MONTREAL', 'CHICAGO', 'ABIDJAN', 'NEW YORK', 'CONAKRY', 'MIAMI', 'PARIS', 'DAKAR', 'LYON', 'TORONTO'];
 const GRID_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÀÉÈÊÇÙ';
@@ -42,18 +43,16 @@ export default function LoadingScreen({ onComplete, mode = 'loading', onWake }) 
     return () => clearInterval(interval);
   }, []);
 
-  const barFilled = Math.round((progress / 100) * 18);
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
       style={{
-        background: 'radial-gradient(circle at 50% 18%, rgba(199,161,90,0.18), transparent 28%), linear-gradient(145deg, #3B2A23 0%, #6E1E2E 52%, #4B1220 100%)',
+        background: 'radial-gradient(circle at 50% 18%, rgba(199,161,90,0.20), transparent 30%), radial-gradient(circle at 16% 78%, rgba(243,232,210,0.10), transparent 26%), linear-gradient(145deg, #3B2A23 0%, #6E1E2E 54%, #4B1220 100%)',
         fontFamily: 'Inter, sans-serif',
       }}
       onClick={mode === 'idle' ? onWake : undefined}
     >
-      <div className="absolute inset-0 opacity-70" style={{ backgroundImage: 'radial-gradient(circle at 18% 72%, rgba(243,232,210,0.10), transparent 24%)' }} />
+      <div className="absolute inset-0 opacity-75" style={{ backgroundImage: 'linear-gradient(90deg, rgba(199,161,90,0.05) 1px, transparent 1px), linear-gradient(0deg, rgba(199,161,90,0.04) 1px, transparent 1px)', backgroundSize: '42px 42px' }} />
       <div className="absolute inset-0 flex flex-col items-center justify-start pt-2 px-3 overflow-hidden select-none">
         {flickerGrid.map((row, ri) => (
           <div key={ri} className="flex gap-[6px] leading-[1.55]">
@@ -93,65 +92,7 @@ export default function LoadingScreen({ onComplete, mode = 'loading', onWake }) 
         );
       })}
 
-      <div className="relative z-10 flex flex-col items-center w-[286px]">
-        <div
-          className="w-full mb-6 relative overflow-hidden"
-          style={{
-            background: 'linear-gradient(145deg, #F7EEDC, #F3E8D2)',
-            border: '2px solid #C7A15A',
-            padding: '22px 24px 18px',
-            boxShadow: '0 0 0 5px rgba(59,42,35,0.28), 8px 10px 0 rgba(0,0,0,0.26), inset 0 0 26px rgba(199,161,90,0.16)',
-          }}
-        >
-          <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full" style={{ background: '#4B1220' }} />
-          <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full" style={{ background: '#4B1220' }} />
-          <div className="absolute right-4 top-4 rotate-[-10deg] rounded-full px-3 py-2 text-[8px] font-bold uppercase tracking-[2px]" style={{ border: '1px solid rgba(110,30,46,0.52)', color: '#6E1E2E' }}>Visa livres</div>
-
-          <div className="flex justify-between mb-1" style={{ color: '#C7A15A', fontSize: 11 }}>
-            <span>★</span><span>★</span>
-          </div>
-          <div className="text-center mb-1 text-[9px] uppercase tracking-[3px]" style={{ color: '#6E1E2E' }}>France → le Monde</div>
-          <div
-            className="text-center font-bold uppercase"
-            style={{
-              fontSize: 30, color: '#6E1E2E', fontFamily: 'Playfair Display, serif',
-              borderTop: '1px solid #C7A15A', borderBottom: '1px solid #C7A15A',
-              padding: '6px 0', margin: '7px 0', letterSpacing: '6px',
-              textShadow: '0 1px 0 rgba(199,161,90,0.42)',
-            }}
-          >
-            BORDERO
-          </div>
-          <div style={{ borderTop: '1px dashed #C7A15A', margin: '7px 0' }} />
-          <div className="text-center" style={{ fontSize: 11, color: '#3B2A23', fontStyle: 'italic', fontFamily: 'Cormorant Garamond, serif' }}>
-            Manifeste des livres voyageurs.
-          </div>
-        </div>
-
-        <div className="w-full">
-          {mode === 'loading' ? (
-            <>
-              <div className="w-full relative mb-1" style={{ border: '1.5px solid rgba(199,161,90,0.7)', padding: '4px', background: 'rgba(59,42,35,0.48)' }}>
-                <div className="flex gap-[3px]">
-                  {Array.from({ length: 18 }).map((_, i) => (
-                    <div key={i} style={{ flex: 1, height: 12, background: i < barFilled ? '#F3E8D2' : 'rgba(243,232,210,0.14)', transition: 'background 0.16s ease' }} />
-                  ))}
-                </div>
-              </div>
-              <div className="flex justify-between text-[9px] tracking-[1px]" style={{ color: 'rgba(243,232,210,0.64)' }}>
-                <span>0%</span><span>50%</span><span>100%</span>
-              </div>
-              <div className="text-center mt-2" style={{ fontSize: 12, color: 'rgba(243,232,210,0.78)', fontStyle: 'italic', fontFamily: 'Cormorant Garamond, serif' }}>
-                {progress < 100 ? 'Préparation du carnet Bordero…' : 'Prêt pour le voyage.'}
-              </div>
-            </>
-          ) : (
-            <div className="text-center mt-2" style={{ fontSize: 12, color: 'rgba(243,232,210,0.72)', fontStyle: 'italic', fontFamily: 'Cormorant Garamond, serif', letterSpacing: 1 }}>
-              Touchez l’écran pour reprendre le carnet.
-            </div>
-          )}
-        </div>
-      </div>
+      <LoadingPassportTicket mode={mode} progress={progress} />
     </div>
   );
 }
