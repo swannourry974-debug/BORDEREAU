@@ -23,10 +23,9 @@ const AuthenticatedApp = () => {
   const { user, isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const captureMode = true;
   const publicRoutes = ['/', '/landing-lecteur', '/landing-voyageur', '/landing-relais', '/LandingRelais', '/LandingRelais/', '/relais'];
   const isPublicRoute = publicRoutes.includes(location.pathname);
-  const shouldOpenRelayStock = !captureMode && user?.role === 'relais' && user?.relais_valide === true && location.pathname !== '/stock' && (location.pathname === '/' || location.pathname === '/catalogue' || isPublicRoute);
+  const shouldOpenRelayStock = user?.role === 'relais' && user?.relais_valide === true && location.pathname !== '/stock' && (location.pathname === '/' || location.pathname === '/catalogue' || isPublicRoute);
 
   useEffect(() => {
     if (!isLoadingPublicSettings && !isLoadingAuth && shouldOpenRelayStock) {
@@ -35,7 +34,7 @@ const AuthenticatedApp = () => {
   }, [isLoadingPublicSettings, isLoadingAuth, shouldOpenRelayStock, navigate]);
 
   // Show loading spinner while checking app public settings or auth
-  if (isLoadingPublicSettings || (!captureMode && isLoadingAuth)) {
+  if (isLoadingPublicSettings || isLoadingAuth) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
@@ -46,7 +45,7 @@ const AuthenticatedApp = () => {
   if (shouldOpenRelayStock) return null;
 
   // Handle authentication errors
-  if (!captureMode && authError && !isPublicRoute) {
+  if (authError && !isPublicRoute) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
@@ -65,7 +64,7 @@ const AuthenticatedApp = () => {
         transition={{ duration: 0.22, ease: 'easeOut' }}
       >
         <Routes location={location}>
-          <Route path="/" element={captureMode ? <Bordero /> : (user ? <Bordero /> : <LandingPresentation />)} />
+          <Route path="/" element={user ? <Bordero /> : <LandingPresentation />} />
           <Route path="/catalogue" element={<Bordero initialPanel="catalogue" />} />
           <Route path="/etagere" element={<Bordero initialPanel="etagere" />} />
           <Route path="/bibliotheque" element={<Bordero initialPanel="etagere" />} />
@@ -104,7 +103,7 @@ const AuthenticatedApp = () => {
 const IDLE_TIMEOUT = 720000; // 12 minutes — suffisant pour lire et commander sans être déconnecté
 
 function App() {
-  const [loadingDone, setLoadingDone] = useState(true);
+  const [loadingDone, setLoadingDone] = useState(false);
   const [isIdle, setIsIdle] = useState(false);
 
   useEffect(() => {
