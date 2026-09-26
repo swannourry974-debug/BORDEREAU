@@ -12,7 +12,7 @@ export default function AdminHomeDashboard({ stats, filters, onCountryChange, on
       <AdminAlertsPanel stats={stats} />
       <AdminLogisticsPanel stats={stats} />
       <AdminNetworkPanel stats={stats} />
-      <AdminQuickActions query={search.query} onQueryChange={search.setQuery} results={search.results} users={search.users} />
+      <AdminQuickActions query={search.query} onQueryChange={search.setQuery} results={search.results} users={search.users} stats={stats} />
     </div>
   );
 }
