@@ -4,11 +4,13 @@ import { useLang } from '@/lib/LangContext';
 const roles = [
   { id: 'lecteur', icon: '📖', label_key: 'role_lecteur', desc_key: 'role_switch_lecteur_desc' },
   { id: 'voyageur', icon: '✈️', label_key: 'role_voyageur', desc_key: 'role_switch_voyageur_desc' },
+  { id: 'admin', icon: '⌘', label: 'Admin', desc: 'Accéder au tableau de bord' },
 ];
 
 export default function RoleSwitcher({ open, currentRole, onSwitch }) {
   const { t } = useLang();
-  const visibleRoles = roles;
+  const canOpenAdmin = currentRole === 'admin' || currentRole === 'admin_secondaire';
+  const visibleRoles = roles.filter(role => role.id !== 'admin' || canOpenAdmin);
   if (!open) return null;
   return (
     <div style={{
@@ -38,8 +40,8 @@ export default function RoleSwitcher({ open, currentRole, onSwitch }) {
         >
           <span style={{ fontSize: 20, width: 28, textAlign: 'center' }}>{r.icon}</span>
           <div>
-            <div style={{ fontSize: 13, letterSpacing: 1 }}>{t(r.label_key)}</div>
-            <div style={{ fontSize: 10, color: 'rgba(26,16,8,0.5)', fontStyle: 'italic' }}>{t(r.desc_key)}</div>
+            <div style={{ fontSize: 13, letterSpacing: 1 }}>{r.label || t(r.label_key)}</div>
+            <div style={{ fontSize: 10, color: 'rgba(26,16,8,0.5)', fontStyle: 'italic' }}>{r.desc || t(r.desc_key)}</div>
           </div>
         </div>
       ))}

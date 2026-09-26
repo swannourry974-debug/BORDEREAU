@@ -150,10 +150,14 @@ export default function Bordero({ initialPanel }) {
   };
 
   const switchRole = (newRole, profileData = {}) => {
-    setRole(newRole);
     setRoleSwitcherOpen(false);
     setRolePromptOpen(false);
     setCommandeOpen(false);
+    if (newRole === 'admin') {
+      navigate('/admin');
+      return;
+    }
+    setRole(newRole);
     if (currentUser) {
       localStorage.setItem(`bordero_role_prompt_seen_${currentUser.email}`, 'true');
       const updates = newRole === 'relais'
