@@ -1,3 +1,5 @@
+import html2canvas from 'html2canvas';
+
 const PAGE_GROUPS = [
   {
     title: 'Pages publiques',
@@ -128,18 +130,87 @@ function groupPage(group, origin, page, total) {
   return ops.join('\n');
 }
 
+function openExportBlob(blob, filename, previewWindow) {
+  const url = URL.createObjectURL(blob);
+  const target = previewWindow && !previewWindow.closed ? previewWindow : window.open('', '_blank');
+
+  if (target) {
+    target.document.title = filename;
+    target.location.href = url;
+    setTimeout(() => URL.revokeObjectURL(url), 120000);
+    return;
+  }
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 120000);
+}
+
+function renderCard(parent, title, subtitle, rows = []) {
+  const card = document.createElement('section');
+  card.style.cssText = 'width:1080px;min-height:1520px;background:#F3E8D2;color:#1E1A18;padding:72px;box-sizing:border-box;font-family:Georgia,serif;border-bottom:18px solid #6E1E2E;position:relative;';
+  card.innerHTML = `
+    <div style="height:92px;background:#6E1E2E;color:#F3E8D2;margin:-72px -72px 62px;padding:28px 72px;box-sizing:border-box;font:700 34px Georgia,serif;letter-spacing:4px;">BORDERO</div>
+    <h1 style="margin:0;color:#6E1E2E;font-size:48px;line-height:1.1;">${clean(title)}</h1>
+    <p style="margin:18px 0 42px;color:#3B2A23;font-size:24px;">${clean(subtitle)}</p>
+  `;
+  rows.forEach((row, index) => {
+    const item = document.createElement('div');
+    item.style.cssText = `margin:0 0 22px;padding:26px 30px;background:${index % 2 ? '#F7EEDC' : '#FFF7E6'};border:2px solid #C7A15A;border-radius:22px;box-shadow:0 12px 28px rgba(59,42,35,.10);`;
+    item.innerHTML = `<strong style="display:block;color:#6E1E2E;font-size:27px;margin-bottom:8px;">${clean(row[0])}</strong><span style="display:block;font-size:20px;color:#3B2A23;line-height:1.35;">${clean(row[1])}</span>${row[2] ? `<small style="display:block;margin-top:10px;color:#6E1E2E;font-size:16px;font-family:Arial,sans-serif;">${clean(row[2])}</small>` : ''}`;
+    card.appendChild(item);
+  });
+  parent.appendChild(card);
+}
+
+function buildPngSource(stats) {
+  const origin = window.location.origin;
+  const today = new Date().toLocaleDateString('fr-FR');
+  const root = document.createElement('div');
+  root.style.cssText = 'position:fixed;left:-12000px;top:0;width:1080px;background:#F3E8D2;z-index:-1;';
+
+  renderCard(root, 'Dossier complet des pages capturées', `Export administrateur généré le ${today}`, [
+    ['Application', origin],
+    ['Contenu', 'Routes, audiences, objectifs et indicateurs de pilotage.'],
+    ['Usage', 'Document prêt à partager pour documentation interne Bordero.'],
+  ]);
+
+  renderCard(root, 'Indicateurs admin', 'État des données au moment de l export.', [
+    ['CA jour', euro(stats?.caJour)], ['CA mois', euro(stats?.caMois)],
+    ['Commandes filtrées', stats?.filteredCommandes?.length || 0], ['Bloquées > 48h', stats?.bloquees?.length || 0],
+    ['Litiges', stats?.litiges?.length || 0], ['Profils à valider', stats?.profilsAttente || 0],
+    ['Relais visibles', stats?.visibleRelays?.length || 0], ['Voyageurs actifs', stats?.voyageurs?.actifs || 0],
+  ]);
+
+  PAGE_GROUPS.forEach(group => renderCard(root, group.title, `Audience : ${group.audience}`, group.items.map(([label, path, description]) => [label, description, `${origin}${path}`])));
+
+  document.body.appendChild(root);
+  return root;
+}
+
 export function downloadApplicationPagesPdf({ stats } = {}) {
   const origin = window.location.origin;
   const today = new Date().toLocaleDateString('fr-FR');
   const total = PAGE_GROUPS.length + 2;
   const streams = [cover(origin, today), statsPage(stats, 2, total), ...PAGE_GROUPS.map((group, i) => groupPage(group, origin, i + 3, total))];
   const blob = buildPdf(streams);
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `bordero-dossier-pages-capturees-${new Date().toISOString().slice(0, 10)}.pdf`;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  URL.revokeObjectURL(url);
+  openExportBlob(blob, `bordero-dossier-pages-capturees-${new Date().toISOString().slice(0, 10)}.pdf`);
+}
+
+export async function downloadApplicationPagesPng({ stats } = {}) {
+  const previewWindow = window.open('', '_blank');
+  if (previewWindow) {
+    previewWindow.document.write('<p style="font-family:Arial;padding:24px;color:#6E1E2E;">Préparation du PNG Bordero…</p>');
+  }
+
+  const source = buildPngSource(stats);
+  const canvas = await html2canvas(source, { backgroundColor: '#F3E8D2', scale: 1, useCORS: true });
+  source.remove();
+
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 0.96));
+  openExportBlob(blob, `bordero-dossier-pages-capturees-${new Date().toISOString().slice(0, 10)}.png`, previewWindow);
 }
