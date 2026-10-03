@@ -3,6 +3,27 @@ import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 
 const TYPES_COMMERCE = ['Boulangerie', 'Café', 'Restaurant'];
+const CONFIG_PLACEHOLDER = 'À configurer';
+
+const cleanInviteValue = (value) => {
+  const decoded = String(value || '').trim();
+  return decoded && decoded !== CONFIG_PLACEHOLDER ? decoded : '';
+};
+
+const getInvitePrefill = () => {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has('finaliser_relais')) return null;
+  return {
+    nom_enseigne: cleanInviteValue(params.get('nom')),
+    email: cleanInviteValue(params.get('email')),
+    ville: cleanInviteValue(params.get('ville')),
+    pays: cleanInviteValue(params.get('pays')) || 'France',
+    adresse: cleanInviteValue(params.get('adresse')),
+    type_commerce: TYPES_COMMERCE.includes(cleanInviteValue(params.get('type_commerce'))) ? cleanInviteValue(params.get('type_commerce')) : 'Boulangerie',
+    horaires: cleanInviteValue(params.get('horaires')),
+    telephone: cleanInviteValue(params.get('telephone')),
+  };
+};
 
 const paysCode = (pays) => {
   const normalized = pays.trim().toLowerCase();
@@ -17,8 +38,9 @@ export default function LandingRelais() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(true);
-  const [entryMode, setEntryMode] = useState('choice');
-  const [form, setForm] = useState({ nom_enseigne: '', identifiant_connexion: '', email: '', ville: '', pays: 'France', adresse: '', type_commerce: 'Boulangerie', horaires: '', telephone: '' });
+  const [invitePrefill] = useState(() => getInvitePrefill());
+  const [entryMode, setEntryMode] = useState(invitePrefill ? 'signup' : 'choice');
+  const [form, setForm] = useState({ nom_enseigne: '', identifiant_connexion: '', email: '', ville: '', pays: 'France', adresse: '', type_commerce: 'Boulangerie', horaires: '', telephone: '', ...(invitePrefill || {}) });
   const [status, setStatus] = useState('idle');
   const [message, setMessage] = useState('');
 
@@ -30,20 +52,20 @@ export default function LandingRelais() {
         const existing = (await base44.entities.PointRelais.filter({ gerant_email: u.email }, '-updated_date', 1))[0];
         if (existing) {
           setForm({
-            nom_enseigne: existing.nom || '',
-            identifiant_connexion: existing.identifiant_connexion || '',
+            nom_enseigne: cleanInviteValue(existing.nom),
+            identifiant_connexion: cleanInviteValue(existing.identifiant_connexion),
             email: u.email,
-            ville: existing.ville || '',
-            pays: existing.pays_nom || existing.pays_code || 'France',
-            adresse: existing.adresse || '',
-            type_commerce: existing.type_commerce || 'Boulangerie',
-            horaires: existing.horaires || '',
-            telephone: existing.telephone || '',
+            ville: cleanInviteValue(existing.ville),
+            pays: cleanInviteValue(existing.pays_nom || existing.pays_code) || 'France',
+            adresse: cleanInviteValue(existing.adresse),
+            type_commerce: TYPES_COMMERCE.includes(cleanInviteValue(existing.type_commerce)) ? cleanInviteValue(existing.type_commerce) : 'Boulangerie',
+            horaires: cleanInviteValue(existing.horaires),
+            telephone: cleanInviteValue(existing.telephone),
           });
           setMessage(existing.validation_admin === 'valide' ? 'Votre accès Point Relais est validé.' : existing.validation_admin === 'rejete' ? 'Votre demande a été refusée. Vous pouvez la corriger et la renvoyer.' : 'Votre demande est en attente de validation administrateur.');
         } else {
-          setForm(prev => ({ ...prev, ...(pending || {}), email: u.email }));
-          if (pending) setEntryMode('signup');
+          setForm(prev => ({ ...prev, ...(invitePrefill || {}), ...(pending || {}), email: u.email }));
+          if (pending || invitePrefill) setEntryMode('signup');
         }
       }
       setChecking(false);
@@ -55,7 +77,7 @@ export default function LandingRelais() {
       navigate('/stock');
       return;
     }
-    base44.auth.redirectToLogin(window.location.origin + '/relais');
+    base44.auth.redirectToLogin(window.location.href);
   };
 
   const updateField = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
