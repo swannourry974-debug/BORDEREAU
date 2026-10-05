@@ -1,5 +1,6 @@
 import React from 'react';
 import AdminActivityApp from '@/components/admin/AdminActivityApp';
+import AdminAnalyticsBehavior from '@/components/admin/AdminAnalyticsBehavior';
 import AdminAchatsVilles from '@/components/admin/AdminAchatsVilles';
 import AdminLivraisonsEtats from '@/components/admin/AdminLivraisonsEtats';
 import AdminLitiges from '@/components/admin/AdminLitiges';
@@ -13,6 +14,7 @@ import AdminHomeDashboard from './AdminHomeDashboard';
 export default function AdminContentRouter(props) {
   if (props.activeTab === 'dashboard') return <AdminHomeDashboard {...props.homeProps} />;
   if (props.activeTab === 'activite') return <AdminActivityApp />;
+  if (props.activeTab === 'analytics') return <AdminAnalyticsBehavior />;
   if (props.activeTab === 'villes') return <AdminAchatsVilles />;
   if (props.activeTab === 'livraisons') return <AdminLivraisonsEtats />;
   if (props.activeTab === 'litiges') return <AdminLitiges />;
