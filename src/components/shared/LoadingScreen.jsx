@@ -2,28 +2,9 @@ import React, { useEffect, useState } from 'react';
 import LoadingPassportTicket from './LoadingPassportTicket';
 
 const CITIES = ['MONTREAL', 'CHICAGO', 'ABIDJAN', 'NEW YORK', 'CONAKRY', 'MIAMI', 'PARIS', 'DAKAR', 'LYON', 'TORONTO'];
-const GRID_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÀÉÈÊÇÙ';
-const ROWS = 22;
-const COLS = 14;
-
-function randomChar() {
-  return GRID_CHARS[Math.floor(Math.random() * GRID_CHARS.length)];
-}
-
-function buildGrid(rows, cols) {
-  return Array.from({ length: rows }, () => Array.from({ length: cols }, () => randomChar()));
-}
 
 export default function LoadingScreen({ onComplete, mode = 'loading', onWake }) {
   const [progress, setProgress] = useState(0);
-  const [flickerGrid, setFlickerGrid] = useState(() => buildGrid(ROWS, COLS));
-  const highlightedCities = [
-    { word: 'MONTREAL', row: 4, col: 4 },
-    { word: 'CHICAGO', row: 13, col: 5 },
-    { word: 'ABIDJAN', row: 18, col: 0 },
-    { word: 'NEWYORK', row: 21, col: 1 },
-    { word: 'CONAKRY', row: 20, col: 6 },
-  ];
 
   useEffect(() => {
     if (mode !== 'loading') return;
@@ -36,63 +17,40 @@ export default function LoadingScreen({ onComplete, mode = 'loading', onWake }) 
     return () => clearTimeout(t);
   }, [progress, onComplete, mode]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFlickerGrid(prev => prev.map(row => row.map(cell => Math.random() < 0.035 ? randomChar() : cell)));
-    }, 190);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
-      style={{
-        background: 'radial-gradient(circle at 50% 18%, rgba(199,161,90,0.20), transparent 30%), radial-gradient(circle at 16% 78%, rgba(243,232,210,0.10), transparent 26%), linear-gradient(145deg, #3B2A23 0%, #6E1E2E 54%, #4B1220 100%)',
-        fontFamily: 'Inter, sans-serif',
-      }}
-      onClick={mode === 'idle' ? onWake : undefined}
-    >
-      <div className="absolute inset-0 opacity-75" style={{ backgroundImage: 'linear-gradient(90deg, rgba(199,161,90,0.05) 1px, transparent 1px), linear-gradient(0deg, rgba(199,161,90,0.04) 1px, transparent 1px)', backgroundSize: '42px 42px' }} />
-      <div className="absolute inset-0 flex flex-col items-center justify-start pt-2 px-3 overflow-hidden select-none">
-        {flickerGrid.map((row, ri) => (
-          <div key={ri} className="flex gap-[6px] leading-[1.55]">
-            {row.map((char, ci) => {
-              const isCity = highlightedCities.some(({ word, row: cr, col: cc }) => ri === cr && ci >= cc && ci < cc + word.length);
-              return (
-                <span
-                  key={ci}
-                  className="text-[11px] font-bold"
-                  style={{ color: isCity ? '#F3E8D2' : 'rgba(243,232,210,0.18)', letterSpacing: '1px' }}
-                >
-                  {char}
-                </span>
-              );
-            })}
-          </div>
-        ))}
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-white px-4" onClick={mode === 'idle' ? onWake : undefined}>
+      <style>{`
+        .bordero-loading-premium, .bordero-loading-premium * { box-sizing: border-box; border-radius: 0 !important; }
+        .bordero-loading-premium { width: 680px; max-width: calc(100vw - 32px); padding: 24px 28px 28px; display: flex; flex-direction: column; align-items: center; gap: 22px; overflow: hidden; position: relative; color: #3B2A23; background: radial-gradient(ellipse at 50% 38%, #fffaf0 0%, #F3E8D2 68%, #e8d9bc 100%); border: 1px solid #C7A15A; box-shadow: 0 14px 36px rgba(59,42,35,.2), inset 0 0 0 6px rgba(110,30,46,.06); font-family: Georgia, 'Times New Roman', serif; }
+        .bordero-loading-premium:before { content: ""; position: absolute; inset: 12px; border: 1px solid rgba(110,30,46,.2); pointer-events: none; }
+        .bordero-loading-cityfield { width: 100%; display: grid; grid-template-columns: repeat(5, 1fr); gap: 9px 12px; padding: 4px 10px 0; position: relative; }
+        .bordero-loading-city { padding: 7px 5px; text-align: center; border: 1px solid rgba(199,161,90,.7); background: rgba(255,250,240,.62); color: #6E1E2E; font: 700 10px/1.2 Arial, sans-serif; letter-spacing: 1.4px; box-shadow: 0 2px 5px rgba(59,42,35,.08); }
+        .bordero-loading-ticket { width: 340px; max-width: 100%; padding: 25px 28px 22px; position: relative; text-align: center; background: linear-gradient(145deg, #fffaf0, #F3E8D2); border: 2px solid #6E1E2E; box-shadow: 0 0 0 5px rgba(59,42,35,.12), 8px 10px 0 rgba(59,42,35,.18), inset 0 0 28px rgba(199,161,90,.2); }
+        .bordero-loading-ticket:before { content: ""; position: absolute; inset: 10px; border: 1px dashed rgba(110,30,46,.35); pointer-events: none; }
+        .bordero-loading-ticket:after { content: ""; position: absolute; left: -13px; top: 50%; width: 25px; height: 25px; border-radius: 50% !important; transform: translateY(-50%); background: #F3E8D2; border-right: 1px solid #C7A15A; }
+        .bordero-loading-edge { position: absolute; right: -13px; top: 50%; width: 25px; height: 25px; border-radius: 50% !important; transform: translateY(-50%); background: #F3E8D2; border-left: 1px solid #C7A15A; }
+        .bordero-loading-stars { display: flex; justify-content: space-between; color: #C7A15A; font-size: 14px; margin-bottom: 9px; }
+        .bordero-loading-route { font: 700 9px/1.4 Arial, sans-serif; letter-spacing: 2px; color: #3B2A23; }
+        .bordero-loading-brand { margin: 9px 0 11px; padding: 8px 0; border-top: 1px solid rgba(199,161,90,.85); border-bottom: 1px solid rgba(199,161,90,.85); color: #6E1E2E; font-size: 34px; font-weight: 700; line-height: 1; letter-spacing: 6px; }
+        .bordero-loading-manifest { color: #3B2A23; font-size: 14px; font-style: italic; }
+        .bordero-loading-visa { position: absolute; right: 18px; top: 17px; padding: 6px 10px; border: 1px solid rgba(110,30,46,.58); border-radius: 50% !important; color: #6E1E2E; font: 700 8px/1 Arial, sans-serif; letter-spacing: 1.4px; text-transform: uppercase; transform: rotate(-10deg); animation: borderoStamp 1.15s cubic-bezier(.22,1,.36,1) both; }
+        .bordero-loading-progress { width: 340px; max-width: 100%; display: flex; flex-direction: column; gap: 9px; }
+        .bordero-loading-track { padding: 5px; border: 1px solid rgba(110,30,46,.58); background: #3B2A23; }
+        .bordero-loading-perfs { display: grid; grid-template-columns: repeat(20, 1fr); gap: 3px; }
+        .bordero-loading-perfs i { height: 12px; background: rgba(243,232,210,.2); }
+        .bordero-loading-perfs i.is-filled { background: #F3E8D2; animation: borderoFill .35s ease both; }
+        .bordero-loading-scale { display: flex; justify-content: space-between; color: #6E1E2E; font: 700 9px/1 Arial, sans-serif; letter-spacing: 1px; }
+        .bordero-loading-text { text-align: center; color: #6E1E2E; font-size: 15px; font-style: italic; }
+        @keyframes borderoStamp { 0% { opacity: 0; transform: rotate(-10deg) scale(1.4); } 100% { opacity: 1; transform: rotate(-10deg) scale(1); } }
+        @keyframes borderoFill { from { opacity: .3; } to { opacity: 1; } }
+        @media (max-width: 560px) { .bordero-loading-cityfield { grid-template-columns: repeat(2, 1fr); } .bordero-loading-premium { padding: 20px 18px 24px; } }
+      `}</style>
+      <div className="bordero-loading-premium">
+        <div className="bordero-loading-cityfield">
+          {CITIES.map(city => <div key={city} className="bordero-loading-city">{city}</div>)}
+        </div>
+        <LoadingPassportTicket mode={mode} progress={progress} />
       </div>
-
-      {CITIES.slice(0, 5).map((label, index) => {
-        const positions = [
-          ['14%', '26%'], ['44%', '30%'], ['58%', '2%'], ['70%', '8%'], ['74%', '40%'],
-        ];
-        return (
-          <div
-            key={label}
-            className="absolute text-[10px] font-bold uppercase tracking-[2px]"
-            style={{
-              top: positions[index][0], left: positions[index][1],
-              color: '#F3E8D2', border: '1px solid rgba(199,161,90,0.7)',
-              padding: '2px 6px', background: 'rgba(59,42,35,0.58)',
-              boxShadow: '0 5px 14px rgba(0,0,0,0.16)',
-            }}
-          >
-            {label}
-          </div>
-        );
-      })}
-
-      <LoadingPassportTicket mode={mode} progress={progress} />
     </div>
   );
 }
