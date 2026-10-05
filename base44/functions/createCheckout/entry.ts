@@ -1,5 +1,6 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import Stripe from 'npm:stripe@14.21.0';
+import { validateCollectePromo } from '../../shared/collecteBatching.ts';
 
 function genererCodeSecret() {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -26,6 +27,7 @@ async function getTrustedBookPrice(book = {}) {
 }
 
 const APP_BASE_URL = 'https://bordero.base44.app';
+const STATIC_PROMO_CODES = { BIENVENUE: 2, AMI10: 1, BORDERO: 3 };
 
 const COMPARATIVE_RATES = {
   conakry: { destination: 'Conakry', colissimo: 256.89, dhlMin: 380, fretMin: 250 },
@@ -59,7 +61,7 @@ export default async function(req) {
     if (!stripeSecret) return Response.json({ error: 'Stripe non configuré' }, { status: 500 });
     const stripe = new Stripe(stripeSecret);
 
-    const { book, zone_id, zone_nom, mode_livraison, transit, adresse, suivi_facturation_mode } = await req.json();
+    const { book, zone_id, zone_nom, mode_livraison, transit, adresse, suivi_facturation_mode, point_relais_id, point_relais_nom, code_promo, forfait } = await req.json();
 
     const modeInput = String(mode_livraison || transit || 'express').toLowerCase();
     if (!['express', 'collectif', 'collecte'].includes(modeInput)) {
@@ -89,10 +91,23 @@ export default async function(req) {
     }
 
     const isExpress = modeInput === 'express';
+    const pointRelaisId = String(point_relais_id || '').trim();
+    const pointRelaisNom = String(point_relais_nom || '').trim();
     const prixLivraison = isExpress ? Number(zone.frais_lecteur_express) : Number(zone.frais_lecteur_collectif);
     const prixLivre = await getTrustedBookPrice(book);
     const prixLivreARembourser = prixLivre <= 0;
-    const totalEuros = prixLivre + prixLivraison;
+    let promoCampaign = null;
+    let promoDiscount = 0;
+
+    if (code_promo) {
+      const normalizedPromoCode = String(code_promo || '').trim().toUpperCase();
+      promoCampaign = !isExpress ? await validateCollectePromo(base44, { code: normalizedPromoCode, pointRelaisId }) : null;
+      const staticDiscount = STATIC_PROMO_CODES[normalizedPromoCode] || 0;
+      if (!promoCampaign && !staticDiscount) return Response.json({ error: 'Code promotionnel invalide ou expiré' }, { status: 400 });
+      promoDiscount = Math.min(Number(promoCampaign?.montant_reduction || staticDiscount || 0), Math.max(0, prixLivraison));
+    }
+
+    const totalEuros = Math.max(0, prixLivre + prixLivraison - promoDiscount);
 
     if (!Number.isFinite(totalEuros) || totalEuros <= 0) {
       return Response.json({ error: 'Tarif indisponible pour cette zone' }, { status: 400 });
@@ -118,7 +133,7 @@ export default async function(req) {
           currency: 'eur',
           product_data: {
             name: `📚 ${book?.title || 'Livre'}`,
-            description: `${modeLabel} · Livre ${prixLivre.toFixed(2)}€ + livraison ${prixLivraison.toFixed(2)}€ · Zone ${zoneLabel}${adresse ? ` · ${adresse}` : ''}`,
+            description: `${modeLabel} · Livre ${prixLivre.toFixed(2)}€ + livraison ${prixLivraison.toFixed(2)}€${promoDiscount ? ` − code ${promoDiscount.toFixed(2)}€` : ''} · Zone ${zoneLabel}${adresse ? ` · ${adresse}` : ''}`,
           },
           unit_amount: totalCents,
         },
@@ -134,7 +149,13 @@ export default async function(req) {
         book_author: book?.author || '',
         zone_id: zoneKey,
         zone_nom: zoneLabel,
+        point_relais_id: pointRelaisId,
+        point_relais_nom: pointRelaisNom,
+        livre_type: forfait === 'L' ? 'Relié' : forfait === 'M' ? 'Broché' : 'Poche',
         mode_livraison: isExpress ? 'express' : 'collectif',
+        code_promo_collecte: promoCampaign?.code || String(code_promo || '').trim().toUpperCase(),
+        campagne_promo_id: promoCampaign?.id || '',
+        montant_reduction_collecte: String(promoDiscount),
         suivi_facturation_mode: suivi_facturation_mode === 'email' ? 'email' : 'application',
         suivi_active: 'true',
         facture_reference: `BORD-${new Date().getFullYear()}-${codeSecret}`,
@@ -156,13 +177,15 @@ export default async function(req) {
       },
     });
 
-    console.log(`[createCheckout] Session créée: ${session.id} | Livre: ${prixLivre}€ | Livraison: ${prixLivraison}€ | Total: ${totalEuros}€`);
+    console.log(`[createCheckout] Session créée: ${session.id} | Livre: ${prixLivre}€ | Livraison: ${prixLivraison}€ | Réduction: ${promoDiscount}€ | Total: ${totalEuros}€`);
 
     return Response.json({
       url: session.url,
       total_euros: totalEuros,
       prix_livre: prixLivre,
       frais_livraison: prixLivraison,
+      reduction_collecte: promoDiscount,
+      code_promo_collecte: promoCampaign?.code || '',
       zone_id: zoneKey,
     });
   } catch (error) {

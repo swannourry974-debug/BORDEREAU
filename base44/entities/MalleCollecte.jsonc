@@ -38,6 +38,19 @@
       "default": 0,
       "description": "Nombre de commandes Collecte rattach\u00e9es \u00e0 cette malle"
     },
+    "capacite_commandes": {
+      "type": "number",
+      "default": 40,
+      "description": "Capacit\u00e9 stricte du carton Collecte"
+    },
+    "numero_carton": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence op\u00e9rationnelle du carton de 40 livres"
+    },
+    "seuil_atteint_le": {
+      "type": "string",
+      "description": "Date ISO \u00e0 laquelle les 40 livres ont \u00e9t\u00e9 r\u00e9unis"
+    },
     "date_fermeture": {
       "type": "string",
       "description": "Date ISO de fermeture de la malle"

@@ -1,0 +1,47 @@
+{
+  "name": "Relance Collecte stagnante",
+  "description": "V\u00e9rifie chaque matin les groupes Collecte incomplets et active un code promotionnel commun quand un point relais stagne.",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "relance_collecte_stagnante",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "verifier_groupes_collecte": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "relancerCollecteStagnee",
+            "args": {
+              "dry_run": false
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "V\u00e9rifier les Collectes",
+            "description": "Codes si stagnation"
+          }
+        }
+      }
+    ]
+  },
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 9 * * *",
+      "one_time_date": null,
+      "timezone": "Europe/Paris",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  }
+}

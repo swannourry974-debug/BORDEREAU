@@ -9,6 +9,7 @@ import { getOrderWeightKg } from '@/components/collecte/collecteUtils';
 
 export default function PanelProgressionCollecte({ role, currentUser }) {
   const [orders, setOrders] = useState([]);
+  const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [scopeLabel, setScopeLabel] = useState('Suivi personnalisé');
 
@@ -31,6 +32,10 @@ export default function PanelProgressionCollecte({ role, currentUser }) {
         setScopeLabel('Toutes les collectes');
       }
       const data = await base44.entities.Commande.filter(filter, '-created_date', 120);
+      const relayIds = [...new Set((data || []).map(o => o.point_relais_id).filter(Boolean))];
+      const activePromos = relayIds.length ? await base44.entities.CampagnePromoCollecte.filter({ statut: 'active' }, '-created_date', 100).catch(() => []) : [];
+      const now = Date.now();
+      setCampaigns((activePromos || []).filter(p => relayIds.includes(p.point_relais_id) && (!p.valide_jusquau || new Date(p.valide_jusquau).getTime() >= now)));
       setOrders(data || []);
       setLoading(false);
     }
@@ -38,9 +43,10 @@ export default function PanelProgressionCollecte({ role, currentUser }) {
   }, [role, currentUser?.email, currentUser?.point_relais_id]);
 
   const activeOrders = orders.filter(o => !['annulee', 'livree'].includes(o.statut));
+  const campaignsByRelay = useMemo(() => Object.fromEntries(campaigns.map(c => [c.point_relais_id, c])), [campaigns]);
   const totalKg = useMemo(() => activeOrders.reduce((sum, order) => sum + getOrderWeightKg(order), 0), [activeOrders]);
 
   if (loading) return <div className="font-fell" style={{ textAlign: 'center', padding: 40, fontStyle: 'italic', color: 'rgba(128,0,32,0.5)' }}>Chargement de la malle Collecte…</div>;
 
-  return <div><CollecteHeader totalKg={totalKg} count={activeOrders.length} scopeLabel={scopeLabel} /><CollecteDashboard totalKg={totalKg} count={activeOrders.length} /><CollecteStack orders={activeOrders} totalKg={totalKg} /><PerfoStrip /><SectionTitle>Commandes de la pile</SectionTitle><CollecteOrderList orders={activeOrders} /></div>;
+  return <div><CollecteHeader totalKg={totalKg} count={activeOrders.length} scopeLabel={scopeLabel} /><CollecteDashboard totalKg={totalKg} count={activeOrders.length} /><CollecteStack orders={activeOrders} totalKg={totalKg} /><PerfoStrip /><SectionTitle>Commandes de la pile</SectionTitle><CollecteOrderList orders={activeOrders} campaignsByRelay={campaignsByRelay} /></div>;
 }

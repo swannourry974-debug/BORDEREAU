@@ -1,0 +1,95 @@
+{
+  "name": "CampagnePromoCollecte",
+  "type": "object",
+  "properties": {
+    "point_relais_id": {
+      "type": "string",
+      "description": "Point relais concern\u00e9 par la relance Collecte"
+    },
+    "point_relais_nom": {
+      "type": "string",
+      "description": "Nom lisible du point relais"
+    },
+    "code": {
+      "type": "string",
+      "description": "Code promotionnel commun \u00e0 partager"
+    },
+    "montant_reduction": {
+      "type": "number",
+      "default": 5,
+      "description": "R\u00e9duction en euros appliqu\u00e9e c\u00f4t\u00e9 serveur au paiement Collecte"
+    },
+    "devise": {
+      "type": "string",
+      "default": "EUR"
+    },
+    "statut": {
+      "type": "string",
+      "enum": [
+        "active",
+        "terminee",
+        "expiree"
+      ],
+      "default": "active"
+    },
+    "seuil_stagnation_jours": {
+      "type": "number",
+      "default": 7,
+      "description": "Dur\u00e9e sans nouvelle commande avant relance"
+    },
+    "objectif_commandes": {
+      "type": "number",
+      "default": 40
+    },
+    "nombre_commandes_attente": {
+      "type": "number",
+      "default": 0
+    },
+    "nombre_utilisations": {
+      "type": "number",
+      "default": 0
+    },
+    "active_le": {
+      "type": "string",
+      "description": "Date ISO d'activation du code"
+    },
+    "valide_jusquau": {
+      "type": "string",
+      "description": "Date ISO d'expiration du code"
+    },
+    "derniere_commande_le": {
+      "type": "string",
+      "description": "Derni\u00e8re progression observ\u00e9e du groupe Collecte"
+    },
+    "desactivee_le": {
+      "type": "string"
+    },
+    "message_partage": {
+      "type": "string",
+      "description": "Message affich\u00e9 aux lecteurs pour encourager le partage"
+    }
+  },
+  "required": [
+    "point_relais_id",
+    "code",
+    "statut"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

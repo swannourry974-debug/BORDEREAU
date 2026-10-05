@@ -1,7 +1,8 @@
 import React from 'react';
 import { getOrderWeightKg, getCollecteStatus, formatKg } from '@/components/collecte/collecteUtils';
+import CollectePromoShareCard from '@/components/collecte/CollectePromoShareCard';
 
-export default function CollecteOrderList({ orders }) {
+export default function CollecteOrderList({ orders, campaignsByRelay = {} }) {
   if (!orders.length) return <div className="font-fell" style={{ textAlign: 'center', fontStyle: 'italic', color: 'rgba(128,0,32,0.55)', padding: 24 }}>Aucune commande Collecte active pour le moment.</div>;
   return (
     <div style={{ display: 'grid', gap: 10 }}>
@@ -11,8 +12,9 @@ export default function CollecteOrderList({ orders }) {
             <div className="font-playfair" style={{ fontSize: 15, fontWeight: 700, color: 'var(--bordeaux)' }}>{order.livre_titre || 'Livre Collecte'}</div>
             <div className="font-fell" style={{ fontSize: 12, fontStyle: 'italic', color: 'rgba(128,0,32,0.62)', marginTop: 2 }}>{order.livre_auteur || 'Auteur non renseigné'} · {order.zone_nom || 'Destination collecte'}</div>
             <div className="font-fell" style={{ fontSize: 11, fontStyle: 'italic', color: 'rgba(128,0,32,0.48)', marginTop: 3 }}>
-              {order.malle_id ? `Malle ${order.malle_id.slice(0, 8)}` : 'En attente de regroupement Bordero'}{order.transporteur_assigne ? ` · ${order.transporteur_assigne}` : ''}{order.reference_suivi_collecte ? ` · ${order.reference_suivi_collecte}` : ''}
+              {order.malle_id ? `Carton 40 livres · Malle ${order.malle_id.slice(0, 8)}${order.collecte_position_malle ? ` · position ${order.collecte_position_malle}/40` : ''}` : 'En attente : le point relais doit atteindre 40 livres'}{order.transporteur_assigne ? ` · ${order.transporteur_assigne}` : ''}{order.reference_suivi_collecte ? ` · ${order.reference_suivi_collecte}` : ''}
             </div>
+            {!order.malle_id && <CollectePromoShareCard campaign={campaignsByRelay[order.point_relais_id]} />}
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
             <div className="font-special" style={{ fontSize: 9, letterSpacing: 1.4, textTransform: 'uppercase', color: '#C2410C' }}>{getCollecteStatus(order)}</div>

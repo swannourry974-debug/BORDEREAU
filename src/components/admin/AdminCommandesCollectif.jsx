@@ -12,25 +12,29 @@ export default function AdminCommandesCollectif() {
   const [commandes, setCommandes] = useState([]);
   const [malles, setMalles] = useState([]);
   const [relais, setRelais] = useState([]);
+  const [campagnes, setCampagnes] = useState([]);
   const [drafts, setDrafts] = useState({});
   const [message, setMessage] = useState('');
 
   const load = async () => {
-    const [orders, trunks, relays] = await Promise.all([
+    const [orders, trunks, relays, campaigns] = await Promise.all([
       base44.entities.Commande.filter({ mode_livraison: 'collectif' }, '-created_date', 500),
       base44.entities.MalleCollecte.list('-updated_date', 250),
       base44.entities.PointRelais.list('-updated_date', 250),
+      base44.entities.CampagnePromoCollecte.list('-updated_date', 250).catch(() => []),
     ]);
     setCommandes(orders || []);
     setMalles(trunks || []);
     setRelais(relays || []);
+    setCampagnes(campaigns || []);
   };
 
   useEffect(() => { load(); }, []);
 
   const relayById = useMemo(() => Object.fromEntries(relais.map(r => [r.id, r])), [relais]);
+  const activeCampaignByRelay = useMemo(() => Object.fromEntries(campagnes.filter(c => c.statut === 'active').map(c => [c.point_relais_id, c])), [campagnes]);
   const activeOrders = commandes.filter(c => !['annulee', 'livree'].includes(c.statut));
-  const unassignedGroups = activeOrders.filter(c => !c.malle_id).reduce((acc, c) => {
+  const unassignedGroups = activeOrders.filter(c => c.statut === 'payee' && !c.malle_id).reduce((acc, c) => {
     const key = c.point_relais_id || 'sans_relais';
     acc[key] = acc[key] || [];
     acc[key].push(c);
@@ -40,21 +44,14 @@ export default function AdminCommandesCollectif() {
   const ordersForMalle = (malleId) => activeOrders.filter(c => c.malle_id === malleId);
   const poids = (items) => Math.round(items.reduce((s, c) => s + getOrderWeightKg(c), 0) * 100) / 100;
 
-  const createOrFillMalle = async (relayId, items) => {
-    const relay = relayById[relayId] || {};
-    let malle = malles.find(m => m.point_relais_id === relayId && m.statut === 'en_preparation' && !m.date_fermeture);
-    if (!malle) {
-      malle = await base44.entities.MalleCollecte.create({
-        point_relais_id: relayId,
-        point_relais_nom: relay.nom || 'Relais non assigné',
-        statut: 'en_preparation',
-        poids_actuel_kg: 0,
-        nombre_commandes: 0,
-      });
+  const createOrFillMalle = async (relayId) => {
+    if (!relayId || relayId === 'sans_relais') {
+      setMessage('Ces commandes n’ont pas de point relais : elles restent hors regroupement automatique.');
+      return;
     }
-    await base44.entities.Commande.bulkUpdate(items.map(c => ({ id: c.id, malle_id: malle.id, statut: 'en_preparation' })));
-    await base44.entities.MalleCollecte.update(malle.id, { poids_actuel_kg: poids([...ordersForMalle(malle.id), ...items]), nombre_commandes: ordersForMalle(malle.id).length + items.length });
-    setMessage('Commandes rattachées à la malle Collecte.');
+    const res = await base44.functions.invoke('grouperCollectePayee', { point_relais_id: relayId });
+    const result = res.data?.result || {};
+    setMessage(result.created ? `${result.created} carton(s) de 40 livres créé(s).` : 'Le seuil de 40 livres n’est pas encore atteint.');
     await load();
   };
 
@@ -101,7 +98,7 @@ export default function AdminCommandesCollectif() {
     <div style={{ display: 'grid', gap: 16 }}>
       <div>
         <h2 className="font-special" style={{ fontSize: 20, letterSpacing: 3, color: 'var(--bordeaux)', textTransform: 'uppercase' }}>Malles Collecte Bordero</h2>
-        <p className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.55)', marginTop: 4 }}>La Collecte est gérée uniquement par Bordero : regroupement par point relais, assignation transporteur manuelle et jauge 0→20 kg.</p>
+        <p className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.55)', marginTop: 4 }}>La Collecte est gérée uniquement par Bordero : cartons automatiques de 40 livres par point relais, relance Partenaria en cas de stagnation, puis assignation transporteur manuelle.</p>
       </div>
 
       {message && <div style={{ background: 'rgba(45,106,45,0.08)', border: '1px solid #2d6a2d', color: '#2d6a2d', padding: 12, fontSize: 12 }}>{message}</div>}
@@ -109,15 +106,21 @@ export default function AdminCommandesCollectif() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
         <div style={{ background: 'var(--papier)', border: '1px solid hsl(var(--border))', padding: 16 }}>Commandes Collecte<br /><strong style={{ fontSize: 28, color: 'var(--bordeaux)' }}>{commandes.length}</strong></div>
         <div style={{ background: 'var(--papier)', border: '1px solid hsl(var(--border))', padding: 16 }}>Malles ouvertes<br /><strong style={{ fontSize: 28, color: 'var(--bordeaux)' }}>{malles.filter(m => m.statut === 'en_preparation').length}</strong></div>
-        <div style={{ background: 'var(--papier)', border: '1px solid hsl(var(--border))', padding: 16 }}>À mettre en malle<br /><strong style={{ fontSize: 28, color: 'var(--bordeaux)' }}>{activeOrders.filter(c => !c.malle_id).length}</strong></div>
+        <div style={{ background: 'var(--papier)', border: '1px solid hsl(var(--border))', padding: 16 }}>En attente 40<br /><strong style={{ fontSize: 28, color: 'var(--bordeaux)' }}>{activeOrders.filter(c => c.statut === 'payee' && !c.malle_id).length}</strong></div>
       </div>
 
-      {Object.entries(unassignedGroups).map(([relayId, items]) => (
-        <div key={relayId} style={{ background: 'var(--papier)', border: '1px dashed var(--bordeaux)', padding: 16 }}>
-          <div className="font-special" style={{ fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 8 }}>{relayById[relayId]?.nom || 'Relais non assigné'} · {items.length} commande{items.length > 1 ? 's' : ''} · {formatKg(poids(items))}</div>
-          <button onClick={() => createOrFillMalle(relayId, items)} style={{ background: 'var(--cta-orange)', color: 'var(--cta-foreground)', border: 'none', padding: '11px 14px', fontFamily: 'Inter, sans-serif', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', cursor: 'pointer' }}>Créer / compléter la malle</button>
-        </div>
-      ))}
+      {Object.entries(unassignedGroups).map(([relayId, items]) => {
+        const progress = Math.min(items.length, 40);
+        const campaign = activeCampaignByRelay[relayId];
+        return (
+          <div key={relayId} style={{ background: 'var(--papier)', border: items.length >= 40 ? '1.5px solid #2d6a2d' : '1px dashed var(--bordeaux)', padding: 16 }}>
+            <div className="font-special" style={{ fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 8 }}>{relayById[relayId]?.nom || 'Relais non assigné'} · {items.length}/40 livres · {formatKg(poids(items))}</div>
+            <div style={{ height: 9, background: 'rgba(128,0,32,0.08)', border: '1px solid rgba(128,0,32,0.18)', overflow: 'hidden', marginBottom: 10 }}><div style={{ width: `${(progress / 40) * 100}%`, height: '100%', background: items.length >= 40 ? '#2d6a2d' : 'linear-gradient(90deg, #C8A165, #C2410C)' }} /></div>
+            {campaign && <div style={{ background: '#fff7ed', border: '1px solid rgba(194,65,12,0.35)', padding: 10, marginBottom: 10, fontSize: 12, color: 'var(--encre)' }}><strong style={{ color: 'var(--cta-orange)' }}>Code Partenaria {campaign.code}</strong> · −{Number(campaign.montant_reduction || 0).toFixed(0)} € · partage lecteur actif</div>}
+            <button disabled={items.length < 40 || relayId === 'sans_relais'} onClick={() => createOrFillMalle(relayId)} style={{ background: items.length >= 40 ? 'var(--cta-orange)' : 'rgba(26,16,8,0.12)', color: items.length >= 40 ? 'var(--cta-foreground)' : 'rgba(26,16,8,0.45)', border: 'none', padding: '11px 14px', fontFamily: 'Inter, sans-serif', fontSize: 11, letterSpacing: 1.5, textTransform: 'uppercase', cursor: items.length >= 40 ? 'pointer' : 'not-allowed' }}>{items.length >= 40 ? 'Créer le carton de 40' : `Encore ${40 - progress} livre(s)`}</button>
+          </div>
+        );
+      })}
 
       {malles.map(malle => {
         const items = ordersForMalle(malle.id);
@@ -128,7 +131,7 @@ export default function AdminCommandesCollectif() {
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
               <div>
                 <div className="font-special" style={{ fontSize: 13, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--bordeaux)' }}>{malle.point_relais_nom || relayById[malle.point_relais_id]?.nom || 'Point relais'}</div>
-                <div className="font-fell" style={{ fontSize: 13, fontStyle: 'italic', color: 'rgba(26,16,8,0.58)', marginTop: 3 }}>{items.length} livres · {formatKg(totalKg)} / 20 kg · {MALLE_STATUS[malle.statut] || malle.statut}</div>
+                <div className="font-fell" style={{ fontSize: 13, fontStyle: 'italic', color: 'rgba(26,16,8,0.58)', marginTop: 3 }}>{items.length}/{malle.capacite_commandes || 40} livres · {formatKg(totalKg)} / 20 kg · {MALLE_STATUS[malle.statut] || malle.statut}{malle.numero_carton ? ` · ${malle.numero_carton}` : ''}</div>
               </div>
               <strong style={{ color: percent >= 100 ? '#2d6a2d' : 'var(--bordeaux)' }}>{Math.round(percent)}%</strong>
             </div>

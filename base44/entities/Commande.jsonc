@@ -38,9 +38,43 @@
     "point_relais_id": {
       "type": "string"
     },
+    "point_relais_nom": {
+      "type": "string",
+      "description": "Nom du point relais choisi pour la commande"
+    },
     "malle_id": {
       "type": "string",
       "description": "ID de la malle Collecte Bordero rattach\u00e9e \u00e0 cette commande"
+    },
+    "collecte_batch_statut": {
+      "type": "string",
+      "enum": [
+        "en_attente_40",
+        "malle_creee"
+      ],
+      "default": "en_attente_40",
+      "description": "Progression de regroupement Collecte par carton de 40 livres"
+    },
+    "collecte_regroupee_le": {
+      "type": "string",
+      "description": "Date ISO d'affectation \u00e0 une malle Collecte"
+    },
+    "collecte_position_malle": {
+      "type": "number",
+      "description": "Position de la commande dans le carton de 40"
+    },
+    "campagne_promo_id": {
+      "type": "string",
+      "description": "Campagne Partenaria utilis\u00e9e pour cette commande"
+    },
+    "code_promo_collecte": {
+      "type": "string",
+      "description": "Code promotionnel Collecte appliqu\u00e9"
+    },
+    "montant_reduction_collecte": {
+      "type": "number",
+      "default": 0,
+      "description": "R\u00e9duction Collecte valid\u00e9e c\u00f4t\u00e9 serveur"
     },
     "transporteur_assigne": {
       "type": "string",

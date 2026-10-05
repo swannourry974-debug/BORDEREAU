@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '@/lib/CartContext';
 import CouponButton from '@/components/shared/CouponButton';
@@ -17,17 +17,38 @@ export default function PanierCheckout({ onClose }) {
   const [coupon, setCoupon] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
   const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponCampaign, setCouponCampaign] = useState(null);
+  const [availablePromos, setAvailablePromos] = useState([]);
   const [suiviMode, setSuiviMode] = useState('application');
   const [loading, setLoading] = useState(false);
   const isTestPreview = window.self !== window.top;
 
-  // Codes de parrainage simulés (à connecter à une entité si nécessaire)
+  // Codes de parrainage fixes + codes Partenaria activés par stagnation Collecte.
   const CODES_VALIDES = { 'BIENVENUE': 2, 'AMI10': 1, 'BORDERO': 3 };
+
+  useEffect(() => {
+    const relayIds = [...new Set(items.filter(i => i.transit === 'collecte' && i.selectedRelay?.id).map(i => i.selectedRelay.id))];
+    if (!relayIds.length) { setAvailablePromos([]); return; }
+    base44.entities.CampagnePromoCollecte.filter({ statut: 'active' }, '-created_date', 100)
+      .then(promos => {
+        const now = Date.now();
+        setAvailablePromos((promos || []).filter(p => relayIds.includes(p.point_relais_id) && (!p.valide_jusquau || new Date(p.valide_jusquau).getTime() >= now)));
+      })
+      .catch(() => setAvailablePromos([]));
+  }, [items]);
 
   const applyCoupon = () => {
     const code = coupon.trim().toUpperCase();
-    if (CODES_VALIDES[code]) {
+    const campaign = availablePromos.find(p => p.code === code);
+    if (campaign) {
+      const discount = Number(campaign.montant_reduction || 0);
+      setCouponDiscount(discount);
+      setCouponCampaign(campaign);
+      setCouponApplied(true);
+      toast.success(`Code Partenaria "${code}" appliqué — ${discount} € de réduction !`);
+    } else if (CODES_VALIDES[code]) {
       setCouponDiscount(CODES_VALIDES[code]);
+      setCouponCampaign(null);
       setCouponApplied(true);
       toast.success(`Code "${code}" appliqué — ${CODES_VALIDES[code]} € de réduction !`);
     } else {
@@ -62,8 +83,13 @@ export default function PanierCheckout({ onClose }) {
         zone_id: item.selectedCity?.zone_id || 'international',
         zone_nom: item.selectedCity?.label || item.adresse || 'International',
         point_relais_id: item.selectedRelay?.id || '',
+        point_relais_nom: item.selectedRelay?.name || '',
         mode_livraison: modeLivraison,
+        collecte_batch_statut: modeLivraison === 'collectif' ? 'en_attente_40' : undefined,
         montant_paye: itemTotal,
+        campagne_promo_id: couponCampaign?.id || '',
+        code_promo_collecte: couponCampaign?.code || '',
+        montant_reduction_collecte: couponCampaign ? couponDiscount / items.length : 0,
         prix_livre_neuf: prixLivre,
         frais_port_ref: prixLivraison,
         frais_bordereau: prixLivraison,
@@ -81,6 +107,7 @@ export default function PanierCheckout({ onClose }) {
       };
     }));
     await Promise.all((created || []).map(cmd => base44.functions.invoke('genererQrCommande', { commande_id: cmd.id }).catch(() => null)));
+    await Promise.all((created || []).filter(cmd => cmd.mode_livraison === 'collectif' && cmd.statut === 'payee').map(cmd => base44.functions.invoke('grouperCollectePayee', { commande_id: cmd.id }).catch(() => null)));
   };
 
   const completeSimulatedPurchase = async () => {
@@ -112,6 +139,10 @@ export default function PanierCheckout({ onClose }) {
           zone_nom: first.selectedCity?.label || first.adresse || '',
           mode_livraison: first.transit === 'collecte' ? 'collectif' : 'express',
           suivi_facturation_mode: suiviMode,
+          point_relais_id: first.selectedRelay?.id || '',
+          point_relais_nom: first.selectedRelay?.name || '',
+          code_promo: couponApplied ? coupon.trim().toUpperCase() : '',
+          forfait: first.forfait,
           prix_livre: first.prixLivre || 0,
           frais_livraison: first.prixLivraison ?? first.prixVal ?? 0,
           prix_livre_a_rembourser: first.prixLivreARembourser === true,
@@ -230,6 +261,14 @@ export default function PanierCheckout({ onClose }) {
 
             <SuiviFacturationChoice value={suiviMode} onChange={setSuiviMode} />
 
+            {availablePromos.length > 0 && !couponApplied && (
+              <div style={{ background: '#fff7ed', border: '1px solid rgba(194,65,12,0.35)', padding: '10px 12px', marginBottom: 14, color: 'var(--encre)' }}>
+                <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--cta-orange)', marginBottom: 4 }}>Code Partenaria disponible</div>
+                <div style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, color: 'var(--bordeaux)', fontSize: 18 }}>{availablePromos[0].code}</div>
+                <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.58)', marginTop: 2 }}>Partagez-le autour de vous pour compléter le carton Collecte de {availablePromos[0].point_relais_nom || 'ce relais'}.</div>
+              </div>
+            )}
+
             {/* Code de parrainage */}
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.55)', marginBottom: 6 }}>
@@ -266,7 +305,7 @@ export default function PanierCheckout({ onClose }) {
                 )}
               </div>
               {couponApplied && (
-                <button onClick={() => { setCouponApplied(false); setCouponDiscount(0); setCoupon(''); }}
+                <button onClick={() => { setCouponApplied(false); setCouponDiscount(0); setCouponCampaign(null); setCoupon(''); }}
                   style={{ marginTop: 4, background: 'none', border: 'none', cursor: 'pointer', fontSize: 9, fontFamily: 'Special Elite, monospace', letterSpacing: 1, color: 'rgba(26,16,8,0.45)', textDecoration: 'underline' }}>
                   Retirer le code
                 </button>

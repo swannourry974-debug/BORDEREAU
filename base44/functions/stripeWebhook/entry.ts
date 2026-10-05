@@ -9,8 +9,9 @@
  *   URL : https://bordero.base44.app/api/functions/stripeWebhook
  *   Événements : checkout.session.completed
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import Stripe from 'npm:stripe@14.21.0';
+import { waitUntil } from 'base44:runtime';
 
 export default async function(req: Request): Promise<Response> {
   const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY');
@@ -60,6 +61,9 @@ export default async function(req: Request): Promise<Response> {
   const bookAuthor = meta.book_author || '';
   const zoneId = meta.zone_id || 'international';
   const zoneNom = meta.zone_nom || 'International';
+  const pointRelaisId = meta.point_relais_id || '';
+  const pointRelaisNom = meta.point_relais_nom || '';
+  const livreType = meta.livre_type || 'Poche';
   const modeLivraison = meta.mode_livraison === 'collectif' ? 'collectif' : 'express';
   const adresse = meta.adresse || '';
   const prixLivre = parseFloat(meta.prix_livre || '0');
@@ -73,6 +77,9 @@ export default async function(req: Request): Promise<Response> {
   const prixLivreARembourser = meta.prix_livre_a_rembourser === 'true';
   const factureRef = meta.facture_reference || `BORD-${new Date().getFullYear()}-${codeSecret}`;
   const suiviMode = meta.suivi_facturation_mode === 'email' ? 'email' : 'application';
+  const campagnePromoId = meta.campagne_promo_id || '';
+  const codePromoCollecte = meta.code_promo_collecte || '';
+  const montantReductionCollecte = parseFloat(meta.montant_reduction_collecte || '0');
 
   // Créer la commande en base avec statut "payee"
   let commande;
@@ -81,12 +88,18 @@ export default async function(req: Request): Promise<Response> {
       lecteur_email: userEmail,
       livre_titre: bookTitle,
       livre_auteur: bookAuthor,
-      livre_type: 'Poche', // Sera affiné via forfait dans une version future
+      livre_type: livreType,
       zone_id: zoneId,
       zone_nom: zoneNom,
+      point_relais_id: pointRelaisId,
+      point_relais_nom: pointRelaisNom,
       mode_livraison: modeLivraison,
+      collecte_batch_statut: modeLivraison === 'collectif' ? 'en_attente_40' : undefined,
       montant_paye: montantTotal,
       stripe_session_id: session.id,
+      campagne_promo_id: campagnePromoId,
+      code_promo_collecte: codePromoCollecte,
+      montant_reduction_collecte: Number.isFinite(montantReductionCollecte) ? montantReductionCollecte : 0,
       statut: 'payee',
       code_secret: codeSecret,
       prix_livre_neuf: prixLivre,
@@ -114,10 +127,18 @@ export default async function(req: Request): Promise<Response> {
 
   console.log(`[stripeWebhook] ✅ Commande créée: ${commande.id} | ${bookTitle} | ${userEmail} | ${montantTotal}€`);
 
-  // Déclencher la notification lecteur en arrière-plan (non bloquant)
-  base44.asServiceRole.functions.invoke('notifierSuiviCommande', { commande_id: commande.id }).catch(e =>
-    console.warn('[stripeWebhook] Notification suivi échouée:', e.message)
-  );
+  // Déclencher les suites de paiement en arrière-plan (non bloquant)
+  waitUntil(Promise.all([
+    base44.asServiceRole.functions.invoke('notifierSuiviCommande', { commande_id: commande.id }).catch(e =>
+      console.warn('[stripeWebhook] Notification suivi échouée:', e.message)
+    ),
+    base44.asServiceRole.functions.invoke('grouperCollectePayee', { commande_id: commande.id }).catch(e =>
+      console.warn('[stripeWebhook] Regroupement Collecte échoué:', e.message)
+    ),
+    campagnePromoId ? base44.asServiceRole.entities.CampagnePromoCollecte.get(campagnePromoId)
+      .then(c => c ? base44.asServiceRole.entities.CampagnePromoCollecte.update(c.id, { nombre_utilisations: Number(c.nombre_utilisations || 0) + 1 }) : null)
+      .catch(e => console.warn('[stripeWebhook] Comptage promo échoué:', e.message)) : Promise.resolve(null),
+  ]));
 
   return Response.json({ received: true, commande_id: commande.id });
 }
