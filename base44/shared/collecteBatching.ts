@@ -58,6 +58,7 @@ export async function groupRelayCollecte(base44, pointRelaisId) {
     const malle = await base44.asServiceRole.entities.MalleCollecte.create({
       point_relais_id: pointRelaisId,
       point_relais_nom: relayInfo.nom || chunk[0]?.point_relais_nom || 'Point relais',
+      gerant_email: relayInfo.gerant_email || '',
       statut: 'en_preparation',
       poids_actuel_kg: poids,
       nombre_commandes: CAPACITE_CARTON,

@@ -10,6 +10,10 @@
       "type": "string",
       "description": "Nom lisible du point relais de destination"
     },
+    "gerant_email": {
+      "type": "string",
+      "description": "Email du g\u00e9rant du point relais destinataire"
+    },
     "statut": {
       "type": "string",
       "enum": [

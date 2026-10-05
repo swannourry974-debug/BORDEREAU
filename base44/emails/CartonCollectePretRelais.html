@@ -1,0 +1,52 @@
+<mjml>
+  <mj-head>
+    <mj-title>Votre carton Bordero est prêt pour expédition</mj-title>
+    <mj-preview>Le carton Collecte de {{point_relais_nom}} a atteint 40 livres.</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="Arial, sans-serif" />
+      <mj-section background-color="#f3e8d3" padding="0 36px" />
+      <mj-text color="#000000" font-size="15px" line-height="1.6" padding="0" />
+      <mj-button background-color="#6c1e2d" color="#f3e8d3" border-radius="16px" font-weight="700" inner-padding="14px 28px" align="left" />
+      <mj-class name="h" font-family="Arial, sans-serif" font-weight="700" color="#6c1e2d" />
+      <mj-class name="muted" color="#000000" font-size="13px" line-height="1.5" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#1f1b19">
+    <mj-section background-color="#6c1e2d" padding="24px 36px">
+      <mj-column>
+        <mj-image src="https://media.base44.com/images/public/69e8b7d9fb460a4f0f638f97/58d652582_logo.png" alt="BORDERO" width="74px" align="left" padding="0 0 10px" />
+        <mj-text color="#f3e8d3" font-size="18px" font-weight="700" letter-spacing="2px" padding="0">BORDERO</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="34px 36px 10px">
+      <mj-column>
+        <mj-text mj-class="h" font-size="30px" line-height="1.15">Votre carton Collecte est prêt.</mj-text>
+        <mj-text mj-class="muted" padding="10px 0 0">Le point relais {{point_relais_nom}} vient d’atteindre le seuil de 40 livres. Le carton peut maintenant être préparé pour expédition.</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="18px 36px 8px">
+      <mj-column background-color="#f3e8d3" border="1px solid #c7a566" border-radius="16px" padding="20px">
+        <mj-text font-size="13px" font-weight="700" color="#6c1e2d" letter-spacing="1px" text-transform="uppercase" padding="0 0 10px">Détails du carton</mj-text>
+        <mj-text padding="0 0 6px"><strong>Référence :</strong> {{numero_carton}}</mj-text>
+        <mj-text padding="0 0 6px"><strong>Livres regroupés :</strong> {{nombre_commandes}} / 40</mj-text>
+        <mj-text padding="0 0 6px"><strong>Poids estimé :</strong> {{poids_actuel_kg}} kg</mj-text>
+        <mj-text padding="0"><strong>Point relais :</strong> {{point_relais_nom}}</mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="22px 36px 34px">
+      <mj-column>
+        <mj-text padding="0 0 16px">Merci de vérifier le stock physique, de préparer le carton Bordero, puis de suivre les consignes d’expédition indiquées dans votre espace relais.</mj-text>
+        <mj-button href="{{app_url}}">Ouvrir mon espace relais</mj-button>
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#6c1e2d" padding="18px 36px">
+      <mj-column>
+        <mj-text color="#f3e8d3" font-size="12px" line-height="1.5" padding="0">Bordero vous remercie pour votre rôle dans la Collecte. Cet email est envoyé automatiquement dès qu’un carton atteint sa capacité.</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

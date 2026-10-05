@@ -1,0 +1,47 @@
+{
+  "name": "Alerte relais carton Collecte pr\u00eat",
+  "description": "Envoie un email automatique au g\u00e9rant du point relais quand un carton Collecte atteint 40 livres.",
+  "trigger": {
+    "config": {
+      "trigger_type": "entity",
+      "entity_name": "MalleCollecte",
+      "events": [
+        "create",
+        "update"
+      ]
+    },
+    "condition": "${ .trigger.data.nombre_commandes >= 40 and (.trigger.data.gerant_email // \"\") != \"\" and (.trigger.event_type == \"create\" or ((.trigger.old_data.nombre_commandes // 0) < 40)) }"
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "alerte_relais_carton_collecte_pret",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "envoyer_email_relais": {
+          "call": "send_email",
+          "with": {
+            "template_name": "CartonCollectePretRelais",
+            "to": "${ .trigger.data.gerant_email }",
+            "description": "Informe le relais qu\u2019un carton Collecte de 40 livres est pr\u00eat pour exp\u00e9dition.",
+            "variables": {
+              "point_relais_nom": "${ .trigger.data.point_relais_nom }",
+              "numero_carton": "${ .trigger.data.numero_carton }",
+              "nombre_commandes": "${ .trigger.data.nombre_commandes }",
+              "poids_actuel_kg": "${ .trigger.data.poids_actuel_kg }",
+              "app_url": "https://bordero.base44.app/stock"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Pr\u00e9venir le relais",
+            "description": "Carton 40 livres pr\u00eat"
+          }
+        }
+      }
+    ]
+  }
+}
