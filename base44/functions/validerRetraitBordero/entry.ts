@@ -43,7 +43,7 @@ export default async function(req: Request): Promise<Response> {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    if (!['admin', 'admin_secondaire', 'relais', 'voyageur'].includes(user.role)) {
+    if (!['admin', 'admin_secondaire', 'relais'].includes(user.role)) {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
@@ -63,6 +63,21 @@ export default async function(req: Request): Promise<Response> {
     if (payload.Format_Livre !== formatAttendu) return fail(base44, commande, 'Taille S/M/L incohérente avec le format physique du livre.');
     if (payload.Hash_Securite !== hashAttendu || commande.hash_securite !== hashAttendu || commande.qr_code_token !== token) return fail(base44, commande, 'Hash de sécurité invalide.');
 
+    if (!['en_transit', 'au_relais'].includes(commande.statut)) {
+      return fail(base44, commande, 'Statut de commande non éligible à la remise sécurisée.');
+    }
+
+    const action = commande.statut === 'en_transit' ? 'reception_relais' : 'retrait_lecteur';
+    const isAdmin = user.role === 'admin' || user.role === 'admin_secondaire';
+    let relaisAutorise = null;
+    if (!isAdmin) {
+      if (user.role !== 'relais' || !commande.point_relais_id) return Response.json({ error: 'Forbidden' }, { status: 403 });
+      relaisAutorise = await base44.asServiceRole.entities.PointRelais.get(commande.point_relais_id).catch(() => null);
+      if (!relaisAutorise || relaisAutorise.validation_admin !== 'valide' || relaisAutorise.gerant_email !== user.email) {
+        return Response.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
+
     const visuel = commande.visuel_bordero_id
       ? await base44.asServiceRole.entities.VisuelBordero.get(commande.visuel_bordero_id).catch(() => null)
       : null;
@@ -71,12 +86,7 @@ export default async function(req: Request): Promise<Response> {
       return fail(base44, commande, 'Visuel officiel non concordant avec la taille du livre.');
     }
 
-    if (!['en_transit', 'au_relais'].includes(commande.statut)) {
-      return fail(base44, commande, 'Statut de commande non éligible à la remise sécurisée.');
-    }
-
     const now = new Date();
-    const action = commande.statut === 'en_transit' ? 'reception_relais' : 'retrait_lecteur';
     const receipt = `${action === 'reception_relais' ? 'Réceptionné en point relais' : 'Retiré par le lecteur'} · ${now.toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })} · ${commande.id}`;
     const updates: Record<string, any> = {
       statut: action === 'reception_relais' ? 'au_relais' : 'livree',
@@ -100,7 +110,7 @@ export default async function(req: Request): Promise<Response> {
 
     const updated = await base44.asServiceRole.entities.Commande.update(commande.id, updates);
 
-    const relais = await base44.asServiceRole.entities.PointRelais.filter({ gerant_email: user.email }, '-updated_date', 1).catch(() => []);
+    const relais = relaisAutorise ? [relaisAutorise] : await base44.asServiceRole.entities.PointRelais.filter({ gerant_email: user.email }, '-updated_date', 1).catch(() => []);
     if (relais?.[0]) {
       const stock = relais[0].stock_actuel || 0;
       await base44.asServiceRole.entities.PointRelais.update(relais[0].id, {

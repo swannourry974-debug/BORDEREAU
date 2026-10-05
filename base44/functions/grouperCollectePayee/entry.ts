@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { groupAllEligibleCollecte, groupRelayCollecte } from '../../shared/collecteBatching.ts';
+import { requireAdmin } from '../../shared/adminAuth.ts';
 
 export default async function(req) {
   try {
@@ -8,6 +9,9 @@ export default async function(req) {
     }
 
     const base44 = createClientFromRequest(req);
+    const { response } = await requireAdmin(base44);
+    if (response) return response;
+
     const payload = await req.json().catch(() => ({}));
     const commandeId = payload?.commande_id || payload?.commandeId || '';
     const pointRelaisId = payload?.point_relais_id || payload?.pointRelaisId || '';
