@@ -25,6 +25,10 @@ function cleanCodePart(value = '') {
   return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 8) || 'RELAIS';
 }
 
+function formatEuro(value) {
+  return Number(value || 0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
+}
+
 function isPaidCollecte(order) {
   return order?.mode_livraison === 'collectif' && order?.statut === 'payee' && !order?.malle_id && !!order?.point_relais_id;
 }
@@ -55,10 +59,17 @@ export async function groupRelayCollecte(base44, pointRelaisId) {
     const now = new Date().toISOString();
     const cartonRef = `COL-${cleanCodePart(relayInfo.nom || pointRelaisId)}-${now.slice(0, 10).replace(/-/g, '')}-${String(Date.now()).slice(-5)}`;
     const poids = Math.round(chunk.reduce((sum, order) => sum + getCollecteWeightKg(order), 0) * 100) / 100;
+    const descriptifCommandes = chunk.map((order, index) => {
+      const lecteur = order.lecteur_nom || order.lecteur_email || 'Lecteur non renseigné';
+      const taille = order.format_livre_bordero || resolveCollecteFormat(order);
+      const titre = order.livre_titre || 'Livre';
+      return `${index + 1}. ${lecteur} · ${taille} · ${titre} · ${formatEuro(order.montant_paye)}`;
+    }).join('\n');
     const malle = await base44.asServiceRole.entities.MalleCollecte.create({
       point_relais_id: pointRelaisId,
       point_relais_nom: relayInfo.nom || chunk[0]?.point_relais_nom || 'Point relais',
       gerant_email: relayInfo.gerant_email || '',
+      descriptif_commandes: descriptifCommandes,
       statut: 'en_preparation',
       poids_actuel_kg: poids,
       nombre_commandes: CAPACITE_CARTON,

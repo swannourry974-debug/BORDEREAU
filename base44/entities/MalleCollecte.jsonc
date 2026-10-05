@@ -14,6 +14,10 @@
       "type": "string",
       "description": "Email du g\u00e9rant du point relais destinataire"
     },
+    "descriptif_commandes": {
+      "type": "string",
+      "description": "Liste d\u00e9taill\u00e9e des livres du carton : lecteur, taille, titre et co\u00fbt total de chaque commande"
+    },
     "statut": {
       "type": "string",
       "enum": [

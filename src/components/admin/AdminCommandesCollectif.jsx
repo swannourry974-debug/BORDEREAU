@@ -146,7 +146,14 @@ export default function AdminCommandesCollectif() {
               <button onClick={() => moveMalle(malle, 'en_transit')} style={{ background: 'var(--bordeaux)', color: 'var(--creme)', border: 'none', padding: '10px 12px', fontFamily: 'Inter, sans-serif', fontSize: 11, textTransform: 'uppercase' }}>Passer en transit</button>
               <button onClick={() => moveMalle(malle, 'arrivee_relais')} style={{ background: '#2d6a2d', color: 'white', border: 'none', padding: '10px 12px', fontFamily: 'Inter, sans-serif', fontSize: 11, textTransform: 'uppercase' }}>Arrivée relais</button>
             </div>
-            {items.map(c => <div key={c.id} style={{ borderTop: '1px dashed rgba(26,16,8,0.14)', padding: '8px 0', fontSize: 12 }}><strong>{c.livre_titre || 'Livre'}</strong> · {c.lecteur_email || 'lecteur'} · {c.format_livre_bordero || 'format à assigner'} · {c.visuel_bordero_serie || 'visuel en attente'}</div>)}
+            {items.map(c => (
+              <div key={c.id} style={{ borderTop: '1px dashed rgba(26,16,8,0.14)', padding: '9px 0', fontSize: 12, display: 'grid', gridTemplateColumns: 'minmax(150px, 1.5fr) repeat(3, minmax(90px, 1fr))', gap: 8, alignItems: 'center' }}>
+                <strong>{c.livre_titre || 'Livre'}</strong>
+                <span>{c.lecteur_nom || c.lecteur_email || 'Lecteur'}</span>
+                <span>Taille {c.format_livre_bordero || c.livre_type || 'à assigner'}</span>
+                <span style={{ color: 'var(--bordeaux)', fontWeight: 700 }}>{Number(c.montant_paye || 0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+              </div>
+            ))}
           </div>
         );
       })}

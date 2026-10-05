@@ -32,6 +32,7 @@
               "numero_carton": "${ .trigger.data.numero_carton }",
               "nombre_commandes": "${ .trigger.data.nombre_commandes }",
               "poids_actuel_kg": "${ .trigger.data.poids_actuel_kg }",
+              "descriptif_commandes": "${ .trigger.data.descriptif_commandes }",
               "app_url": "https://bordero.base44.app/stock"
             }
           },
