@@ -135,7 +135,9 @@ export default function Bordero({ initialPanel }) {
   }, []);
 
   const pathToPanel = { '/catalogue': 'catalogue', '/etagere': 'etagere', '/bibliotheque': 'etagere', '/wishlist': 'wishlist', '/favoris': 'favoris', '/progression-collecte': 'progression-collecte', '/missions': 'missions', '/stock': 'stock', '/Stock': 'stock', '/accueil-voyageur': 'accueil-voyageur', '/scanner': 'scanner', '/profils': 'profils', '/profil': 'profil', '/PanelProfil': 'profil', '/panel-profil': 'profil', '/wallet': 'wallet', '/aide': 'aide' };
-  const activePanel = pathToPanel[location.pathname] || initialPanel || 'catalogue';
+  const knownPanels = ['catalogue', 'etagere', 'wishlist', 'favoris', 'progression-collecte', 'missions', 'stock', 'accueil-voyageur', 'scanner', 'profils', 'profil', 'wallet', 'aide'];
+  const requestedPanel = pathToPanel[location.pathname] || initialPanel;
+  const activePanel = knownPanels.includes(requestedPanel) ? requestedPanel : 'catalogue';
   const isRelaisValidated = currentUser?.role === 'admin' || (currentUser?.role === 'relais' && currentUser?.relais_valide === true);
   const isRelaisPanel = role === 'relais' && ['stock', 'scanner', 'profils'].includes(activePanel);
 
