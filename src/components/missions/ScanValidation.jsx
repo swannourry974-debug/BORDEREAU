@@ -38,8 +38,8 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
     const montantTicket = Number(String(ticketAmount).replace(',', '.')) || 0;
     if (montantTicket <= 0) { setLoading(false); setError('Veuillez saisir le montant du ticket de caisse'); return; }
 
-    // Upload du ticket
-    const { file_url } = await base44.integrations.Core.UploadFile({ file: ticketFile });
+    // Upload privé du ticket
+    const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file: ticketFile });
 
     // Cherche la commande liée à cette mission ou crée un enregistrement temporaire
     // On crée une commande de validation si elle n'existe pas encore
@@ -52,7 +52,7 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
       const alertePrix = prixAttendu > 0 && Math.abs(ecartPrix) > 2;
       await base44.entities.Commande.update(commande.id, {
         code_barre_isbn: isbn,
-        ticket_caisse_url: file_url,
+        ticket_caisse_url: file_uri,
         ticket_montant: montantTicket,
         ecart_prix_ticket: ecartPrix,
         alerte_prix_livre: alertePrix ? `Écart ticket ${ecartPrix.toFixed(2)} € par rapport au prix Google.` : '',
@@ -68,7 +68,7 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
         zone_nom: mission.ville_destination || mission.ville || '',
         mode_livraison: 'express',
         code_barre_isbn: isbn,
-        ticket_caisse_url: file_url,
+        ticket_caisse_url: file_uri,
         ticket_montant: montantTicket,
         prix_livre_neuf: 0,
         prix_livre_a_rembourser: true,

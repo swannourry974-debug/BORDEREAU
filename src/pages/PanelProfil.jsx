@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import MesLivres from '@/components/profil/MesLivres';
 import VoyageurDestinationCard from '@/components/profil/VoyageurDestinationCard';
+import VoyageurFinanceRubriques from '@/components/profil/VoyageurFinanceRubriques';
 import LangSwitcher from '@/components/shared/LangSwitcher';
 import { useLang } from '@/lib/LangContext';
 
@@ -180,10 +181,12 @@ export default function PanelProfil() {
         </div>
 
         {isVoyageur ? (
-          <div style={sectionStyle}>
-            <div className="font-special" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.45)', marginBottom: 14 }}>
-              Mission en cours
-            </div>
+          <>
+            <VoyageurFinanceRubriques user={user} sectionStyle={sectionStyle} />
+            <div style={sectionStyle}>
+              <div className="font-special" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.45)', marginBottom: 14 }}>
+                Mission en cours
+              </div>
             {missionsEnCours.length === 0 ? (
               <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.45)' }}>Aucune mission en cours.</div>
             ) : missionsEnCours.map(m => (
@@ -192,8 +195,9 @@ export default function PanelProfil() {
                 <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.5)' }}>{m.ville_destination || 'Destination'} · {m.statut}</div>
               </div>
             ))}
-          </div>
-        ) : (
+            </div>
+            </>
+            ) : (
           <>
             <div style={sectionStyle}>
               <div className="font-special" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.45)', marginBottom: 16 }}>

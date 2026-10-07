@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function WalletCard({ soldeDisponible, gainsPrevisionnels, virementSuspendu }) {
+export default function WalletCard({ soldeDisponible, gainsPrevisionnels, virementSuspendu, hideTransfer }) {
   const MIN_VIREMENT = 20;
   const peutVirer = soldeDisponible >= MIN_VIREMENT && !virementSuspendu;
   const manque = Math.max(0, MIN_VIREMENT - soldeDisponible).toFixed(2);
@@ -40,30 +40,31 @@ export default function WalletCard({ soldeDisponible, gainsPrevisionnels, vireme
         </div>
       </div>
 
-      {/* Bouton virement */}
-      <button
-        disabled={!peutVirer}
-        onClick={() => alert('Transfert bancaire initié !')}
-        style={{
-          width: '100%',
-          background: peutVirer ? '#a8d5a2' : 'rgba(253,252,240,0.1)',
-          color: peutVirer ? '#1a1008' : 'rgba(253,252,240,0.35)',
-          border: peutVirer ? 'none' : '1px dashed rgba(253,252,240,0.2)',
-          padding: '12px 16px',
-          fontFamily: 'Special Elite, monospace',
-          fontSize: 10,
-          letterSpacing: 3,
-          textTransform: 'uppercase',
-          cursor: peutVirer ? 'pointer' : 'not-allowed',
-          transition: 'all 0.2s',
-        }}
-      >
-        {virementSuspendu
-          ? '🔒 Virement suspendu (audit en cours)'
-          : peutVirer
-          ? '✦ Transférer vers ma banque'
-          : `Encore ${manque} € pour débloquer votre virement`}
-      </button>
+      {!hideTransfer && (
+        <button
+          disabled={!peutVirer}
+          onClick={() => alert('Transfert bancaire initié !')}
+          style={{
+            width: '100%',
+            background: peutVirer ? '#a8d5a2' : 'rgba(253,252,240,0.1)',
+            color: peutVirer ? '#1a1008' : 'rgba(253,252,240,0.35)',
+            border: peutVirer ? 'none' : '1px dashed rgba(253,252,240,0.2)',
+            padding: '12px 16px',
+            fontFamily: 'Special Elite, monospace',
+            fontSize: 10,
+            letterSpacing: 3,
+            textTransform: 'uppercase',
+            cursor: peutVirer ? 'pointer' : 'not-allowed',
+            transition: 'all 0.2s',
+          }}
+        >
+          {virementSuspendu
+            ? '🔒 Virement suspendu (audit en cours)'
+            : peutVirer
+            ? '✦ Transférer vers ma banque'
+            : `Encore ${manque} € pour débloquer votre virement`}
+        </button>
+      )}
     </div>
   );
 }

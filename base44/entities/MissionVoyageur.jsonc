@@ -66,6 +66,18 @@
     "ticket_url": {
       "type": "string",
       "description": "URL du ticket de caisse scann\u00e9"
+    },
+    "justificatif_photo_uri": {
+      "type": "string",
+      "description": "Fichier priv\u00e9 du justificatif photo associ\u00e9 \u00e0 la mission"
+    },
+    "justificatif_photo_nom": {
+      "type": "string",
+      "description": "Nom du fichier justificatif photo"
+    },
+    "justificatif_photo_date": {
+      "type": "string",
+      "description": "Date ISO d'envoi du justificatif photo"
     }
   },
   "required": [

@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import WalletCard from '@/components/missions/WalletCard';
 import { SectionTitle, PerfoStrip } from '@/components/bordereau/shared';
 import VoyageurStatsCard from './VoyageurStatsCard';
-import PayoutRequestButtons from './PayoutRequestButtons';
 import LangSwitcher from '@/components/shared/LangSwitcher';
 
 export default function PanelAccueilVoyageur() {
   const [user, setUser] = useState(null);
-  const [wallet, setWallet] = useState(null);
   const [missions, setMissions] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -16,11 +13,7 @@ export default function PanelAccueilVoyageur() {
     base44.auth.me().then(async (u) => {
       setUser(u);
       if (!u) { setLoading(false); return; }
-      const [wallets, allMissions] = await Promise.all([
-        base44.entities.VoyageurWallet.filter({ user_email: u.email }),
-        base44.entities.MissionVoyageur.filter({ voyageur_email: u.email }),
-      ]);
-      setWallet(wallets[0] || { solde_disponible: 0, gains_previsionnels: 0, virement_suspendu: false });
+      const allMissions = await base44.entities.MissionVoyageur.filter({ voyageur_email: u.email });
       setMissions(allMissions || []);
       setLoading(false);
     }).catch(() => setLoading(false));
@@ -40,7 +33,7 @@ export default function PanelAccueilVoyageur() {
           Bonjour {user?.full_name?.split(' ')[0] || 'Voyageur'} ✦
         </div>
         <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.5)', marginTop: 2 }}>
-          Langue, niveau, livres et portefeuille
+          Langue, niveau et livres transportés
         </div>
       </div>
 
@@ -68,13 +61,6 @@ export default function PanelAccueilVoyageur() {
       </div>
 
       <PerfoStrip />
-      <SectionTitle>Portefeuille</SectionTitle>
-      <WalletCard
-        soldeDisponible={wallet?.solde_disponible ?? 0}
-        gainsPrevisionnels={wallet?.gains_previsionnels ?? 0}
-        virementSuspendu={wallet?.virement_suspendu ?? false}
-      />
-      <PayoutRequestButtons user={user} wallet={wallet} onUpdated={setWallet} />
     </div>
   );
 }
