@@ -20,6 +20,7 @@ import PanelWalletAdmin from '../components/wallet/PanelWalletAdmin';
 import PanelAide from '../components/aide/PanelAide';
 import PanelProgressionCollecte from '@/components/collecte/PanelProgressionCollecte';
 import AppFooter from '../components/bordereau/AppFooter';
+import { TEST_MODE_OPEN_ALL_PROFILES } from '@/lib/testMode';
 
 function SidebarItem({ icon, label, active, onClick, badge }) {
   return (
@@ -138,8 +139,8 @@ export default function Bordero({ initialPanel }) {
   const knownPanels = ['catalogue', 'etagere', 'wishlist', 'favoris', 'progression-collecte', 'missions', 'stock', 'accueil-voyageur', 'scanner', 'profils', 'profil', 'wallet', 'aide'];
   const requestedPanel = pathToPanel[location.pathname] || initialPanel;
   const activePanel = knownPanels.includes(requestedPanel) ? requestedPanel : 'catalogue';
-  const isRelaisValidated = currentUser?.role === 'admin' || (currentUser?.role === 'relais' && currentUser?.relais_valide === true);
-  const isRelaisPanel = role === 'relais' && ['stock', 'scanner', 'profils'].includes(activePanel);
+  const isRelaisValidated = TEST_MODE_OPEN_ALL_PROFILES || currentUser?.role === 'admin' || (currentUser?.role === 'relais' && currentUser?.relais_valide === true);
+  const isRelaisPanel = (role === 'relais' || TEST_MODE_OPEN_ALL_PROFILES) && ['stock', 'scanner', 'profils'].includes(activePanel);
 
   const markRolePromptSeen = () => {
     if (currentUser) {
@@ -160,6 +161,11 @@ export default function Bordero({ initialPanel }) {
       return;
     }
     setRole(newRole);
+    if (TEST_MODE_OPEN_ALL_PROFILES) {
+      const defaults = { lecteur: '/catalogue', voyageur: '/accueil-voyageur', relais: '/stock' };
+      navigate(defaults[newRole]);
+      return;
+    }
     if (currentUser) {
       localStorage.setItem(`bordero_role_prompt_seen_${currentUser.email}`, 'true');
       const updates = newRole === 'relais'
@@ -391,11 +397,11 @@ export default function Bordero({ initialPanel }) {
             {activePanel === 'scanner' && role === 'voyageur' && <PanelScannerVoyageur />}
             {isRelaisPanel && !isRelaisValidated && <RelaisAccessNotice status={currentUser?.relais_validation_status} onBack={() => switchPanel('profil')} />}
             {activePanel === 'stock' && isRelaisValidated && <PanelStock />}
-            {activePanel === 'scanner' && role === 'relais' && isRelaisValidated && <PanelScanner />}
+            {activePanel === 'scanner' && (role === 'relais' || (TEST_MODE_OPEN_ALL_PROFILES && role !== 'voyageur')) && isRelaisValidated && <PanelScanner />}
             {activePanel === 'profils' && isRelaisValidated && <PanelProfils />}
             {activePanel === 'profil' && <PanelProfil />}
-            {activePanel === 'progression-collecte' && role !== 'voyageur' && <PanelProgressionCollecte role={role} currentUser={currentUser} />}
-            {activePanel === 'progression-collecte' && role === 'voyageur' && (
+            {activePanel === 'progression-collecte' && (role !== 'voyageur' || TEST_MODE_OPEN_ALL_PROFILES) && <PanelProgressionCollecte role={role} currentUser={currentUser} />}
+            {activePanel === 'progression-collecte' && role === 'voyageur' && !TEST_MODE_OPEN_ALL_PROFILES && (
               <div style={{ background: 'var(--papier)', border: '1px dashed var(--bordeaux)', padding: 24, textAlign: 'center', color: 'var(--bordeaux)' }}>
                 La Collecte est gérée uniquement par Bordero. Votre espace voyageur reste dédié aux missions Express limitées à 10 livres.
               </div>

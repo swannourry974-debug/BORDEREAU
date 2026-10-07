@@ -3,6 +3,7 @@ import { base44 } from '@/api/base44Client';
 import AdminSidebar from '@/components/admin/dashboard/AdminSidebar';
 import AdminContentRouter from '@/components/admin/dashboard/AdminContentRouter';
 import { buildAdminStats, searchAdminData } from '@/components/admin/dashboard/adminDashboardData';
+import { TEST_MODE_OPEN_ALL_PROFILES } from '@/lib/testMode';
 
 const TABS = [
   { id: 'dashboard', label: 'Accueil' },
@@ -30,7 +31,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     base44.auth.me().then(async u => {
-      const isAllowed = u?.role === 'admin' || u?.role === 'admin_secondaire';
+      const isAllowed = TEST_MODE_OPEN_ALL_PROFILES || u?.role === 'admin' || u?.role === 'admin_secondaire';
       setUser(u);
       setAuthorized(isAllowed);
       if (!isAllowed) {

@@ -1,16 +1,18 @@
 import React from 'react';
 import { useLang } from '@/lib/LangContext';
+import { TEST_MODE_OPEN_ALL_PROFILES } from '@/lib/testMode';
 
 const roles = [
   { id: 'lecteur', icon: '📖', label_key: 'role_lecteur', desc_key: 'role_switch_lecteur_desc' },
   { id: 'voyageur', icon: '✈️', label_key: 'role_voyageur', desc_key: 'role_switch_voyageur_desc' },
+  { id: 'relais', icon: '📦', label: 'Point relais', desc: 'Tester le stock, le scanner et les profils lecteurs' },
   { id: 'admin', icon: '⌘', label: 'Admin', desc: 'Accéder au tableau de bord' },
 ];
 
 export default function RoleSwitcher({ open, currentRole, onSwitch }) {
   const { t } = useLang();
-  const canOpenAdmin = currentRole === 'admin' || currentRole === 'admin_secondaire';
-  const visibleRoles = roles.filter(role => role.id !== 'admin' || canOpenAdmin);
+  const canOpenAdmin = TEST_MODE_OPEN_ALL_PROFILES || currentRole === 'admin' || currentRole === 'admin_secondaire';
+  const visibleRoles = TEST_MODE_OPEN_ALL_PROFILES ? roles : roles.filter(role => role.id !== 'admin' || canOpenAdmin);
   if (!open) return null;
   return (
     <div style={{
