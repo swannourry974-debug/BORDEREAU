@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import AdminSidebar from '@/components/admin/dashboard/AdminSidebar';
 import AdminContentRouter from '@/components/admin/dashboard/AdminContentRouter';
+import AdminCategoryButtons from '@/components/admin/dashboard/AdminCategoryButtons';
 import { buildAdminStats, searchAdminData } from '@/components/admin/dashboard/adminDashboardData';
 import { TEST_MODE_OPEN_ALL_PROFILES } from '@/lib/testMode';
 
@@ -76,7 +77,8 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground md:flex">
       <AdminSidebar tabs={visibleTabs} activeTab={activeTab} onTabChange={setActiveTab} isAgentBordeur={isAgentBordeur} onOfficialLogin={openOfficialLogin} />
-      <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-hidden">
+      <main className="flex-1 p-4 md:p-6 lg:p-8 overflow-hidden space-y-5">
+        <AdminCategoryButtons tabs={visibleTabs} activeTab={activeTab} onTabChange={setActiveTab} />
         <AdminContentRouter
           activeTab={activeTab}
           homeProps={{
