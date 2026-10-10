@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { extractValidIsbn } from '@/lib/isbn';
 
 export default function ScanPhotoButton({ onResult }) {
   const inputRef = useRef(null);
@@ -17,10 +18,10 @@ export default function ScanPhotoButton({ onResult }) {
       verbose: false,
     });
     try {
-      const decodedText = await scanner.scanFile(file, false);
-      const isbn = decodedText.replace(/[^0-9X]/gi, '');
-      if (isbn.length === 10 || isbn.length === 13) onResult(isbn);
-      else setError('Photo illisible. Essayez une image plus nette.');
+      const decodedText = await scanner.scanFile(file, true);
+      const isbn = extractValidIsbn(decodedText);
+      if (isbn) onResult(isbn);
+      else setError('ISBN détecté mais invalide. Essayez une photo plus nette ou saisissez le titre.');
     } catch {
       setError('Aucun ISBN détecté sur cette photo.');
     } finally {
@@ -32,7 +33,7 @@ export default function ScanPhotoButton({ onResult }) {
 
   return (
     <div>
-      <div id={readerIdRef.current} className="fixed -left-[9999px] top-0 h-px w-px overflow-hidden" />
+      <div id={readerIdRef.current} className="fixed -left-[9999px] top-0 h-[220px] w-[320px] overflow-hidden opacity-0" />
       <input ref={inputRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
       <button
         type="button"

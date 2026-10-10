@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { X } from 'lucide-react';
+import { extractValidIsbn, isValidIsbn, normalizeIsbn } from '@/lib/isbn';
 
 export default function ISBNScanner({ onResult, onClose }) {
   const scannerRef = useRef(null);
@@ -32,10 +33,10 @@ export default function ISBNScanner({ onResult, onClose }) {
 
     html5Qrcode.start(
       { facingMode: 'environment' },
-      { fps: 12, qrbox: { width: 290, height: 150 }, aspectRatio: 1.6 },
+      { fps: 12, qrbox: (width, height) => ({ width: Math.min(300, Math.floor(width * 0.9)), height: Math.min(150, Math.floor(height * 0.45)) }) },
       (decodedText) => {
-        const isbn = decodedText.replace(/[^0-9X]/gi, '');
-        if (isbn.length === 10 || isbn.length === 13) {
+        const isbn = extractValidIsbn(decodedText);
+        if (isbn) {
           if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
           html5Qrcode.stop().catch(() => {}).finally(() => {
             startedRef.current = false;
@@ -68,8 +69,8 @@ export default function ISBNScanner({ onResult, onClose }) {
   };
 
   const handleManualSubmit = () => {
-    const clean = manualValue.replace(/[^0-9X]/gi, '');
-    if (clean.length === 10 || clean.length === 13) {
+    const clean = normalizeIsbn(manualValue);
+    if (isValidIsbn(clean)) {
       onResult(clean);
     } else if (manualValue.trim()) {
       onResult(manualValue.trim());
@@ -96,9 +97,9 @@ export default function ISBNScanner({ onResult, onClose }) {
       });
     }
     try {
-      const decodedText = await fileScannerRef.current.scanFile(file, false);
-      const isbn = decodedText.replace(/[^0-9X]/gi, '');
-      if (isbn.length === 10 || isbn.length === 13) {
+      const decodedText = await fileScannerRef.current.scanFile(file, true);
+      const isbn = extractValidIsbn(decodedText);
+      if (isbn) {
         if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         onResult(isbn);
       } else {
@@ -120,7 +121,7 @@ export default function ISBNScanner({ onResult, onClose }) {
       background: 'rgba(26,16,8,0.95)',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
     }}>
-      <div id="isbn-file-reader" style={{ position: 'absolute', left: -9999, top: -9999, width: 1, height: 1, overflow: 'hidden' }} />
+      <div id="isbn-file-reader" style={{ position: 'absolute', left: -9999, top: -9999, width: 320, height: 220, overflow: 'hidden', opacity: 0 }} />
       <input
         ref={fileInputRef}
         type="file"

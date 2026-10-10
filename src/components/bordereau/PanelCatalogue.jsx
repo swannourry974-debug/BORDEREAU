@@ -15,6 +15,7 @@ import { useCart } from '@/lib/CartContext';
 import { toast } from 'sonner';
 import { formatEuro, extractGoogleBookPrice } from '@/lib/bookPricing';
 import { useSearchParams } from 'react-router-dom';
+import { isValidIsbn, normalizeIsbn } from '@/lib/isbn';
 
 const DEFAULT_BOOKS_BASE = [];
 
@@ -106,8 +107,8 @@ export default function PanelCatalogue() {
 
   const handleISBNResult = async (isbn) => {
     setScannerOpen(false);
-
-    const isISBN = /^[0-9X]{10,13}$/.test(isbn);
+    const cleanIsbn = normalizeIsbn(isbn);
+    const isISBN = isValidIsbn(cleanIsbn);
     if (isISBN) {
       setIsbnLoading(true);
       try {
@@ -115,21 +116,21 @@ export default function PanelCatalogue() {
 
         try {
           const olRes = await fetch(
-            `https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`
+            `https://openlibrary.org/api/books?bibkeys=ISBN:${cleanIsbn}&format=json&jscmd=data`
           );
           const olData = await olRes.json();
-          const book = olData[`ISBN:${isbn}`];
+          const book = olData[`ISBN:${cleanIsbn}`];
           if (book) {
             const pages = book.number_of_pages || null;
             const type = pages > 400 ? 'Broché' : 'Poche';
-            const googlePrice = await fetchGooglePriceByIsbn(isbn);
+            const googlePrice = await fetchGooglePriceByIsbn(cleanIsbn);
             formatted = {
-              id: isbn,
+              id: cleanIsbn,
               title: book.title,
               author: book.authors?.[0]?.name || 'Auteur inconnu',
-              isbn,
+              isbn: cleanIsbn,
               coverId: null,
-              coverUrl: `https://covers.openlibrary.org/b/isbn/${isbn}-M.jpg`,
+              coverUrl: `https://covers.openlibrary.org/b/isbn/${cleanIsbn}-M.jpg`,
               pages,
               type,
               price: googlePrice.available ? formatEuro(googlePrice.value) : googlePrice.label,
@@ -142,7 +143,7 @@ export default function PanelCatalogue() {
 
         if (!formatted) {
           try {
-            const gbRes = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`);
+            const gbRes = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${cleanIsbn}`);
             const gbData = await gbRes.json();
             const item = gbData?.items?.[0]?.volumeInfo;
             if (item) {
@@ -150,10 +151,10 @@ export default function PanelCatalogue() {
               const type = pages > 400 ? 'Broché' : 'Poche';
               const googlePrice = extractGoogleBookPrice(gbData?.items?.[0]?.saleInfo || {});
               formatted = {
-                id: isbn,
+                id: cleanIsbn,
                 title: item.title,
                 author: item.authors?.[0] || 'Auteur inconnu',
-                isbn,
+                isbn: cleanIsbn,
                 coverId: null,
                 coverUrl: item.imageLinks?.thumbnail?.replace('http://', 'https://') || null,
                 pages,
@@ -170,7 +171,10 @@ export default function PanelCatalogue() {
         if (formatted) {
           openBookChoice(formatted);
         } else {
-          toast('ISBN non trouvé — recherchez le titre manuellement pour continuer.');
+          toast('ISBN reconnu mais non trouvé — recherche élargie lancée.');
+          setHasSearched(true);
+          setCatalogueStep(1);
+          search(cleanIsbn);
         }
       } finally {
         setIsbnLoading(false);
