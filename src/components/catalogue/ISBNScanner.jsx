@@ -32,7 +32,7 @@ export default function ISBNScanner({ onResult, onClose }) {
 
     html5Qrcode.start(
       { facingMode: 'environment' },
-      { fps: 10, qrbox: { width: 250, height: 140 } },
+      { fps: 12, qrbox: { width: 290, height: 150 }, aspectRatio: 1.6 },
       (decodedText) => {
         const isbn = decodedText.replace(/[^0-9X]/gi, '');
         if (isbn.length === 10 || isbn.length === 13) {
@@ -220,7 +220,7 @@ export default function ISBNScanner({ onResult, onClose }) {
         {!error && !manualMode && (
           <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
             <div style={{ color: 'rgba(253,252,240,0.5)', fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, textAlign: 'center', letterSpacing: 1 }}>
-              Pointez la caméra vers le code-barres du livre ou importez une photo nette.
+              Cadrez le code-barres ISBN dans le rectangle. Gardez le livre bien à plat et la lumière stable.
             </div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
               <button onClick={() => fileInputRef.current?.click()} disabled={photoLoading} style={{

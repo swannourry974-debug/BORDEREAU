@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import CouponButton from '@/components/shared/CouponButton';
+import ScanPhotoButton from '@/components/catalogue/ScanPhotoButton';
 
-export default function SearchBlock({ onSearch, onScanOpen }) {
+export default function SearchBlock({ onSearch, onScanOpen, onScanResult }) {
   const [query, setQuery] = useState('');
 
   return (
@@ -21,18 +22,15 @@ export default function SearchBlock({ onSearch, onScanOpen }) {
         />
         <CouponButton onClick={() => onSearch(query)} className="w-full sm:w-auto justify-center">Chercher</CouponButton>
       </div>
-      <button
-        onClick={onScanOpen}
-        style={{
-          marginTop: 10, width: '100%', padding: '9px 0',
-          border: '1px dashed var(--bordeaux)', background: 'transparent',
-          color: 'var(--bordeaux)', fontFamily: 'Special Elite, monospace',
-          fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        }}
-      >
-        <span>📷</span> Scanner un code-barres ISBN
-      </button>
+      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <button
+          onClick={onScanOpen}
+          className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-dashed border-bordeaux/50 bg-transparent px-3 py-2 font-ui text-[10px] uppercase tracking-[1.8px] text-bordeaux transition hover:border-cta hover:text-cta"
+        >
+          <span>📷</span> Scanner caméra
+        </button>
+        <ScanPhotoButton onResult={onScanResult} />
+      </div>
     </div>
   );
 }

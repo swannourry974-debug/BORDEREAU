@@ -236,7 +236,7 @@ export default function PanelCatalogue() {
             <>
               <CatalogueSearchIntro />
               <SectionTitle>Rechercher un livre</SectionTitle>
-              <SearchBlock onSearch={handleSearch} onScanOpen={() => setScannerOpen(true)} />
+              <SearchBlock onSearch={handleSearch} onScanOpen={() => setScannerOpen(true)} onScanResult={handleISBNResult} />
 
               {isbnLoading && (
                 <div style={{ textAlign: 'center', padding: '20px 0', fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))' }}>
