@@ -24,7 +24,13 @@ export function buildAdminStats({ commandes = [], relais = [], missions = [], us
   const caMois = filteredCommandes.filter(c => isThisMonth(c.created_date)).reduce((s, c) => s + (c.montant_paye || 0), 0);
   const bloquees = filteredCommandes.filter(c => c.statut !== 'livree' && c.statut !== 'litige' && hoursSince(c.updated_date || c.created_date) > 48);
   const litiges = filteredCommandes.filter(c => c.statut === 'litige');
-  const profilsAttente = relais.filter(r => r.validation_admin === 'en_attente').length + users.filter(u => u.voyageur_validation_status === 'en_attente' || u.identite_validation_status === 'en_attente').length;
+  const commandesTransit = filteredCommandes.filter(c => ['en_transit', 'en_preparation', 'payee'].includes(c.statut)).length;
+  const livresRelais = filteredCommandes.filter(c => c.statut === 'au_relais').length;
+  const relaisAttente = relais.filter(r => r.validation_admin === 'en_attente').length;
+  const retardsPenalites = filteredCommandes.filter(c => (c.jours_retard || 0) > 0 || (c.penalite_retard || 0) > 0).length || bloquees.length;
+  const recentCommandes = filteredCommandes.slice(0, 8);
+  const recentRelais = visibleRelays.slice(0, 8);
+  const profilsAttente = relaisAttente + users.filter(u => u.voyageur_validation_status === 'en_attente' || u.identite_validation_status === 'en_attente').length;
 
   const delivered = filteredCommandes.filter(c => c.statut === 'livree');
   const avgDelay = delivered.length ? delivered.reduce((s, c) => s + Math.max(0, ((toDate(c.date_retrait || c.updated_date) || now) - (toDate(c.created_date) || now)) / 864e5), 0) / delivered.length : 0;
@@ -32,7 +38,7 @@ export function buildAdminStats({ commandes = [], relais = [], missions = [], us
   const topRelais = Object.entries(monthOrders.reduce((acc, c) => ({ ...acc, [c.point_relais_id || 'none']: (acc[c.point_relais_id || 'none'] || 0) + 1 }), {}))
     .map(([id, count]) => ({ id, count, name: relayById[id]?.nom || 'Relais non assigné' })).sort((a, b) => b.count - a.count).slice(0, 3);
 
-  return { countries, visibleRelays, filteredCommandes, caJour, caMois, bloquees, litiges, profilsAttente, avgDelay, topRelais,
+  return { countries, visibleRelays, filteredCommandes, caJour, caMois, bloquees, litiges, profilsAttente, commandesTransit, livresRelais, relaisAttente, retardsPenalites, recentCommandes, recentRelais, avgDelay, topRelais,
     logistics: {
       attente: filteredCommandes.filter(c => c.statut === 'en_attente_paiement').length,
       preparation: filteredCommandes.filter(c => ['payee', 'en_preparation', 'en_transit', 'au_relais'].includes(c.statut)).length,

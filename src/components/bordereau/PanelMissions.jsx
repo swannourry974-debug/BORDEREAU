@@ -9,6 +9,10 @@ import FormulaireVol from '../missions/FormulaireVol';
 import CalendrierVoyageur from '@/components/voyageur/CalendrierVoyageur';
 import CalculatriceRevenus from '@/components/voyageur/CalculatriceRevenus';
 import QuotaJauge from '@/components/voyageur/QuotaJauge';
+import MissionEnCoursCard from '@/components/voyageur/MissionEnCoursCard';
+import VoyageurSectionTabs from '@/components/voyageur/VoyageurSectionTabs';
+import CollapsedMissionList from '@/components/voyageur/CollapsedMissionList';
+import VoyageurSecondarySearch from '@/components/voyageur/VoyageurSecondarySearch';
 import FiltreVille from '@/components/missions/FiltreVille';
 import { BADGES_CONFIG, getBadgesDebloques } from '@/lib/badges';
 import { base44 } from '@/api/base44Client';
@@ -168,6 +172,8 @@ export default function PanelMissions() {
   const [voyageurValidationStatus, setVoyageurValidationStatus] = useState('aucune');
   const [showFormVol, setShowFormVol] = useState(false);
   const [filtreVille, setFiltreVille] = useState(null);
+  const [missionSearch, setMissionSearch] = useState('');
+  const [activeVoyageurTab, setActiveVoyageurTab] = useState('missions');
   const [searchParams, setSearchParams] = useSearchParams();
   const modalParam = searchParams.get('modal');
 
@@ -244,16 +250,22 @@ export default function PanelMissions() {
     paysVisites: 2,
   };
 
-  const missionsMode = available.filter(m => m.mode_livraison === 'express');
+  const searchNeedle = missionSearch.trim().toLowerCase();
+  const matchesSearch = (mission) => !searchNeedle || [mission.livre, mission.ville, mission.type, mission.date].some(value => String(value || '').toLowerCase().includes(searchNeedle));
+  const missionsMode = available.filter(m => m.mode_livraison === 'express' && matchesSearch(m));
+  const searchedMissionsActives = missionsActives.filter(matchesSearch);
+  const searchedMissionsArchivees = missionsArchivees.filter(matchesSearch);
   const missionsFiltered = missionsMode.filter(m => {
     const matchVoyage = voyageActif
       ? m.ville.toLowerCase().includes(voyageActif.arrivee_ville.toLowerCase())
-      : false;
+      : true;
     const matchFiltre = filtreVille
       ? (m.zone_id === filtreVille || m.ville === filtreVille)
       : true;
     return matchVoyage && matchFiltre;
   });
+  const missionEnCours = searchedMissionsActives[0] || missionsFiltered[0] || null;
+  const missionEnCoursCommission = missionEnCours?.engaged ? missionEnCours.commission : (missionEnCours ? getCommission(Object.values(ZONES).find(z => z.id === missionEnCours.zone_id) || zoneVoyage, livresActifs + 1) : null);
 
   const acceptMission = (id, commission) => {
     const mission = available.find(m => m.id === id);
@@ -345,203 +357,149 @@ export default function PanelMissions() {
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
-    <div>
-
-      {/* Notification nouveau badge */}
-      {newBadge && (
-        <div
-          onClick={() => setNewBadge(null)}
-          style={{
-            position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)',
-            zIndex: 500, background: 'var(--encre)', color: 'var(--creme)',
-            padding: '16px 24px', maxWidth: 320, width: '90%',
-            border: '2px solid var(--bordeaux)',
-            boxShadow: '0 0 20px rgba(128,0,32,0.4)',
-            animation: 'fadeSlideIn 0.4s ease',
-            cursor: 'pointer', textAlign: 'center',
-          }}
-        >
-          <div style={{ fontSize: 36, marginBottom: 6 }}>{newBadge.emoji}</div>
-          <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 4 }}>
-            Badge débloqué !
-          </div>
-          <div style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: 16, marginBottom: 4 }}>
-            {newBadge.nom}
-          </div>
-          <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, opacity: 0.7, lineHeight: 1.5 }}>
-            {newBadge.description}
-          </div>
-          <div style={{ marginTop: 10, fontFamily: 'Special Elite, monospace', fontSize: 8, letterSpacing: 2, opacity: 0.4, textTransform: 'uppercase' }}>
-            Appuyez pour fermer
-          </div>
-        </div>
-      )}
-
-      {/* Quota douanier par zone */}
-      <QuotaJauge zone={zoneVoyage} poidsActuelG={poidsEngageG} nbLivres={livresActifs} />
-
-      {/* Jauge valise */}
-      <JaugeValise livresActifs={livresActifs} totalCommission={totalCommission} />
-
-      {/* Scan Validation Modal */}
-      {scanMission && (
-        <ScanValidation
-          mission={scanMission}
-          onClose={() => { setScanMission(null); clearModalParam('scan-validation'); }}
-          onValidated={() => {
-            updateMissionStatus(scanMission.id, 'en_transit');
-            setScanMission(null);
-            clearModalParam('scan-validation');
-          }}
-        />
-      )}
-
-      {/* Missions engagées */}
-      {missionsActives.length > 0 && (
-        <>
-          <SectionTitle>Missions engagées</SectionTitle>
-          {missionsActives.map(m => (
-            <MissionCard key={m.id} mission={m} onAccept={() => {}} disabled={false} onScan={openMissionAction} onRemove={removeMission} />
-          ))}
-          <PerfoStrip />
-        </>
-      )}
-
-      {/* Archives */}
-      {missionsArchivees.length > 0 && (
-        <>
-          <SectionTitle>Archives des missions terminées</SectionTitle>
-          <div style={{
-            background: 'var(--papier)',
-            border: '1.5px solid rgba(45,106,45,0.25)',
-            padding: 16,
-            marginBottom: 12,
-            boxShadow: '3px 3px 0 rgba(26,16,8,0.08)',
-          }}>
-            {missionsArchivees.map(m => (
-              <div key={m.id} style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-                padding: '10px 0', borderBottom: '1px dashed rgba(26,16,8,0.12)',
-              }}>
-                <div>
-                  <div className="font-playfair" style={{ fontSize: 14, fontWeight: 700, color: 'var(--encre)' }}>📚 {m.livre}</div>
-                  <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.5)', marginTop: 2 }}>
-                    {m.ville} · Commission {m.commission?.toFixed(2) || '0.00'} €
-                  </div>
-                </div>
-                <div className="font-special" style={{
-                  border: '1px solid #2d6a2d', color: '#2d6a2d',
-                  fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
-                  padding: '4px 8px', flexShrink: 0,
-                }}>
-                  Livrée
-                </div>
-              </div>
-            ))}
-          </div>
-          <PerfoStrip />
-        </>
-      )}
-
-      <div style={{ background: 'rgba(128,0,32,0.07)', border: '1px dashed var(--bordeaux)', padding: '12px 16px', marginBottom: 16, fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'var(--bordeaux)', lineHeight: 1.6 }}>
-        Les voyageurs interviennent uniquement sur les livraisons Express. Les commandes Collecte sont regroupées et acheminées par Bordero.
-      </div>
-
-      <SectionTitle>Calendrier</SectionTitle>
-      <CalendrierVoyageur missions={engagees} voyages={voyages} />
-      <PerfoStrip />
-
-      <SectionTitle>Calculateur de revenus</SectionTitle>
-      <CalculatriceRevenus />
-      <PerfoStrip />
-
-      {/* Missions disponibles */}
-      <SectionTitle>Choix des livres</SectionTitle>
-      <FiltreVille filtre={filtreVille} onFiltre={setFiltreVille} missions={missionsMode} />
-
-      {!voyageActif && (
-        <div style={{ background: validationBloquee ? 'rgba(180,20,20,0.08)' : 'rgba(128,0,32,0.08)', border: `1px dashed ${validationBloquee ? '#b41414' : 'var(--bordeaux)'}`, padding: '12px 16px', marginBottom: 16, fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: validationBloquee ? '#b41414' : 'var(--bordeaux)', lineHeight: 1.6 }}>
-          {validationBloquee ? '⛔ Profil voyageur bloqué : accès aux missions fermé.' : validationEnAttente ? '⏳ Votre justificatif de vol est en cours de validation admin.' : '🔒 Déclarez un vol futur avec justificatif, puis attendez la validation admin pour accéder aux missions.'}
-        </div>
-      )}
-
-      {limitAtteinte && (
-        <div style={{
-          background: 'rgba(128,0,32,0.08)',
-          border: '1px dashed #800020',
-          padding: '12px 16px', marginBottom: 16,
-          fontFamily: 'IM Fell English, serif', fontStyle: 'italic',
-          fontSize: 13, color: 'var(--bordeaux)', lineHeight: 1.6,
-        }}>
-          🔒 Quota atteint ({quotaLivres} livres / {quotaKg} kg max — Zone {zoneVoyage.label}) pour garantir un passage serein en douane.
-        </div>
-      )}
-
-      {missionsMode.length === 0 && !limitAtteinte && (
-        <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))', textAlign: 'center', padding: 20 }}>
-          Aucune mission Express disponible pour ce trajet.
-        </div>
-      )}
-
-      {voyageActif && (
-        <div style={{
-          background: 'rgba(45,106,45,0.07)', border: '1px solid #2d6a2d',
-          padding: '10px 14px', marginBottom: 12,
-          fontFamily: 'IM Fell English, serif', fontStyle: 'italic',
-          fontSize: 12, color: '#2d6a2d', lineHeight: 1.6,
-          display: 'flex', alignItems: 'center', gap: 8,
-        }}>
-          ✈️ <span>Filtré sur <strong>{voyageActif.arrivee_ville}</strong> · {voyageActif.date_vol}</span>
-        </div>
-      )}
-
-      {missionsFiltered.length === 0 && !limitAtteinte && (
-        <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))', textAlign: 'center', padding: 20 }}>
-          {voyageActif
-            ? `Aucune mission pour "${voyageActif.arrivee_ville}" pour le moment.`
-            : 'Aucune mission disponible pour ce trajet.'}
-        </div>
-      )}
-
-      {missionsFiltered.map((m, i) => {
-        const rang = livresActifs + 1;
-        return (
-          <MissionCard
-            key={m.id}
-            mission={m}
-            rang={rang}
-            onAccept={acceptMission}
-            disabled={limitAtteinte}
-          />
-        );
-      })}
-
-      <PerfoStrip />
-
-      <SectionTitle>Déclarer un nouveau vol</SectionTitle>
-      {!showFormVol ? (
-        <div style={{ background: 'var(--papier)', border: '1.5px dashed hsl(var(--border))', padding: 20, textAlign: 'center' }}>
-          <div style={{ fontSize: 32, marginBottom: 8 }}>✈️</div>
-          {voyageActif && (
-            <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.55)', marginBottom: 10 }}>
-              Vol actif : <strong>{voyageActif.depart_ville} → {voyageActif.arrivee_ville}</strong> · {voyageActif.date_vol}
+      <div>
+        {newBadge && (
+          <div
+            onClick={() => setNewBadge(null)}
+            style={{
+              position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)',
+              zIndex: 500, background: 'var(--encre)', color: 'var(--creme)',
+              padding: '16px 24px', maxWidth: 320, width: '90%',
+              border: '2px solid var(--bordeaux)',
+              boxShadow: '0 0 20px rgba(128,0,32,0.4)',
+              animation: 'fadeSlideIn 0.4s ease',
+              cursor: 'pointer', textAlign: 'center',
+            }}
+          >
+            <div style={{ fontSize: 36, marginBottom: 6 }}>{newBadge.emoji}</div>
+            <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 4 }}>
+              Badge débloqué !
             </div>
-          )}
-          <div className="font-fell" style={{ fontSize: 13, color: 'rgba(26,16,8,0.5)', marginBottom: 14, fontStyle: 'italic' }}>
-            {voyageActif ? 'Déclarer un autre voyage ?' : 'Vous avez un voyage prévu ?'}
+            <div style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: 16, marginBottom: 4 }}>
+              {newBadge.nom}
+            </div>
+            <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, opacity: 0.7, lineHeight: 1.5 }}>
+              {newBadge.description}
+            </div>
           </div>
-          <BtnCoupon onClick={() => setShowFormVol(true)} disabled={validationBloquee}>{validationBloquee ? 'Profil bloqué' : '+ Déclarer un vol'}</BtnCoupon>
-        </div>
-      ) : (
-        <FormulaireVol
-          user={user}
-          onVolDeclare={(voyage) => {
-            setVoyageurValidationStatus(voyage.validation_admin || 'en_attente');
-            setShowFormVol(false);
-          }}
+        )}
+
+        {scanMission && (
+          <ScanValidation
+            mission={scanMission}
+            onClose={() => { setScanMission(null); clearModalParam('scan-validation'); }}
+            onValidated={() => {
+              updateMissionStatus(scanMission.id, 'en_transit');
+              setScanMission(null);
+              clearModalParam('scan-validation');
+            }}
+          />
+        )}
+
+        <VoyageurSecondarySearch query={missionSearch} onQueryChange={setMissionSearch} />
+
+        <MissionEnCoursCard
+          mission={missionEnCours}
+          isEngaged={!!missionEnCours?.engaged}
+          commission={missionEnCoursCommission}
+          disabled={limitAtteinte || validationBloquee || !voyageActif}
+          onAccept={(mission) => acceptMission(mission.id, missionEnCoursCommission)}
+          onDeposit={(mission) => openMissionAction(mission, 'scan')}
         />
-      )}
-    </div>
+
+        <CollapsedMissionList
+          title="Missions acceptées"
+          missions={searchedMissionsActives}
+          renderMission={(mission) => (
+            <MissionCard key={mission.id} mission={mission} onAccept={() => {}} disabled={false} onScan={openMissionAction} onRemove={removeMission} />
+          )}
+        />
+        <CollapsedMissionList
+          title="Missions passées"
+          missions={searchedMissionsArchivees}
+          renderMission={(mission) => (
+            <MissionCard key={mission.id} mission={mission} onAccept={() => {}} disabled={false} onScan={openMissionAction} onRemove={removeMission} />
+          )}
+        />
+
+        <VoyageurSectionTabs active={activeVoyageurTab} onChange={setActiveVoyageurTab} />
+
+        {activeVoyageurTab === 'missions' && (
+          <>
+            <SectionTitle>Choix des livres</SectionTitle>
+            <FiltreVille filtre={filtreVille} onFiltre={setFiltreVille} missions={missionsMode} />
+
+            {!voyageActif && (
+              <div style={{ background: validationBloquee ? 'rgba(180,20,20,0.08)' : 'rgba(128,0,32,0.08)', border: `1px dashed ${validationBloquee ? '#b41414' : 'var(--bordeaux)'}`, padding: '12px 16px', marginBottom: 16, fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: validationBloquee ? '#b41414' : 'var(--bordeaux)', lineHeight: 1.6 }}>
+                {validationBloquee ? '⛔ Profil voyageur bloqué : accès aux missions fermé.' : validationEnAttente ? '⏳ Votre justificatif de vol est en cours de validation admin.' : '🔒 Déclarez un vol futur avec justificatif, puis attendez la validation admin pour accéder aux missions.'}
+              </div>
+            )}
+
+            {limitAtteinte && (
+              <div style={{ background: 'rgba(128,0,32,0.08)', border: '1px dashed #800020', padding: '12px 16px', marginBottom: 16, fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'var(--bordeaux)', lineHeight: 1.6 }}>
+                🔒 Quota atteint ({quotaLivres} livres / {quotaKg} kg max — Zone {zoneVoyage.label}) pour garantir un passage serein en douane.
+              </div>
+            )}
+
+            {voyageActif && (
+              <div style={{ background: 'rgba(45,106,45,0.07)', border: '1px solid #2d6a2d', padding: '10px 14px', marginBottom: 12, fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: '#2d6a2d', lineHeight: 1.6, display: 'flex', alignItems: 'center', gap: 8 }}>
+                ✈️ <span>Filtré sur <strong>{voyageActif.arrivee_ville}</strong> · {voyageActif.date_vol}</span>
+              </div>
+            )}
+
+            {missionsFiltered.length === 0 && !limitAtteinte && (
+              <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))', textAlign: 'center', padding: 20 }}>
+                {missionSearch ? 'Aucune mission ne correspond à cette recherche.' : voyageActif ? `Aucune mission pour "${voyageActif.arrivee_ville}" pour le moment.` : 'Aucune mission disponible pour ce trajet.'}
+              </div>
+            )}
+
+            {missionsFiltered.map((mission) => {
+              const rang = livresActifs + 1;
+              return <MissionCard key={mission.id} mission={mission} rang={rang} onAccept={acceptMission} disabled={limitAtteinte} />;
+            })}
+          </>
+        )}
+
+        {activeVoyageurTab === 'wallet' && (
+          <>
+            <QuotaJauge zone={zoneVoyage} poidsActuelG={poidsEngageG} nbLivres={livresActifs} />
+            <JaugeValise livresActifs={livresActifs} totalCommission={totalCommission} />
+            <WalletCard soldeDisponible={wallet.soldeDisponible} gainsPrevisionnels={wallet.gainsPrevisionnels} virementSuspendu={wallet.virementSuspendu} />
+            <SectionTitle>Calculateur de revenus</SectionTitle>
+            <CalculatriceRevenus />
+          </>
+        )}
+
+        {activeVoyageurTab === 'profil' && (
+          <>
+            <SectionTitle>Calendrier</SectionTitle>
+            <CalendrierVoyageur missions={engagees} voyages={voyages} />
+            <SectionTitle>Déclarer un nouveau vol</SectionTitle>
+            {!showFormVol ? (
+              <div style={{ background: 'var(--papier)', border: '1.5px dashed hsl(var(--border))', padding: 20, textAlign: 'center' }}>
+                <div style={{ fontSize: 32, marginBottom: 8 }}>✈️</div>
+                {voyageActif && (
+                  <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.55)', marginBottom: 10 }}>
+                    Vol actif : <strong>{voyageActif.depart_ville} → {voyageActif.arrivee_ville}</strong> · {voyageActif.date_vol}
+                  </div>
+                )}
+                <div className="font-fell" style={{ fontSize: 13, color: 'rgba(26,16,8,0.5)', marginBottom: 14, fontStyle: 'italic' }}>
+                  {voyageActif ? 'Déclarer un autre voyage ?' : 'Vous avez un voyage prévu ?'}
+                </div>
+                <BtnCoupon onClick={() => setShowFormVol(true)} disabled={validationBloquee}>{validationBloquee ? 'Profil bloqué' : '+ Déclarer un vol'}</BtnCoupon>
+              </div>
+            ) : (
+              <FormulaireVol
+                user={user}
+                onVolDeclare={(voyage) => {
+                  setVoyageurValidationStatus(voyage.validation_admin || 'en_attente');
+                  setShowFormVol(false);
+                }}
+              />
+            )}
+          </>
+        )}
+      </div>
     </PullToRefresh>
   );
 }
