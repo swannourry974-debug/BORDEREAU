@@ -6,18 +6,18 @@ import AdminCategoryButtons from '@/components/admin/dashboard/AdminCategoryButt
 import { buildAdminStats, searchAdminData } from '@/components/admin/dashboard/adminDashboardData';
 import { TEST_MODE_OPEN_ALL_PROFILES } from '@/lib/testMode';
 
-const TABS = [
-  { id: 'dashboard', label: 'Accueil' },
-  { id: 'validation-relais', label: 'Validation relais' },
-  { id: 'validation-voyageurs', label: 'Validation voyageurs' },
-  { id: 'activite', label: "Activité de l'appli" },
-  { id: 'analytics', label: 'Analytics comportements' },
-  { id: 'villes', label: 'Achats par villes' },
-  { id: 'livraisons', label: 'Livraisons & États' },
-  { id: 'litiges', label: 'Tableau litiges' },
-  { id: 'collectif', label: 'Malles Collecte' },
-  { id: 'relais', label: 'Réseau Points Relais' },
-  { id: 'dossier-canvas', label: 'Dossier Canvas' },
+export const TABS = [
+  { id: 'dashboard', label: 'Accueil', category: 'validations', icon: '🏠' },
+  { id: 'validation-relais', label: 'Validation relais', category: 'validations', icon: '🏪' },
+  { id: 'validation-voyageurs', label: 'Validation voyageurs', category: 'validations', icon: '✈️' },
+  { id: 'livraisons', label: 'Livraisons & États', category: 'operations', icon: '🚚' },
+  { id: 'litiges', label: 'Tableau litiges', category: 'operations', icon: '⚠️' },
+  { id: 'collectif', label: 'Malles Collecte', category: 'operations', icon: '📦' },
+  { id: 'relais', label: 'Réseau Relais', category: 'operations', icon: '🗺️' },
+  { id: 'activite', label: "Activité de l'appli", category: 'analytics', icon: '📈' },
+  { id: 'analytics', label: 'Analytics comportements', category: 'analytics', icon: '📊' },
+  { id: 'villes', label: 'Achats par villes', category: 'analytics', icon: '🏙️' },
+  { id: 'dossier-canvas', label: 'Dossier Canvas', category: 'analytics', icon: '📋' },
 ];
 
 export default function AdminDashboard() {
