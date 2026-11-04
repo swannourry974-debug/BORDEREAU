@@ -4,7 +4,25 @@ import { ArrowLeft } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useLang } from '@/lib/LangContext';
 
-const ROOT_PANELS = ['/', '/catalogue', '/etagere', '/progression-collecte', '/missions', '/accueil-voyageur', '/stock'];
+const ROOT_PANELS = [
+  '/',
+  '/catalogue',
+  '/etagere',
+  '/wishlist',
+  '/favoris',
+  '/progression-collecte',
+  '/missions',
+  '/accueil-voyageur',
+  '/stock',
+  '/Stock',
+  '/scanner',
+  '/profils',
+  '/profil',
+  '/PanelProfil',
+  '/panel-profil',
+  '/aide',
+  '/wallet',
+];
 
 export default function AppHeader({ role, roleSwitcherOpen, onToggleRoleSwitcher }) {
   const location = useLocation();
@@ -17,6 +35,19 @@ export default function AppHeader({ role, roleSwitcherOpen, onToggleRoleSwitcher
   };
   const showBack = !ROOT_PANELS.includes(location.pathname);
   const openOfficialLogin = () => base44.auth.logout(window.location.pathname);
+
+  const handleBackClick = () => {
+    if (window.history.length > 2) {
+      navigate(-1);
+    } else {
+      const defaultRoleRoot = {
+        lecteur: '/catalogue',
+        voyageur: '/accueil-voyageur',
+        relais: '/stock',
+      };
+      navigate(defaultRoleRoot[role] || '/catalogue');
+    }
+  };
 
   return (
     <header className="px-3 sm:px-5" style={{
@@ -33,7 +64,8 @@ export default function AppHeader({ role, roleSwitcherOpen, onToggleRoleSwitcher
         <div className="min-w-0 flex items-center gap-2 sm:gap-3" style={{ lineHeight: 1 }}>
           {showBack && (
             <button
-              onClick={() => navigate(-1)}
+              onClick={handleBackClick}
+              aria-label="Retour"
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--creme)', display: 'flex', alignItems: 'center', userSelect: 'none' }}
             >
               <ArrowLeft size={20} />
