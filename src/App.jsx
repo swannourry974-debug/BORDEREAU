@@ -23,7 +23,7 @@ const AuthenticatedApp = () => {
   const { user, isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const publicRoutes = ['/', '/landing-lecteur', '/landing-voyageur', '/landing-relais', '/LandingRelais', '/LandingRelais/', '/relais'];
+  const publicRoutes = ['/', '/landing-lecteur', '/LandingLecteur', '/lecteur', '/Lecteur', '/landing-voyageur', '/LandingVoyageur', '/voyageur', '/Voyageur', '/landing-relais', '/LandingRelais', '/LandingRelais/', '/relais', '/Relais'];
   const isPublicRoute = publicRoutes.includes(location.pathname);
   const shouldOpenRelayStock = user?.role === 'relais' && user?.relais_valide === true && location.pathname !== '/stock' && (location.pathname === '/' || location.pathname === '/catalogue' || isPublicRoute);
 
@@ -82,16 +82,24 @@ const AuthenticatedApp = () => {
           <Route path="/aide" element={<Bordero initialPanel="aide" />} />
           {/* Add your page Route elements here */}
           <Route path="/landing-lecteur" element={<LandingLecteur />} />
+          <Route path="/LandingLecteur" element={<LandingLecteur />} />
+          <Route path="/lecteur" element={<LandingLecteur />} />
+          <Route path="/Lecteur" element={<LandingLecteur />} />
           <Route path="/landing-voyageur" element={<LandingVoyageur />} />
+          <Route path="/LandingVoyageur" element={<LandingVoyageur />} />
+          <Route path="/voyageur" element={<LandingVoyageur />} />
+          <Route path="/Voyageur" element={<LandingVoyageur />} />
           <Route path="/landing-relais" element={<LandingRelais />} />
           <Route path="/LandingRelais" element={<LandingRelais />} />
           <Route path="/LandingRelais/" element={<LandingRelais />} />
           <Route path="/relais" element={<LandingRelais />} />
+          <Route path="/Relais" element={<LandingRelais />} />
           <Route path="/panel-profil" element={<PanelProfil />} />
           <Route path="/PanelProfil" element={<PanelProfil />} />
           <Route path="/PanelProfil/" element={<PanelProfil />} />
           <Route path="/panelprofil" element={<PanelProfil />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/Admin" element={<AdminDashboard />} />
           <Route path="*" element={<PageNotFound />} />
         </Routes>
       </motion.div>

@@ -187,6 +187,10 @@ export default function Bordero({ initialPanel }) {
 
   const switchPanel = (panelId) => {
     setCommandeOpen(false);
+    if (panelId === 'admin') {
+      navigate('/admin');
+      return;
+    }
     navigate('/' + panelId);
   };
 
@@ -336,32 +340,18 @@ export default function Bordero({ initialPanel }) {
 
           {/* Nav items */}
           <nav style={{ padding: '16px 0' }}>
-            {role === 'lecteur' && (
-              <>
-                <SidebarItem icon="🏠" label="Accueil" panelId="catalogue" active={activePanel === 'catalogue'} onClick={() => switchPanel('catalogue')} />
-                <SidebarItem icon="▥" label="Bibliothèque" panelId="etagere" active={activePanel === 'etagere'} onClick={() => switchPanel('etagere')} />
-                <SidebarItem icon="♡" label="Wishlist" panelId="wishlist" active={activePanel === 'wishlist'} onClick={() => switchPanel('wishlist')} />
-                <SidebarItem icon="★" label="Favoris" panelId="favoris" active={activePanel === 'favoris'} onClick={() => switchPanel('favoris')} />
-                <SidebarItem icon="⚖️" label="Collecte" panelId="progression-collecte" active={activePanel === 'progression-collecte'} onClick={() => switchPanel('progression-collecte')} />
-              </>
-            )}
-            {role === 'voyageur' && (
-              <>
-                <SidebarItem icon="🏠" label="Accueil" panelId="accueil-voyageur" active={activePanel === 'accueil-voyageur'} onClick={() => switchPanel('accueil-voyageur')} />
-                <SidebarItem icon="🗺️" label="Mission" panelId="missions" active={activePanel === 'missions'} onClick={() => switchPanel('missions')} />
-                <SidebarItem icon="📷" label="Scanner" panelId="scanner" active={activePanel === 'scanner'} onClick={() => switchPanel('scanner')} />
-              </>
-            )}
-            {role === 'relais' && (
-              <>
-                <SidebarItem icon="⬡" label="Scanner" panelId="scanner" active={activePanel === 'scanner'} onClick={() => switchPanel('scanner')} />
-                <SidebarItem icon="📦" label="Stock" panelId="stock" active={activePanel === 'stock'} onClick={() => switchPanel('stock')} />
-                <SidebarItem icon="📊" label="Profils" panelId="profils" active={activePanel === 'profils'} onClick={() => switchPanel('profils')} />
-                <SidebarItem icon="⚖️" label="Collecte" panelId="progression-collecte" active={activePanel === 'progression-collecte'} onClick={() => switchPanel('progression-collecte')} />
-                <SidebarItem icon="❓" label="Aide" panelId="aide" active={activePanel === 'aide'} onClick={() => switchPanel('aide')} />
-              </>
-            )}
+            <SidebarItem icon="🏠" label="Accueil lecteur" panelId="catalogue" active={activePanel === 'catalogue'} onClick={() => switchPanel('catalogue')} />
+            <SidebarItem icon="▥" label="Bibliothèque" panelId="etagere" active={activePanel === 'etagere'} onClick={() => switchPanel('etagere')} />
+            <SidebarItem icon="♡" label="Wishlist" panelId="wishlist" active={activePanel === 'wishlist'} onClick={() => switchPanel('wishlist')} />
+            <SidebarItem icon="✈️" label="Voyageur" panelId="accueil-voyageur" active={activePanel === 'accueil-voyageur'} onClick={() => switchPanel('accueil-voyageur')} />
+            <SidebarItem icon="🗺️" label="Missions" panelId="missions" active={activePanel === 'missions'} onClick={() => switchPanel('missions')} />
+            <SidebarItem icon="📷" label="Scanner" panelId="scanner" active={activePanel === 'scanner'} onClick={() => switchPanel('scanner')} />
+            <SidebarItem icon="📦" label="Stock relais" panelId="stock" active={activePanel === 'stock'} onClick={() => switchPanel('stock')} />
+            <SidebarItem icon="📊" label="Profils relais" panelId="profils" active={activePanel === 'profils'} onClick={() => switchPanel('profils')} />
+            <SidebarItem icon="⚖️" label="Collecte" panelId="progression-collecte" active={activePanel === 'progression-collecte'} onClick={() => switchPanel('progression-collecte')} />
+            <SidebarItem icon="👛" label="Wallet" panelId="wallet" active={activePanel === 'wallet'} onClick={() => switchPanel('wallet')} />
             <SidebarItem icon="👤" label="Profil" panelId="profil" active={activePanel === 'profil'} onClick={() => switchPanel('profil')} />
+            <SidebarItem icon="⌘" label="Admin" panelId="admin" active={false} onClick={() => switchPanel('admin')} />
           </nav>
 
           {/* Footer sidebar */}
@@ -400,12 +390,7 @@ export default function Bordero({ initialPanel }) {
             {activePanel === 'scanner' && (role === 'relais' || (TEST_MODE_OPEN_ALL_PROFILES && role !== 'voyageur')) && isRelaisValidated && <PanelScanner />}
             {activePanel === 'profils' && isRelaisValidated && <PanelProfils />}
             {activePanel === 'profil' && <PanelProfil />}
-            {activePanel === 'progression-collecte' && (role !== 'voyageur' || TEST_MODE_OPEN_ALL_PROFILES) && <PanelProgressionCollecte role={role} currentUser={currentUser} />}
-            {activePanel === 'progression-collecte' && role === 'voyageur' && !TEST_MODE_OPEN_ALL_PROFILES && (
-              <div style={{ background: 'var(--papier)', border: '1px dashed var(--bordeaux)', padding: 24, textAlign: 'center', color: 'var(--bordeaux)' }}>
-                La Collecte est gérée uniquement par Bordero. Votre espace voyageur reste dédié aux missions Express limitées à 10 livres.
-              </div>
-            )}
+            {activePanel === 'progression-collecte' && <PanelProgressionCollecte role={role} currentUser={currentUser} />}
             {activePanel === 'wallet' && (role === 'lecteur' ? <PanelWalletLecteur /> : role === 'voyageur' ? <PanelAccueilVoyageur /> : <PanelWalletAdmin />)}
             {activePanel === 'aide' && <PanelAide role={role} />}
           </div>
