@@ -25,7 +25,9 @@ const AuthenticatedApp = () => {
   const navigate = useNavigate();
   const publicRoutes = ['/', '/landing-lecteur', '/LandingLecteur', '/lecteur', '/Lecteur', '/landing-voyageur', '/LandingVoyageur', '/voyageur', '/Voyageur', '/landing-relais', '/LandingRelais', '/LandingRelais/', '/relais', '/Relais'];
   const isPublicRoute = publicRoutes.includes(location.pathname);
-  const shouldOpenRelayStock = user?.role === 'relais' && user?.relais_valide === true && location.pathname !== '/stock' && (location.pathname === '/' || location.pathname === '/catalogue' || isPublicRoute);
+  const activeProfileChoice = user?.email ? localStorage.getItem(`bordero_active_profile_${user.email}`) : null;
+  const shouldRespectManualProfile = ['lecteur', 'voyageur'].includes(activeProfileChoice);
+  const shouldOpenRelayStock = !shouldRespectManualProfile && user?.role === 'relais' && user?.relais_valide === true && location.pathname !== '/stock' && (location.pathname === '/' || location.pathname === '/catalogue' || isPublicRoute);
 
   useEffect(() => {
     if (!isLoadingPublicSettings && !isLoadingAuth && shouldOpenRelayStock) {

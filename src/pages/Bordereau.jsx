@@ -100,8 +100,9 @@ export default function Bordero({ initialPanel }) {
     base44.auth.me().then(async user => {
       if (!user) return;
       let activeUser = user;
+      const manualProfile = localStorage.getItem(`bordero_active_profile_${user.email}`);
       const relais = (await base44.entities.PointRelais.filter({ gerant_email: user.email }, '-updated_date', 1))[0];
-      if (relais?.validation_admin === 'valide') {
+      if (relais?.validation_admin === 'valide' && !['lecteur', 'voyageur'].includes(manualProfile)) {
         const updates = {
           role: 'relais',
           relais_valide: true,
@@ -123,6 +124,9 @@ export default function Bordero({ initialPanel }) {
           localStorage.setItem(`bordero_role_prompt_seen_${activeUser.email}`, 'true');
           base44.auth.updateMe(updates).then(updated => setCurrentUser(updated || activeUser)).catch(() => setCurrentUser(activeUser));
           navigate('/accueil-voyageur', { replace: true });
+        } else if (['lecteur', 'voyageur', 'relais'].includes(manualProfile)) {
+          setRole(manualProfile);
+          activeUser = { ...activeUser, role: manualProfile };
         } else if (['lecteur', 'voyageur', 'relais'].includes(user.role)) {
           setRole(user.role);
         }
@@ -161,13 +165,9 @@ export default function Bordero({ initialPanel }) {
       return;
     }
     setRole(newRole);
-    if (TEST_MODE_OPEN_ALL_PROFILES) {
-      const defaults = { lecteur: '/catalogue', voyageur: '/accueil-voyageur', relais: '/stock' };
-      navigate(defaults[newRole]);
-      return;
-    }
     if (currentUser) {
       localStorage.setItem(`bordero_role_prompt_seen_${currentUser.email}`, 'true');
+      localStorage.setItem(`bordero_active_profile_${currentUser.email}`, newRole);
       const updates = newRole === 'relais'
         ? {
             role: newRole,
