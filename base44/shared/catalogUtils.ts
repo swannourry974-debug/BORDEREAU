@@ -334,13 +334,39 @@ function rowsFromAwinHtmlList(text = '') {
 function sanitizeAwinFeedRow(row = {}) {
   return {
     advertiser_name: String(row.advertiser_name || '').trim(),
+    feed_id: String(row.feed_id || row.data_feed_id || row.fid || '').trim(),
     feed_name: String(row.feed_name || '').trim(),
     language: String(row.language || '').trim(),
     primary_region: String(row.primary_region || '').trim(),
     datafeed_format: String(row.datafeed_format || '').trim(),
+    membership_status: String(row.membership_status || row.status || '').trim(),
     no_of_products: String(row.no_of_products || '').trim(),
     vertical: String(row.vertical || '').trim(),
   };
+}
+
+export async function listAwinFeedRows(configuredUrl, token, options = {}) {
+  const timeoutMs = options.timeoutMs || 120000;
+  const initial = await fetchAwinWithRedirects(configuredUrl, token, timeoutMs);
+  const initialHttp = {
+    status: initial.response?.status || null,
+    content_type: initial.response?.headers.get('content-type') || '',
+    content_length: initial.response?.headers.get('content-length') || '',
+    redirects: initial.redirects,
+    final_url_masked: maskAwinUrl(initial.finalUrl),
+    auth_mode: initial.auth_mode,
+  };
+
+  if (!initial.response?.ok || !initial.response?.body) {
+    const error = new Error(`Liste Awin impossible (${initial.response?.status || 'sans réponse'})`);
+    (error as any).http = initialHttp;
+    throw error;
+  }
+
+  const firstProbe = await probeAwinStream(initial.response.body, initial.response.headers.get('content-encoding') || '');
+  const listText = await readAwinText(firstProbe.stream);
+  const rows = [...rowsFromAwinCsvList(listText), ...rowsFromAwinHtmlList(listText)];
+  return { rows, http: initialHttp };
 }
 
 function chooseCulturaFeed(rows = []) {

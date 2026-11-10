@@ -1,5 +1,5 @@
 import { secrets } from 'base44:runtime';
-import { AWIN_PRODUCT_FIELDS, isBookCategory, isTruthyStock, maskAwinUrl, normalizeAwinHeader, normalizeIsbn, parseCsvLine, parsePrice, resolveAwinDatafeed, safeUrl } from '../../shared/catalogUtils.ts';
+import { AWIN_PRODUCT_FIELDS, isBookCategory, isTruthyStock, listAwinFeedRows, maskAwinUrl, normalizeAwinHeader, normalizeIsbn, parseCsvLine, parsePrice, resolveAwinDatafeed, safeUrl } from '../../shared/catalogUtils.ts';
 
 // TEMPORAIRE — fonction de diagnostic lecture seule pour valider le flux Awin Cultura.
 // À retirer après validation du flux. Cette fonction n'écrit jamais dans Books, BookOffers ou ImportLog.
@@ -37,6 +37,44 @@ async function* lineIterator(stream, isGzip) {
     }
   }
   if (buffer.trim()) yield buffer;
+}
+
+const BOOK_FEED_KEYWORDS = [
+  'LIVRE',
+  'ROMAN',
+  'LITTERATURE',
+  'BD',
+  'MANGA',
+  'COMIC',
+  'JEUNESSE',
+  'SCOLAIRE',
+  'UNIVERSITAIRE',
+  'PRATIQUE',
+  'HISTOIRE',
+  'SCIENCES',
+  'LOISIRS',
+  'BEAUX LIVRES',
+  'CUISINE',
+  'VOYAGE',
+  'ESSAI',
+  'POCHES',
+  'DICTIONNAIRE',
+];
+
+function normalizeFeedText(value = '') {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase();
+}
+
+function parseProductCount(value = '') {
+  return Number(String(value || '').replace(/[^0-9]/g, '')) || 0;
+}
+
+function looksLikeBookFeed(feedName = '') {
+  const normalized = normalizeFeedText(feedName);
+  return BOOK_FEED_KEYWORDS.some(keyword => normalized.includes(normalizeFeedText(keyword)));
 }
 
 function analyseRow(row, seenIsbns) {
@@ -93,7 +131,96 @@ export default async function(req) {
   const secretStart = nowMs();
   const token = getSecret('AWIN_API_TOKEN');
   const feedUrl = getSecret('AWIN_CULTURA_FEED_URL');
+  const action = String(body.action || '').trim();
   durations.secrets_ms = elapsed(secretStart);
+
+  if (action === 'list_feeds') {
+    const listReport = {
+      diagnostic: 'testAwinFeed',
+      action: 'list_feeds',
+      temporary_function: true,
+      read_only: true,
+      secrets: {
+        awin_api_token_present: Boolean(token),
+        feed_url_present: Boolean(feedUrl),
+      },
+      http: {
+        status: null,
+        content_type: '',
+        content_length: '',
+        redirects: 0,
+        auth_mode: '',
+        error_message: '',
+      },
+      totals: {
+        cultura_feeds_detected: 0,
+        book_feeds_detected: 0,
+        book_feeds_products_sum: 0,
+      },
+      advertisers_detected: [],
+      feeds: [],
+      durations_ms: durations,
+    };
+
+    if (!token || !feedUrl) {
+      listReport.http.error_message = 'Secrets requis manquants';
+      listReport.durations_ms.total_ms = elapsed(totalStart);
+      return Response.json(listReport, { status: 200 });
+    }
+
+    try {
+      const listStart = nowMs();
+      const { rows, http } = await listAwinFeedRows(feedUrl, token, { timeoutMs: 90000 });
+      durations.feed_list_ms = elapsed(listStart);
+      listReport.http = {
+        status: http.status,
+        content_type: http.content_type,
+        content_length: http.content_length,
+        redirects: http.redirects,
+        auth_mode: http.auth_mode,
+        error_message: '',
+      };
+
+      const culturaRows = rows.filter(row => normalizeFeedText(row.advertiser_name).includes('CULTURA'));
+      listReport.advertisers_detected = [...new Set(culturaRows.map(row => String(row.advertiser_name || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+      const culturaFeeds = culturaRows
+        .map(row => {
+          const noOfProducts = parseProductCount(row.no_of_products);
+          return {
+            feed_id: String(row.feed_id || row.data_feed_id || row.fid || '').trim(),
+            feed_name: String(row.feed_name || '').trim(),
+            language: String(row.language || '').trim(),
+            primary_region: String(row.primary_region || '').trim(),
+            datafeed_format: String(row.datafeed_format || '').trim(),
+            membership_status: String(row.membership_status || row.status || '').trim(),
+            no_of_products: noOfProducts,
+            looks_like_books: looksLikeBookFeed(row.feed_name),
+          };
+        })
+        .sort((a, b) => b.no_of_products - a.no_of_products);
+
+      listReport.feeds = culturaFeeds;
+      listReport.totals.cultura_feeds_detected = culturaFeeds.length;
+      listReport.totals.book_feeds_detected = culturaFeeds.filter(feed => feed.looks_like_books).length;
+      listReport.totals.book_feeds_products_sum = culturaFeeds.reduce((sum, feed) => sum + (feed.looks_like_books ? feed.no_of_products : 0), 0);
+      listReport.durations_ms.total_ms = elapsed(totalStart);
+      return Response.json(listReport, { status: 200 });
+    } catch (error) {
+      listReport.http.error_message = error.message;
+      if (error.http) {
+        listReport.http = {
+          status: error.http.status || null,
+          content_type: error.http.content_type || '',
+          content_length: error.http.content_length || '',
+          redirects: error.http.redirects || 0,
+          auth_mode: error.http.auth_mode || '',
+          error_message: error.message,
+        };
+      }
+      listReport.durations_ms.total_ms = elapsed(totalStart);
+      return Response.json(listReport, { status: 200 });
+    }
+  }
 
   const report = {
     diagnostic: 'testAwinFeed',
