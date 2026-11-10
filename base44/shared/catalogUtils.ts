@@ -44,9 +44,16 @@ export function normalizeIsbn(value = '') {
   return null;
 }
 
+export function isValidEan13(value = '') {
+  const digits = String(value || '').replace(/[^0-9]/g, '');
+  if (!/^\d{13}$/.test(digits)) return false;
+  const sum = digits.slice(0, 12).split('').reduce((total, char, index) => total + Number(char) * (index % 2 ? 3 : 1), 0);
+  return ((10 - (sum % 10)) % 10) === Number(digits[12]);
+}
+
 export function cleanEan(value = '') {
   const digits = String(value || '').replace(/[^0-9]/g, '');
-  return /^\d{13}$/.test(digits) ? digits : '';
+  return isValidEan13(digits) ? digits : '';
 }
 
 export function parsePrice(value) {
@@ -90,8 +97,8 @@ export function isTruthyStock(value) { return normalizeAvailability(value) === '
 
 export function isEditorialProduct(category = '', title = '') {
   const text = normalizeText(`${category} ${title}`);
-  const editorial = ['coffret', 'pack', 'integrale', 'intégrale', 'album', 'agenda', 'carnet', 'calendrier', 'lot', 'collector', 'box', 'tome', 'livre', 'roman', 'bd', 'bande dessinee', 'manga', 'comics', 'litterature', 'jeunesse'];
-  const hardExcluded = ['dvd', 'blu ray', 'bluray', 'cd audio', 'vinyle', 'jeux video', 'jeu video', 'jouet', 'figurine', 'peluche', 'fourniture'];
+  const editorial = ['coffret', 'pack', 'integrale', 'intégrale', 'album', 'agenda', 'carnet', 'calendrier', 'dvd', 'lot', 'collector', 'box', 'tome', 'livre', 'roman', 'bd', 'bande dessinee', 'manga', 'comics', 'litterature', 'jeunesse'];
+  const hardExcluded = ['blu ray', 'bluray', 'cd audio', 'vinyle', 'jeux video', 'jeu video', 'jouet', 'figurine', 'peluche', 'fourniture'];
   if (hardExcluded.some(word => text.includes(normalizeText(word)))) return false;
   return editorial.some(word => text.includes(normalizeText(word)));
 }
@@ -101,7 +108,7 @@ export function isBookCategory(category = '', title = '') { return isEditorialPr
 export function inferProductType(category = '', title = '', isbnValid = false) {
   if (isbnValid) return 'livre';
   const text = normalizeText(`${category} ${title}`);
-  return ['coffret', 'pack', 'integrale', 'album', 'agenda', 'carnet', 'calendrier', 'lot', 'collector', 'box'].some(word => text.includes(normalizeText(word))) ? 'produit_editorial' : 'produit_editorial';
+  return ['coffret', 'pack', 'integrale', 'album', 'agenda', 'carnet', 'calendrier', 'dvd', 'lot', 'collector', 'box'].some(word => text.includes(normalizeText(word))) ? 'produit_editorial' : 'livre';
 }
 
 export function inferAuthor(row = {}) {
