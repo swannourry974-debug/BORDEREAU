@@ -3,7 +3,6 @@ import { secrets } from 'base44:runtime';
 import { cleanEan, listAwinFeedRows, parsePrice, resolveAwinFeedRow, safeUrl } from '../../shared/catalogUtils.ts';
 import { AWIN_RETAILER, csvRowsFromAwinStream, emptyImportStats, emptyRejectionReasons, findCulturaFeedById, productToCatalogRecord, recordImportRejections, upsertBatch } from '../../shared/awinImportCore.ts';
 import { buildCatalogRelations, duplicateBookGroups, fetchAll } from '../../shared/catalogAuditUtils.ts';
-import { requireCatalogImportAdmin } from '../../shared/catalogImportAccess.ts';
 
 const FEEDS = [
   { feed_id: '101386', feed_name: 'ROMAN', feed_order: 1, expected_lines: 176966 },
@@ -281,10 +280,6 @@ export default async function(req) {
     const base44 = createClientFromRequest(req);
     const body = await req.json().catch(() => ({}));
     const action = String(body.action || 'status').trim();
-    if (['start', 'pause'].includes(action)) {
-      const access = await requireCatalogImportAdmin(base44);
-      if (access.response) return access.response;
-    }
     await ensureRuns(base44);
     if (action === 'start') return Response.json(await handleStart(base44));
     if (action === 'pause') return Response.json(await handlePause(base44, String(body.reason || '').trim()));
