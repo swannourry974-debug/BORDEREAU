@@ -1,6 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { secrets } from 'base44:runtime';
-import { buildSuggestionsForBook, inferAuthor, inferBookType, isBookCategory, isTruthyStock, normalizeIsbn, normalizeText, parseCsvLine, parsePrice, safeUrl } from '../../shared/catalogUtils.ts';
+import { buildSuggestionsForBook, inferAuthor, inferBookType, isBookCategory, isTruthyStock, normalizeIsbn, normalizeText, parseCsvLine, parsePrice, resolveAwinDatafeed, safeUrl } from '../../shared/catalogUtils.ts';
 
 const RETAILER = 'Cultura';
 const BATCH_SIZE = 300;
@@ -13,8 +13,10 @@ async function readSecret(name) {
   }
 }
 
-async function* csvRowsFromGzipStream(stream) {
-  const textStream = stream.pipeThrough(new DecompressionStream('gzip')).pipeThrough(new TextDecoderStream());
+async function* csvRowsFromAwinStream(stream, isGzip) {
+  const textStream = isGzip
+    ? stream.pipeThrough(new DecompressionStream('gzip')).pipeThrough(new TextDecoderStream())
+    : stream.pipeThrough(new TextDecoderStream());
   const reader = textStream.getReader();
   let buffer = '';
   let headers = null;
@@ -50,15 +52,14 @@ async function* csvRowsFromGzipStream(stream) {
 
 function productToCatalogRecord(row) {
   const title = String(row.product_name || row.title || '').trim();
-  const category = String(row.merchant_product_category_path || row.category || '').trim();
+  const category = String(row.merchant_product_category_path || row.category_name || row.product_type || row.custom_1 || row.category || '').trim();
   if (!isBookCategory(category, title)) return { error: 'not_book' };
 
   const isbn13 = normalizeIsbn(row.ean || row.isbn || row.isbn13 || '');
   if (!isbn13) return { error: 'invalid_ean' };
   const price = parsePrice(row.search_price || row.price);
   if (!price) return { error: 'invalid_price' };
-  const currency = String(row.currency || '').trim().toUpperCase();
-  if (!currency) return { error: 'missing_currency' };
+  const currency = String(row.currency || 'EUR').trim().toUpperCase();
   const merchantUrl = safeUrl(row.merchant_deep_link || row.merchant_url || row.product_url || '');
   const affiliateUrl = safeUrl(row.aw_deep_link || row.affiliate_url || '');
   if (!merchantUrl && !affiliateUrl) return { error: 'invalid_url' };
@@ -77,7 +78,7 @@ function productToCatalogRecord(row) {
       author,
       author_norm: authorNorm,
       description: String(row.description || '').trim(),
-      image_url: safeUrl(row.merchant_image_url || row.image_url || ''),
+      image_url: safeUrl(row.merchant_image_url || row.aw_image_url || row.image_url || ''),
       category,
       category_norm: categoryNorm,
       language: String(row.language || row.lang || 'fr').trim() || 'fr',
@@ -89,7 +90,7 @@ function productToCatalogRecord(row) {
       price,
       original_price: parsePrice(row.original_price || row.rrp_price || row.search_price) || price,
       currency,
-      availability: isTruthyStock(row.in_stock || row.availability) ? 'en_stock' : 'indisponible',
+      availability: isTruthyStock(row.in_stock || row.stock_status || row.availability) ? 'en_stock' : 'indisponible',
       stock_quantity: Number(row.stock_quantity || 0) || 0,
       merchant_url: merchantUrl,
       affiliate_url: affiliateUrl || merchantUrl,
@@ -193,22 +194,18 @@ export default async function(req) {
       test_limit: limit || undefined,
     });
 
-    const feedUrl = await readSecret('AWIN_FEED_URL');
+    const feedUrl = await readSecret('AWIN_CULTURA_FEED_URL') || await readSecret('AWIN_FEED_URL');
     const token = await readSecret('AWIN_API_TOKEN');
     if (!feedUrl || !token) {
       await base44.asServiceRole.entities.ImportLog.update(log.id, {
         finished_at: new Date().toISOString(),
         status: 'failed',
-        error_message: 'Secrets Awin manquants : AWIN_FEED_URL et AWIN_API_TOKEN',
+        error_message: 'Secrets Awin manquants : AWIN_CULTURA_FEED_URL et AWIN_API_TOKEN',
       });
-      return Response.json({ error: 'Secrets Awin manquants : AWIN_FEED_URL et AWIN_API_TOKEN' }, { status: 500 });
+      return Response.json({ error: 'Secrets Awin manquants : AWIN_CULTURA_FEED_URL et AWIN_API_TOKEN' }, { status: 500 });
     }
 
-    const response = await fetch(feedUrl, {
-      headers: { Authorization: `Bearer ${token}`, 'x-api-key': token },
-      signal: AbortSignal.timeout(240000),
-    });
-    if (!response.ok || !response.body) throw new Error(`Téléchargement Awin impossible (${response.status})`);
+    const resolved = await resolveAwinDatafeed(feedUrl, token, { timeoutMs: 240000 });
 
     let batch = [];
     let processed = 0;
@@ -219,7 +216,7 @@ export default async function(req) {
     let lineCheckpoint = resumeFromLine;
     let sampleBook = null;
 
-    for await (const { row, lineNumber } of csvRowsFromGzipStream(response.body)) {
+    for await (const { row, lineNumber } of csvRowsFromAwinStream(resolved.stream, resolved.gzip.is_gzip)) {
       if (lineNumber <= resumeFromLine) continue;
       if (limit && processed >= limit) break;
       processed += 1;
@@ -252,6 +249,7 @@ export default async function(req) {
     const suggestions = sampleBook ? await buildSuggestionsForBook(base44, sampleBook, 5) : [];
     const controlReport = {
       test_limit: limit || null,
+      feed_resolution: resolved.feed_resolution,
       books_created: booksCreated,
       cultura_offers_created_or_updated: offersUpdated,
       duplicate_isbn13_detected_or_existing: duplicates,
@@ -271,7 +269,7 @@ export default async function(req) {
       duplicates,
       errors,
       status,
-      feed_size_bytes: Number(response.headers.get('content-length') || 0),
+      feed_size_bytes: Number(resolved.http.content_length || 0),
       line_checkpoint: lineCheckpoint,
       control_report: controlReport,
     });

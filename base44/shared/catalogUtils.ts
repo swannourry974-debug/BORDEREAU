@@ -202,3 +202,230 @@ export async function buildSuggestionsForBook(base44, book, maxSuggestions = 5) 
   }
   return suggestions;
 }
+
+export const AWIN_PRODUCT_FIELDS = [
+  'product_name',
+  'ean',
+  'search_price',
+  'currency',
+  'merchant_image_url',
+  'description',
+  'merchant_product_category_path',
+  'in_stock',
+  'stock_quantity',
+  'merchant_deep_link',
+  'aw_deep_link',
+  'last_updated',
+];
+
+export function normalizeAwinHeader(value = '') {
+  return normalizeText(value).replace(/ /g, '_');
+}
+
+export function maskAwinUrl(value = '') {
+  try {
+    const url = new URL(value);
+    const safePath = url.pathname
+      .split('/')
+      .map((segment) => {
+        if (!segment) return segment;
+        if (segment.length >= 16) return ':masked';
+        if (/^[A-Fa-f0-9]{10,}$/.test(segment)) return ':masked';
+        return segment;
+      })
+      .join('/');
+    return `${url.origin}${safePath}`;
+  } catch {
+    return '';
+  }
+}
+
+async function fetchAwinWithRedirects(feedUrl, token, timeoutMs = 120000) {
+  let currentUrl = feedUrl;
+  let redirects = 0;
+  let response = null;
+  const hasTokenInUrl = (() => {
+    try {
+      return Boolean(new URL(feedUrl).search);
+    } catch {
+      return false;
+    }
+  })();
+
+  for (let i = 0; i <= 5; i += 1) {
+    const headers = hasTokenInUrl || !token ? {} : { Authorization: `Bearer ${token}` };
+    response = await fetch(currentUrl, {
+      headers,
+      redirect: 'manual',
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    if (![301, 302, 303, 307, 308].includes(response.status)) break;
+    const location = response.headers.get('location');
+    if (!location) break;
+    currentUrl = new URL(location, currentUrl).toString();
+    redirects += 1;
+  }
+
+  return { response, redirects, finalUrl: currentUrl, auth_mode: hasTokenInUrl ? 'url_query' : 'authorization_header' };
+}
+
+async function probeAwinStream(stream, contentEncoding = '') {
+  const [probe, body] = stream.tee();
+  const reader = probe.getReader();
+  const { value } = await reader.read();
+  await reader.cancel().catch(() => {});
+  const firstChunk = value || new Uint8Array();
+  const textPreview = new TextDecoder().decode(firstChunk.slice(0, 8192));
+  const magicBytesGzip = Boolean(firstChunk.length >= 2 && firstChunk[0] === 0x1f && firstChunk[1] === 0x8b);
+  const headerGzip = String(contentEncoding || '').toLowerCase().includes('gzip');
+  return {
+    stream: body,
+    text_preview: textPreview,
+    magic_bytes_gzip: magicBytesGzip,
+    content_encoding_gzip: headerGzip,
+    is_gzip: magicBytesGzip || headerGzip,
+  };
+}
+
+async function readAwinText(stream) {
+  const reader = stream.pipeThrough(new TextDecoderStream()).getReader();
+  let output = '';
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    output += value;
+    if (output.length > 2000000) break;
+  }
+  return output;
+}
+
+function rowsFromAwinCsvList(text = '') {
+  const lines = text.split(/\r?\n/).filter(line => line.trim());
+  if (lines.length < 2) return [];
+  const headers = parseCsvLine(lines[0]).map(normalizeAwinHeader);
+  if (!headers.includes('advertiser_name') || !headers.includes('url')) return [];
+  return lines.slice(1).map(line => {
+    const cells = parseCsvLine(line);
+    const row = {};
+    headers.forEach((header, index) => { row[header] = cells[index] || ''; });
+    return row;
+  });
+}
+
+function stripHtml(value = '') {
+  return String(value || '').replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').trim();
+}
+
+function rowsFromAwinHtmlList(text = '') {
+  const tableRows = [...text.matchAll(/<tr[\s\S]*?<\/tr>/gi)].map(match => match[0]);
+  if (tableRows.length < 2) return [];
+  const headers = [...tableRows[0].matchAll(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/gi)].map(match => normalizeAwinHeader(stripHtml(match[1])));
+  if (!headers.includes('advertiser_name') || !headers.includes('url')) return [];
+  return tableRows.slice(1).map(rowHtml => {
+    const cells = [...rowHtml.matchAll(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/gi)].map(match => stripHtml(match[1]));
+    const href = [...rowHtml.matchAll(/href=["']([^"']+)["']/gi)].map(match => match[1]).find(url => String(url).includes('datafeed')) || '';
+    const row = {};
+    headers.forEach((header, index) => { row[header] = cells[index] || ''; });
+    if (!row.url && href) row.url = href;
+    return row;
+  });
+}
+
+function sanitizeAwinFeedRow(row = {}) {
+  return {
+    advertiser_name: String(row.advertiser_name || '').trim(),
+    feed_name: String(row.feed_name || '').trim(),
+    language: String(row.language || '').trim(),
+    primary_region: String(row.primary_region || '').trim(),
+    datafeed_format: String(row.datafeed_format || '').trim(),
+    no_of_products: String(row.no_of_products || '').trim(),
+    vertical: String(row.vertical || '').trim(),
+  };
+}
+
+function chooseCulturaFeed(rows = []) {
+  const culturaRows = rows.filter(row => normalizeText(row.advertiser_name).includes('cultura'));
+  const scored = culturaRows.map(row => {
+    const text = normalizeText(`${row.feed_name} ${row.language} ${row.primary_region} ${row.datafeed_format}`);
+    let score = 0;
+    if (normalizeText(row.datafeed_format).includes('csv')) score += 50;
+    if (normalizeText(row.language) === 'fr' || normalizeText(row.language).includes('french')) score += 40;
+    if (text.includes('france') || text.includes(' fr ') || text.endsWith(' fr') || text.startsWith('fr ')) score += 20;
+    if (normalizeText(row.feed_name).includes('cultura')) score += 10;
+    score += Math.min(Number(String(row.no_of_products || '').replace(/[^0-9]/g, '')) || 0, 1000000) / 1000000;
+    return { row, score };
+  }).sort((a, b) => b.score - a.score);
+  return scored[0]?.row || null;
+}
+
+export async function resolveAwinDatafeed(configuredUrl, token, options = {}) {
+  const timeoutMs = options.timeoutMs || 120000;
+  const initial = await fetchAwinWithRedirects(configuredUrl, token, timeoutMs);
+  const initialHttp = {
+    status: initial.response?.status || null,
+    content_type: initial.response?.headers.get('content-type') || '',
+    content_length: initial.response?.headers.get('content-length') || '',
+    redirects: initial.redirects,
+    final_url_masked: maskAwinUrl(initial.finalUrl),
+    auth_mode: initial.auth_mode,
+  };
+
+  if (!initial.response?.ok || !initial.response?.body) {
+    throw new Error(`Téléchargement Awin impossible (${initial.response?.status || 'sans réponse'})`);
+  }
+
+  const firstProbe = await probeAwinStream(initial.response.body, initial.response.headers.get('content-encoding') || '');
+  const productHeaderDirect = AWIN_PRODUCT_FIELDS.slice(0, 3).every(field => normalizeText(firstProbe.text_preview).replace(/ /g, '_').includes(field));
+  if (firstProbe.is_gzip || productHeaderDirect) {
+    return {
+      stream: firstProbe.stream,
+      gzip: firstProbe,
+      http: initialHttp,
+      feed_resolution: {
+        method: 'direct',
+        selected_feed: null,
+        advertisers_detected: [],
+      },
+    };
+  }
+
+  const listText = await readAwinText(firstProbe.stream);
+  const rows = [...rowsFromAwinCsvList(listText), ...rowsFromAwinHtmlList(listText)];
+  const selected = chooseCulturaFeed(rows);
+  if (!selected?.url) {
+    const advertisers = [...new Map(rows.map(row => [String(row.advertiser_name || row.feed_name || '').trim(), sanitizeAwinFeedRow(row)]).filter(([name]) => name)).values()].slice(0, 30);
+    const error = new Error('Aucun flux Cultura trouvé dans la liste Awin');
+    (error as any).feed_resolution = {
+      method: 'feed_list',
+      selected_feed: null,
+      advertisers_detected: advertisers,
+    };
+    (error as any).http = initialHttp;
+    throw error;
+  }
+
+  const selectedUrl = new URL(selected.url, configuredUrl).toString();
+  const datafeed = await fetchAwinWithRedirects(selectedUrl, token, timeoutMs);
+  if (!datafeed.response?.ok || !datafeed.response?.body) {
+    throw new Error(`Téléchargement du datafeed Cultura impossible (${datafeed.response?.status || 'sans réponse'})`);
+  }
+  const dataProbe = await probeAwinStream(datafeed.response.body, datafeed.response.headers.get('content-encoding') || '');
+
+  return {
+    stream: dataProbe.stream,
+    gzip: dataProbe,
+    http: {
+      status: datafeed.response.status,
+      content_type: datafeed.response.headers.get('content-type') || '',
+      content_length: datafeed.response.headers.get('content-length') || '',
+      redirects: initial.redirects + datafeed.redirects,
+      final_url_masked: maskAwinUrl(datafeed.finalUrl),
+      auth_mode: datafeed.auth_mode,
+    },
+    feed_resolution: {
+      method: 'feed_list',
+      selected_feed: sanitizeAwinFeedRow(selected),
+      advertisers_detected: [],
+    },
+  };
+}
