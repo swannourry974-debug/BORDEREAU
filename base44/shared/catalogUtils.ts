@@ -7,6 +7,12 @@ export function normalizeText(value = '') {
     .trim();
 }
 
+const STOP_WORDS = new Set(['le', 'la', 'les', 'l', 'un', 'une', 'des', 'du', 'de', 'd', 'et', 'ou', 'a', 'au', 'aux', 'en', 'dans', 'sur', 'pour', 'par', 'avec', 'the', 'a', 'an', 'of', 'in', 'on', 'to', 'and']);
+
+export function tokenizeTitle(value = '') {
+  return [...new Set(normalizeText(value).split(' ').filter(token => token.length > 1 && !STOP_WORDS.has(token)))];
+}
+
 export function isValidIsbn13(value = '') {
   const digits = String(value || '').replace(/[^0-9]/g, '');
   if (!/^\d{13}$/.test(digits)) return false;
@@ -75,17 +81,25 @@ export function parseCsvLine(line = '') {
   return cells.map(cell => cell.trim());
 }
 
+export function normalizeAvailability(value = '') {
+  const raw = String(value ?? '').trim();
+  const text = normalizeText(raw);
+  if (!text) return 'unknown';
+  if (text === '0' || text.includes('hors stock') || text.includes('rupture') || text.includes('indisponible') || text.includes('out of stock') || text.includes('unavailable')) return 'out_of_stock';
+  if (text.includes('stock')) return 'in_stock';
+  if (['1', 'true', 'yes', 'oui', 'available', 'disponible'].includes(text)) return 'in_stock';
+  return 'unknown';
+}
+
 export function isTruthyStock(value) {
-  const text = normalizeText(value);
-  if (!text) return false;
-  return ['1', 'true', 'yes', 'oui', 'y', 'in stock', 'instock', 'en stock', 'available', 'disponible'].some(token => text === token || text.includes(token));
+  return normalizeAvailability(value) === 'in_stock';
 }
 
 export function isBookCategory(category = '', title = '') {
   const text = normalizeText(`${category} ${title}`);
   const excluded = ['papeterie', 'dvd', 'blu ray', 'bluray', 'cd', 'vinyle', 'jeux video', 'jeu video', 'jouet', 'goodies', 'figurine', 'agenda', 'calendrier', 'loisir creatif', 'fourniture'];
   if (excluded.some(word => text.includes(word))) return false;
-  const included = ['livre', 'roman', 'poche', 'bd', 'bande dessinee', 'manga', 'litterature', 'jeunesse', 'essai', 'scolaire', 'parascolaire', 'beau livre', 'bibliotheque'];
+  const included = ['livre', 'roman', 'poche', 'bd', 'bande dessinee', 'manga', 'litterature', 'jeunesse', 'essai', 'scolaire', 'parascolaire', 'beau livre', 'bibliotheque', 'comics'];
   return included.some(word => text.includes(word));
 }
 
@@ -98,18 +112,33 @@ export function inferBookType(category = '', title = '') {
 }
 
 export function inferAuthor(row = {}) {
-  const direct = row.author || row.auteur || row.creator || row.brand || '';
-  if (direct && normalizeText(direct) !== 'cultura') return String(direct).trim();
-  const name = String(row.product_name || row.title || '').trim();
-  const parts = name.split(/\s[-–—|/]\s/).map(part => part.trim()).filter(Boolean);
-  if (parts.length > 1 && parts[parts.length - 1].length < 80) return parts[parts.length - 1];
+  const reject = (value = '') => {
+    const text = normalizeText(value);
+    if (!text || text.includes('cultura') || text.includes('pas de marque') || text.includes('livre') || text.includes('roman') || text.includes('manga') || text.includes('bd') || text.includes('comics')) return true;
+    if (String(value).length > 90 || /[>\/]/.test(String(value))) return true;
+    return !/[A-Za-zÀ-ÿ]{2}/.test(String(value));
+  };
+  for (const key of ['custom_5', 'custom_1', 'brand_name', 'product_type']) {
+    const value = String(row[key] || '').trim();
+    if (value && !reject(value)) return value;
+  }
+  const description = String(row.description || '').replace(/<[^>]+>/g, ' ');
+  const match = description.match(/(?:auteur|auteurs|autrice|scenariste|dessinateur)\s*:?\s*([^.;\n]{2,90})/i);
+  if (match && !reject(match[1])) return match[1].trim();
   return '';
+}
+
+function availabilityRank(offer = {}) {
+  const value = offer?.availability || 'unknown';
+  if (value === 'in_stock') return 0;
+  if (value === 'out_of_stock') return 1;
+  return 2;
 }
 
 export function bestOffer(offers = []) {
   const ranked = [...offers].sort((a, b) => {
-    const av = offerAvailable(a) ? 0 : 1;
-    const bv = offerAvailable(b) ? 0 : 1;
+    const av = availabilityRank(a);
+    const bv = availabilityRank(b);
     if (av !== bv) return av - bv;
     return Number(a.price || 999999) - Number(b.price || 999999);
   });
@@ -117,8 +146,7 @@ export function bestOffer(offers = []) {
 }
 
 export function offerAvailable(offer = {}) {
-  if (Number(offer.stock_quantity || 0) > 0) return true;
-  return isTruthyStock(offer.availability);
+  return offer?.availability === 'in_stock';
 }
 
 export function lightBook(book = {}, offers = [], origin = undefined) {
@@ -128,14 +156,20 @@ export function lightBook(book = {}, offers = [], origin = undefined) {
     isbn13: book.isbn13,
     ean: book.ean,
     title: book.title,
+    title_norm: book.title_norm,
+    title_tokens: book.title_tokens || [],
     author: book.author,
+    author_source: book.author_source || (book.author ? 'feed' : 'none'),
+    author_enriched_at: book.author_enriched_at,
     category: book.category,
+    category_source: book.category_source,
     image_url: book.image_url,
     language: book.language,
     publisher: book.publisher,
     price: offer?.price || 0,
     currency: offer?.currency || 'EUR',
-    availability: offer?.availability || 'indisponible',
+    availability: offer?.availability || 'unknown',
+    availability_raw: offer?.availability_raw || '',
     last_updated: offer?.last_updated || book.updated_date,
     best_offer: offer,
     offers,
@@ -157,8 +191,8 @@ export async function fetchOffersByBookIds(base44, bookIds = []) {
 }
 
 function sortAvailableThenPrice(a, b) {
-  const av = offerAvailable(a.best_offer) ? 0 : 1;
-  const bv = offerAvailable(b.best_offer) ? 0 : 1;
+  const av = availabilityRank(a.best_offer);
+  const bv = availabilityRank(b.best_offer);
   if (av !== bv) return av - bv;
   return Number(a.price || 999999) - Number(b.price || 999999);
 }
@@ -184,10 +218,10 @@ export async function buildSuggestionsForBook(base44, book, maxSuggestions = 5) 
   const sameCategory = categoryBooks.map(candidate => lightBook(candidate, offersMap.get(candidate.id) || [], 'same_category')).sort(sortAvailableThenPrice);
 
   const buckets = [
-    sameAuthor.filter(item => offerAvailable(item.best_offer)),
-    sameCategory.filter(item => offerAvailable(item.best_offer)),
-    sameAuthor.filter(item => !offerAvailable(item.best_offer)),
-    sameCategory.filter(item => !offerAvailable(item.best_offer)),
+    sameAuthor.filter(item => item.availability === 'in_stock'),
+    sameCategory.filter(item => item.availability === 'in_stock'),
+    sameAuthor.filter(item => item.availability !== 'in_stock'),
+    sameCategory.filter(item => item.availability !== 'in_stock'),
   ];
 
   const suggestions = [];
@@ -205,18 +239,7 @@ export async function buildSuggestionsForBook(base44, book, maxSuggestions = 5) 
 }
 
 export const AWIN_PRODUCT_FIELDS = [
-  'product_name',
-  'ean',
-  'search_price',
-  'currency',
-  'merchant_image_url',
-  'description',
-  'merchant_product_category_path',
-  'in_stock',
-  'stock_quantity',
-  'merchant_deep_link',
-  'aw_deep_link',
-  'last_updated',
+  'product_name', 'ean', 'search_price', 'currency', 'merchant_image_url', 'description', 'merchant_product_category_path', 'category_name', 'stock_status', 'in_stock', 'stock_quantity', 'merchant_deep_link', 'aw_deep_link', 'last_updated'
 ];
 
 export function normalizeAwinHeader(value = '') {
@@ -226,15 +249,12 @@ export function normalizeAwinHeader(value = '') {
 export function maskAwinUrl(value = '') {
   try {
     const url = new URL(value);
-    const safePath = url.pathname
-      .split('/')
-      .map((segment) => {
-        if (!segment) return segment;
-        if (segment.length >= 16) return ':masked';
-        if (/^[A-Fa-f0-9]{10,}$/.test(segment)) return ':masked';
-        return segment;
-      })
-      .join('/');
+    const safePath = url.pathname.split('/').map((segment) => {
+      if (!segment) return segment;
+      if (segment.length >= 16) return ':masked';
+      if (/^[A-Fa-f0-9]{10,}$/.test(segment)) return ':masked';
+      return segment;
+    }).join('/');
     return `${url.origin}${safePath}`;
   } catch {
     return '';
@@ -246,20 +266,12 @@ async function fetchAwinWithRedirects(feedUrl, token, timeoutMs = 120000) {
   let redirects = 0;
   let response = null;
   const hasTokenInUrl = (() => {
-    try {
-      return Boolean(new URL(feedUrl).search);
-    } catch {
-      return false;
-    }
+    try { return Boolean(new URL(feedUrl).search); } catch { return false; }
   })();
 
   for (let i = 0; i <= 5; i += 1) {
     const headers = hasTokenInUrl || !token ? {} : { Authorization: `Bearer ${token}` };
-    response = await fetch(currentUrl, {
-      headers,
-      redirect: 'manual',
-      signal: AbortSignal.timeout(timeoutMs),
-    });
+    response = await fetch(currentUrl, { headers, redirect: 'manual', signal: AbortSignal.timeout(timeoutMs) });
     if (![301, 302, 303, 307, 308].includes(response.status)) break;
     const location = response.headers.get('location');
     if (!location) break;
@@ -279,13 +291,7 @@ async function probeAwinStream(stream, contentEncoding = '') {
   const textPreview = new TextDecoder().decode(firstChunk.slice(0, 8192));
   const magicBytesGzip = Boolean(firstChunk.length >= 2 && firstChunk[0] === 0x1f && firstChunk[1] === 0x8b);
   const headerGzip = String(contentEncoding || '').toLowerCase().includes('gzip');
-  return {
-    stream: body,
-    text_preview: textPreview,
-    magic_bytes_gzip: magicBytesGzip,
-    content_encoding_gzip: headerGzip,
-    is_gzip: magicBytesGzip || headerGzip,
-  };
+  return { stream: body, text_preview: textPreview, magic_bytes_gzip: magicBytesGzip, content_encoding_gzip: headerGzip, is_gzip: magicBytesGzip || headerGzip };
 }
 
 async function readAwinText(stream) {
@@ -349,21 +355,12 @@ function sanitizeAwinFeedRow(row = {}) {
 export async function listAwinFeedRows(configuredUrl, token, options = {}) {
   const timeoutMs = options.timeoutMs || 120000;
   const initial = await fetchAwinWithRedirects(configuredUrl, token, timeoutMs);
-  const initialHttp = {
-    status: initial.response?.status || null,
-    content_type: initial.response?.headers.get('content-type') || '',
-    content_length: initial.response?.headers.get('content-length') || '',
-    redirects: initial.redirects,
-    final_url_masked: maskAwinUrl(initial.finalUrl),
-    auth_mode: initial.auth_mode,
-  };
-
+  const initialHttp = { status: initial.response?.status || null, content_type: initial.response?.headers.get('content-type') || '', content_length: initial.response?.headers.get('content-length') || '', redirects: initial.redirects, final_url_masked: maskAwinUrl(initial.finalUrl), auth_mode: initial.auth_mode };
   if (!initial.response?.ok || !initial.response?.body) {
     const error = new Error(`Liste Awin impossible (${initial.response?.status || 'sans réponse'})`);
-    (error as any).http = initialHttp;
+    error.http = initialHttp;
     throw error;
   }
-
   const firstProbe = await probeAwinStream(initial.response.body, initial.response.headers.get('content-encoding') || '');
   const listText = await readAwinText(firstProbe.stream);
   const rows = [...rowsFromAwinCsvList(listText), ...rowsFromAwinHtmlList(listText)];
@@ -390,81 +387,34 @@ export async function resolveAwinFeedRow(configuredUrl, feedRow, token, options 
   if (!feedRow?.url) throw new Error('Flux Awin sans URL téléchargeable');
   const selectedUrl = new URL(feedRow.url, configuredUrl).toString();
   const datafeed = await fetchAwinWithRedirects(selectedUrl, token, timeoutMs);
-  if (!datafeed.response?.ok || !datafeed.response?.body) {
-    throw new Error(`Téléchargement du datafeed Cultura impossible (${datafeed.response?.status || 'sans réponse'})`);
-  }
+  if (!datafeed.response?.ok || !datafeed.response?.body) throw new Error(`Téléchargement du datafeed Cultura impossible (${datafeed.response?.status || 'sans réponse'})`);
   const dataProbe = await probeAwinStream(datafeed.response.body, datafeed.response.headers.get('content-encoding') || '');
   return {
     stream: dataProbe.stream,
     gzip: dataProbe,
-    http: {
-      status: datafeed.response.status,
-      content_type: datafeed.response.headers.get('content-type') || '',
-      content_length: datafeed.response.headers.get('content-length') || '',
-      redirects: datafeed.redirects,
-      final_url_masked: maskAwinUrl(datafeed.finalUrl),
-      auth_mode: datafeed.auth_mode,
-    },
-    feed_resolution: {
-      method: 'feed_list',
-      selected_feed: sanitizeAwinFeedRow(feedRow),
-      advertisers_detected: [],
-    },
+    http: { status: datafeed.response.status, content_type: datafeed.response.headers.get('content-type') || '', content_length: datafeed.response.headers.get('content-length') || '', redirects: datafeed.redirects, final_url_masked: maskAwinUrl(datafeed.finalUrl), auth_mode: datafeed.auth_mode },
+    feed_resolution: { method: 'feed_list', selected_feed: sanitizeAwinFeedRow(feedRow), advertisers_detected: [] },
   };
 }
 
 export async function resolveAwinDatafeed(configuredUrl, token, options = {}) {
   const timeoutMs = options.timeoutMs || 120000;
   const initial = await fetchAwinWithRedirects(configuredUrl, token, timeoutMs);
-  const initialHttp = {
-    status: initial.response?.status || null,
-    content_type: initial.response?.headers.get('content-type') || '',
-    content_length: initial.response?.headers.get('content-length') || '',
-    redirects: initial.redirects,
-    final_url_masked: maskAwinUrl(initial.finalUrl),
-    auth_mode: initial.auth_mode,
-  };
-
-  if (!initial.response?.ok || !initial.response?.body) {
-    throw new Error(`Téléchargement Awin impossible (${initial.response?.status || 'sans réponse'})`);
-  }
-
+  const initialHttp = { status: initial.response?.status || null, content_type: initial.response?.headers.get('content-type') || '', content_length: initial.response?.headers.get('content-length') || '', redirects: initial.redirects, final_url_masked: maskAwinUrl(initial.finalUrl), auth_mode: initial.auth_mode };
+  if (!initial.response?.ok || !initial.response?.body) throw new Error(`Téléchargement Awin impossible (${initial.response?.status || 'sans réponse'})`);
   const firstProbe = await probeAwinStream(initial.response.body, initial.response.headers.get('content-encoding') || '');
   const productHeaderDirect = AWIN_PRODUCT_FIELDS.slice(0, 3).every(field => normalizeText(firstProbe.text_preview).replace(/ /g, '_').includes(field));
-  if (firstProbe.is_gzip || productHeaderDirect) {
-    return {
-      stream: firstProbe.stream,
-      gzip: firstProbe,
-      http: initialHttp,
-      feed_resolution: {
-        method: 'direct',
-        selected_feed: null,
-        advertisers_detected: [],
-      },
-    };
-  }
-
+  if (firstProbe.is_gzip || productHeaderDirect) return { stream: firstProbe.stream, gzip: firstProbe, http: initialHttp, feed_resolution: { method: 'direct', selected_feed: null, advertisers_detected: [] } };
   const listText = await readAwinText(firstProbe.stream);
   const rows = [...rowsFromAwinCsvList(listText), ...rowsFromAwinHtmlList(listText)];
   const selected = chooseCulturaFeed(rows);
   if (!selected?.url) {
     const advertisers = [...new Map(rows.map(row => [String(row.advertiser_name || row.feed_name || '').trim(), sanitizeAwinFeedRow(row)]).filter(([name]) => name)).values()].slice(0, 30);
     const error = new Error('Aucun flux Cultura trouvé dans la liste Awin');
-    (error as any).feed_resolution = {
-      method: 'feed_list',
-      selected_feed: null,
-      advertisers_detected: advertisers,
-    };
-    (error as any).http = initialHttp;
+    error.feed_resolution = { method: 'feed_list', selected_feed: null, advertisers_detected: advertisers };
+    error.http = initialHttp;
     throw error;
   }
-
   const resolved = await resolveAwinFeedRow(configuredUrl, selected, token, { timeoutMs });
-  return {
-    ...resolved,
-    http: {
-      ...resolved.http,
-      redirects: initial.redirects + resolved.http.redirects,
-    },
-  };
+  return { ...resolved, http: { ...resolved.http, redirects: initial.redirects + resolved.http.redirects } };
 }

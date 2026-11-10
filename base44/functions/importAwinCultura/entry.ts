@@ -104,7 +104,7 @@ export default async function(req) {
           totals.productsProcessed += 1;
           totals.lineCheckpoint = lineNumber;
 
-          const record = productToCatalogRecord(row, importedAt);
+          const record = productToCatalogRecord(row, importedAt, feed);
           if (record.error) {
             feedStats.rowsRejected += 1;
             totals.rowsRejected += 1;
@@ -118,17 +118,15 @@ export default async function(req) {
           acceptedForWrite += 1;
 
           if (batch.length >= AWIN_BATCH_SIZE) {
-            const result = await upsertBatch(base44, batch, seenGlobal, writtenExamples);
+            const result = await upsertBatch(base44, batch, writtenExamples, 10);
             feedStats.booksCreated += result.booksCreated;
             feedStats.booksUpdated += result.booksUpdated;
             feedStats.offersCreated += result.offersCreated;
             feedStats.offersUpdated += result.offersUpdated;
-            feedStats.duplicatesCrossFeed += result.duplicatesCrossFeed;
             totals.booksCreated += result.booksCreated;
             totals.booksUpdated += result.booksUpdated;
             totals.offersCreated += result.offersCreated;
             totals.offersUpdated += result.offersUpdated;
-            totals.duplicatesCrossFeed += result.duplicatesCrossFeed;
             batch = [];
             await writeImportProgress(base44, feedLog.id, feedStats);
             await base44.asServiceRole.entities.ImportLog.update(executionLog.id, { current_feed_id: feedId, products_processed: totals.productsProcessed, rows_rejected: totals.rowsRejected, books_created: totals.booksCreated, books_updated: totals.booksUpdated, offers_created: totals.offersCreated, offers_updated: totals.offersUpdated, duplicates_cross_feed: totals.duplicatesCrossFeed, duplicates: totals.duplicatesCrossFeed, line_checkpoint: totals.lineCheckpoint });

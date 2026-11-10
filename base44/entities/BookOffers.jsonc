@@ -22,7 +22,17 @@
       "type": "string"
     },
     "availability": {
-      "type": "string"
+      "type": "string",
+      "enum": [
+        "in_stock",
+        "out_of_stock",
+        "unknown"
+      ],
+      "default": "unknown"
+    },
+    "availability_raw": {
+      "type": "string",
+      "description": "Valeur brute de disponibilit\u00e9 re\u00e7ue du flux marchand"
     },
     "stock_quantity": {
       "type": "number"

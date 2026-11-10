@@ -55,6 +55,10 @@
       "type": "number",
       "default": 0
     },
+    "duplicates_in_feed": {
+      "type": "number",
+      "default": 0
+    },
     "duplicates_cross_feed": {
       "type": "number",
       "default": 0

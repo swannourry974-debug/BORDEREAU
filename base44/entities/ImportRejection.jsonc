@@ -1,0 +1,71 @@
+{
+  "name": "ImportRejection",
+  "type": "object",
+  "properties": {
+    "ean_raw": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string",
+      "enum": [
+        "non_book",
+        "ean_not_isbn",
+        "invalid_isbn",
+        "invalid_price",
+        "missing_title"
+      ]
+    },
+    "feed_id": {
+      "type": "string"
+    },
+    "import_date": {
+      "type": "string"
+    },
+    "reviewed": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "reason",
+    "feed_id",
+    "import_date"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin_secondaire"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

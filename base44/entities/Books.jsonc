@@ -15,7 +15,14 @@
     },
     "title_norm": {
       "type": "string",
-      "description": "Titre normalis\u00e9 minuscules sans accents pour recherche pr\u00e9fixe"
+      "description": "Titre normalis\u00e9 minuscules sans accents et ponctuation remplac\u00e9e par des espaces"
+    },
+    "title_tokens": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Mots normalis\u00e9s du titre, sans mots vides, pour recherche par contenu"
     },
     "author": {
       "type": "string"
@@ -23,6 +30,18 @@
     "author_norm": {
       "type": "string",
       "description": "Auteur normalis\u00e9 minuscules sans accents"
+    },
+    "author_source": {
+      "type": "string",
+      "enum": [
+        "feed",
+        "openlibrary",
+        "none"
+      ],
+      "default": "none"
+    },
+    "author_enriched_at": {
+      "type": "string"
     },
     "description": {
       "type": "string"
@@ -32,6 +51,13 @@
     },
     "category": {
       "type": "string"
+    },
+    "category_source": {
+      "type": "string",
+      "enum": [
+        "feed_field",
+        "feed_rayon"
+      ]
     },
     "category_norm": {
       "type": "string",
