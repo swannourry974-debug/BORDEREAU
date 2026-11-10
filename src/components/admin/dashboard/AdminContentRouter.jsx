@@ -9,6 +9,7 @@ import AdminCommandesCollectif from '@/components/admin/AdminCommandesCollectif'
 import ValidationPointsRelais from '@/components/admin/ValidationPointsRelais';
 import AdminValidationVoyageurs from '@/components/admin/AdminValidationVoyageurs';
 import AdminDossierCanvas from '@/components/admin/dossier/AdminDossierCanvas';
+import AdminCatalogueSync from '@/components/admin/AdminCatalogueSync';
 import AdminHomeDashboard from './AdminHomeDashboard';
 
 export default function AdminContentRouter(props) {
@@ -23,5 +24,6 @@ export default function AdminContentRouter(props) {
   if (props.activeTab === 'validation-voyageurs') return <AdminValidationVoyageurs />;
   if (props.activeTab === 'relais') return <AdminReseauRelais />;
   if (props.activeTab === 'dossier-canvas') return <AdminDossierCanvas />;
+  if (props.activeTab === 'catalogue') return <AdminCatalogueSync />;
   return <AdminHomeDashboard {...props.homeProps} />;
 }

@@ -1,0 +1,77 @@
+{
+  "name": "BookOffers",
+  "type": "object",
+  "properties": {
+    "book_id": {
+      "type": "string",
+      "description": "R\u00e9f\u00e9rence vers Books.id"
+    },
+    "retailer_name": {
+      "type": "string"
+    },
+    "retailer_product_id": {
+      "type": "string"
+    },
+    "price": {
+      "type": "number"
+    },
+    "original_price": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string"
+    },
+    "availability": {
+      "type": "string"
+    },
+    "stock_quantity": {
+      "type": "number"
+    },
+    "merchant_url": {
+      "type": "string"
+    },
+    "affiliate_url": {
+      "type": "string"
+    },
+    "last_updated": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "book_id",
+    "retailer_name",
+    "price",
+    "currency"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin_secondaire"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

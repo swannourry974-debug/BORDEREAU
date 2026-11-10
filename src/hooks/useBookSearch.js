@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react';
+import { base44 } from '@/api/base44Client';
 import { extractGoogleBookPrice } from '@/lib/bookPricing';
 
 /**
@@ -6,6 +7,31 @@ import { extractGoogleBookPrice } from '@/lib/bookPricing';
  * Open Library est favorisé car fiable et sans quota. Google Books sert de complément
  * pour les résultats manquants (couvertures françaises additionnelles).
  */
+function formatCatalogBook(item) {
+  return {
+    id: item.id,
+    title: item.title,
+    author: item.author || 'Auteur inconnu',
+    isbn: item.isbn13 || item.ean || null,
+    isbn13: item.isbn13 || item.ean || null,
+    coverId: null,
+    coverUrl: item.image_url || null,
+    pages: null,
+    year: null,
+    poidsEstime: null,
+    type: 'Poche',
+    price: item.price ? `${Number(item.price).toFixed(2)} €` : 'Prix indisponible',
+    priceVal: Number(item.price || 0),
+    prixLivreDisponible: Number(item.price || 0) > 0 && !String(item.availability || '').toLowerCase().includes('indisponible'),
+    prixLivreSource: 'catalog',
+    dispo: item.availability || 'Catalogue Bordero',
+    source: 'catalog',
+    offers: item.offers || [],
+    bestOffer: item.best_offer || null,
+    _score: 10,
+  };
+}
+
 export function useBookSearch() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -29,9 +55,26 @@ export function useBookSearch() {
     setError(null);
 
     try {
+      const catalogRes = await base44.functions.invoke('searchCatalog', { query: query.trim(), pageSize: 20, suggestions: 5 });
+      const catalogBooks = [
+        ...(catalogRes.data?.main ? [catalogRes.data.main] : []),
+        ...(catalogRes.data?.suggestions || []),
+        ...((catalogRes.data?.items || []).filter(item => item.id !== catalogRes.data?.main?.id)),
+      ];
+      if (catalogBooks.length > 0) {
+        const seen = new Set();
+        setResults(catalogBooks.filter(item => {
+          const key = item.isbn13 || item.id;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        }).map(formatCatalogBook).slice(0, 12));
+        return;
+      }
+
       const q = encodeURIComponent(query.trim());
 
-      // Open Library en priorité — fiable, sans quota
+      // Open Library reste en secours pour préserver le panier existant.
       const olRes = await fetch(
         `https://openlibrary.org/search.json?q=${q}&limit=8&fields=key,title,author_name,isbn,cover_i,number_of_pages_median,publish_year`,
         { signal }
@@ -129,6 +172,10 @@ export function useBookSearch() {
 
       setResults(merged.sort((a, b) => b._score - a._score).slice(0, 12));
     } catch (e) {
+      if (e?.response?.status === 401) {
+        base44.auth.redirectToLogin(window.location.pathname + window.location.search);
+        return;
+      }
       if (e.name === 'AbortError') return; // requête annulée volontairement
       // Message d'erreur lisible par l'utilisateur selon le type de problème
       if (!navigator.onLine) {

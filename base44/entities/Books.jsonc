@@ -1,0 +1,82 @@
+{
+  "name": "Books",
+  "type": "object",
+  "properties": {
+    "isbn13": {
+      "type": "string",
+      "description": "ISBN-13 normalis\u00e9, identifiant fonctionnel unique appliqu\u00e9 par l'import serveur"
+    },
+    "ean": {
+      "type": "string",
+      "description": "EAN source du flux marchand"
+    },
+    "title": {
+      "type": "string"
+    },
+    "title_norm": {
+      "type": "string",
+      "description": "Titre normalis\u00e9 minuscules sans accents pour recherche pr\u00e9fixe"
+    },
+    "author": {
+      "type": "string"
+    },
+    "author_norm": {
+      "type": "string",
+      "description": "Auteur normalis\u00e9 minuscules sans accents"
+    },
+    "description": {
+      "type": "string"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "category": {
+      "type": "string"
+    },
+    "category_norm": {
+      "type": "string",
+      "description": "Cat\u00e9gorie normalis\u00e9e pour suggestions same_then_category"
+    },
+    "language": {
+      "type": "string"
+    },
+    "publisher": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "isbn13",
+    "title"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin_secondaire"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

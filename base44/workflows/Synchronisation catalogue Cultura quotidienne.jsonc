@@ -1,0 +1,45 @@
+{
+  "description": "Pr\u00e9pare la synchronisation quotidienne du catalogue Cultura FR \u00e0 03:00 Europe/Paris. D\u00e9sactiv\u00e9e jusqu'\u00e0 validation du test 1 000 produits.",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "sync_catalogue_cultura_daily",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "import_catalogue": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "importAwinCultura",
+            "args": {}
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Importer Cultura",
+            "description": "Catalogue quotidien"
+          }
+        }
+      }
+    ]
+  },
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 3 * * *",
+      "one_time_date": null,
+      "timezone": "Europe/Paris",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "name": "Synchronisation catalogue Cultura quotidienne"
+}

@@ -122,6 +122,13 @@ export default function PanierCheckout({ onClose }) {
     setLoading(true);
 
     try {
+      const validation = await base44.functions.invoke('validateCatalogCart', { items });
+      if (validation.data?.ok === false) {
+        const change = validation.data.changes?.[0];
+        toast.error('Prix ou disponibilité à vérifier', { description: change?.title ? `${change.title} : ${change.reason}` : 'Un livre du catalogue a changé.' });
+        return;
+      }
+
       if (isTestPreview) {
         await completeSimulatedPurchase();
         return;
