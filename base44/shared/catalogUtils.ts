@@ -95,9 +95,34 @@ export function normalizeAvailability(value = '') {
 
 export function isTruthyStock(value) { return normalizeAvailability(value) === 'in_stock'; }
 
+export function cleanAuthorList(value = '') {
+  const seen = new Set();
+  const authors = String(value || '')
+    .split(/[;,]/)
+    .map(author => author.trim())
+    .filter(Boolean)
+    .filter((author) => {
+      const key = normalizeText(author);
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  return authors.join(', ');
+}
+
+export function isStationeryProduct(title = '') {
+  const text = normalizeText(title);
+  const excluded = ['carnet', 'bloc notes', 'bloc note', 'papeterie', 'marque page', 'marque pages', 'carte postale', 'cartes postales', 'poster', 'stylo', 'stylos'];
+  if (excluded.some(word => text.includes(word))) return true;
+  if (text.includes('cahier') && !text.includes('cahier d exercices')) return true;
+  if (text.includes('agenda') && text.includes('scolaire')) return true;
+  return false;
+}
+
 export function isEditorialProduct(category = '', title = '') {
+  if (isStationeryProduct(title)) return false;
   const text = normalizeText(`${category} ${title}`);
-  const editorial = ['coffret', 'pack', 'integrale', 'intégrale', 'album', 'agenda', 'carnet', 'calendrier', 'dvd', 'lot', 'collector', 'box', 'tome', 'livre', 'roman', 'bd', 'bande dessinee', 'manga', 'comics', 'litterature', 'jeunesse'];
+  const editorial = ['coffret', 'pack', 'integrale', 'intégrale', 'album', 'agenda', 'calendrier', 'dvd', 'lot', 'collector', 'box', 'tome', 'livre', 'roman', 'bd', 'bande dessinee', 'manga', 'comics', 'litterature', 'jeunesse'];
   const hardExcluded = ['blu ray', 'bluray', 'cd audio', 'vinyle', 'jeux video', 'jeu video', 'jouet', 'figurine', 'peluche', 'fourniture'];
   if (hardExcluded.some(word => text.includes(normalizeText(word)))) return false;
   return editorial.some(word => text.includes(normalizeText(word)));
@@ -108,7 +133,7 @@ export function isBookCategory(category = '', title = '') { return isEditorialPr
 export function inferProductType(category = '', title = '', isbnValid = false) {
   if (isbnValid) return 'livre';
   const text = normalizeText(`${category} ${title}`);
-  return ['coffret', 'pack', 'integrale', 'album', 'agenda', 'carnet', 'calendrier', 'dvd', 'lot', 'collector', 'box'].some(word => text.includes(normalizeText(word))) ? 'produit_editorial' : 'livre';
+  return ['coffret', 'pack', 'integrale', 'album', 'agenda', 'calendrier', 'dvd', 'lot', 'collector', 'box'].some(word => text.includes(normalizeText(word))) ? 'produit_editorial' : 'livre';
 }
 
 export function inferAuthor(row = {}) {
@@ -120,11 +145,11 @@ export function inferAuthor(row = {}) {
   };
   for (const key of ['custom_5', 'custom_1', 'product_type']) {
     const value = String(row[key] || '').trim();
-    if (value && !reject(value)) return value;
+    if (value && !reject(value)) return cleanAuthorList(value);
   }
   const description = String(row.description || '').replace(/<[^>]+>/g, ' ');
   const match = description.match(/(?:auteur|auteurs|autrice|scenariste|dessinateur)\s*:?\s*([^.;\n]{2,90})/i);
-  if (match && !reject(match[1])) return match[1].trim();
+  if (match && !reject(match[1])) return cleanAuthorList(match[1]);
   return '';
 }
 

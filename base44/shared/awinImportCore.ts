@@ -1,4 +1,4 @@
-import { cleanEan, cleanPublisher, inferAuthor, inferProductType, isEditorialProduct, isValidIsbn13, normalizeAvailability, normalizeAwinHeader, normalizeIsbn, normalizeText, parseCsvLine, parsePrice, safeUrl, tokenizeTitle } from './catalogUtils.ts';
+import { cleanAuthorList, cleanEan, cleanPublisher, inferAuthor, inferProductType, isEditorialProduct, isStationeryProduct, isValidIsbn13, normalizeAvailability, normalizeAwinHeader, normalizeIsbn, normalizeText, parseCsvLine, parsePrice, safeUrl, tokenizeTitle } from './catalogUtils.ts';
 
 export const AWIN_RETAILER = 'Cultura';
 export const AWIN_BATCH_SIZE = 300;
@@ -45,8 +45,10 @@ function mergeCategory(existing = '', incoming = '', existingSource = '', incomi
 export function mergeBook(existing = {}, incoming = {}) {
   const description = String(incoming.description || '').length > String(existing.description || '').length ? incoming.description : existing.description;
   const categoryMerge = mergeCategory(existing.category, incoming.category, existing.category_source, incoming.category_source);
-  const incomingHasAuthor = Boolean(String(incoming.author || '').trim()) && normalizeText(incoming.author) !== 'pas de marque';
-  const existingHasAuthor = Boolean(String(existing.author || '').trim()) && normalizeText(existing.author) !== 'pas de marque';
+  const existingAuthor = cleanAuthorList(existing.author || '');
+  const incomingAuthor = cleanAuthorList(incoming.author || '');
+  const incomingHasAuthor = Boolean(incomingAuthor) && normalizeText(incomingAuthor) !== 'pas de marque';
+  const existingHasAuthor = Boolean(existingAuthor) && normalizeText(existingAuthor) !== 'pas de marque';
   const existingPublisher = cleanPublisher(existing.publisher || '');
   const incomingPublisher = cleanPublisher(incoming.publisher || '');
   return {
@@ -61,8 +63,8 @@ export function mergeBook(existing = {}, incoming = {}) {
     title: existing.title || incoming.title,
     title_norm: existing.title_norm || incoming.title_norm,
     title_tokens: Array.isArray(existing.title_tokens) && existing.title_tokens.length ? existing.title_tokens : (incoming.title_tokens || tokenizeTitle(existing.title || incoming.title || '')),
-    author: existingHasAuthor ? existing.author : (incoming.author || ''),
-    author_norm: existingHasAuthor ? existing.author_norm : (incoming.author_norm || ''),
+    author: existingHasAuthor ? existingAuthor : (incomingAuthor || ''),
+    author_norm: normalizeText(existingHasAuthor ? existingAuthor : (incomingAuthor || '')),
     author_source: existingHasAuthor ? (existing.author_source || 'feed') : (incomingHasAuthor ? (incoming.author_source || 'feed') : 'none'),
     author_enriched_at: existing.author_enriched_at || incoming.author_enriched_at || undefined,
     description: description || '',
@@ -122,6 +124,7 @@ export function productToCatalogRecord(row, importedAt, feed = {}, options = {})
   const explicitCategory = String(row.category_name || row.merchant_product_category_path || category.category || '').trim();
   const identifier = classifyIdentifier(row, feed);
   if (!identifier) return { error: 'ean_not_isbn', rejection: rejectionFrom(row, 'ean_not_isbn', feedId, importedAt) };
+  if (isStationeryProduct(title)) return { error: 'non_book', rejection: rejectionFrom(row, 'non_book', feedId, importedAt, identifier) };
   const editorial = isEditorialProduct(explicitCategory, title);
   if (!identifier.isbn_valid && (!options.allowNonIsbnEditorial || !editorial)) return { error: 'ean_not_isbn', rejection: rejectionFrom(row, 'ean_not_isbn', feedId, importedAt, identifier) };
   if (explicitCategory && !editorial && !AWIN_FEED_RAYONS[feedId]) return { error: 'non_book', rejection: rejectionFrom(row, 'non_book', feedId, importedAt, identifier) };
@@ -226,8 +229,13 @@ export async function upsertBatch(base44, records, examples, exampleLimit = 10) 
   if (!rows.length) return { booksCreated: 0, booksUpdated: 0, offersCreated: 0, offersUpdated: 0 };
   const identifiers = rows.map(record => record.product_identifier).filter(Boolean);
   const isbn13s = rows.map(record => record.isbn13).filter(Boolean);
-  const existingPage = await base44.asServiceRole.entities.Books.filter({ $or: [{ product_identifier: { $in: identifiers } }, { isbn13: { $in: isbn13s } }] }, { limit: Math.min(500, Math.max(1, identifiers.length + isbn13s.length)) });
-  const existingBooks = existingPage.items || existingPage || [];
+  const [existingByIdentifierPage, existingByIsbnPage] = await Promise.all([
+    identifiers.length ? base44.asServiceRole.entities.Books.filter({ product_identifier: { $in: identifiers } }, { limit: Math.min(500, identifiers.length) }) : { items: [] },
+    isbn13s.length ? base44.asServiceRole.entities.Books.filter({ isbn13: { $in: isbn13s } }, { limit: Math.min(500, isbn13s.length) }) : { items: [] },
+  ]);
+  const existingMap = new Map();
+  for (const book of [...(existingByIdentifierPage.items || existingByIdentifierPage || []), ...(existingByIsbnPage.items || existingByIsbnPage || [])]) existingMap.set(book.id, book);
+  const existingBooks = [...existingMap.values()];
   const byIdentifier = new Map(existingBooks.map(book => [book.product_identifier || book.isbn13, book]));
   const byIsbn = new Map(existingBooks.filter(book => book.isbn13).map(book => [book.isbn13, book]));
   const booksToCreate = [];
