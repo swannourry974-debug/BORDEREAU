@@ -1,8 +1,11 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { fetchOffersByBookIds, lightBook, normalizeIsbn, normalizeText, suggestionPoolsForBook, tokenizeTitle } from '../../shared/catalogUtils.ts';
+import { isSearchVisible } from '../../shared/catalogClassification.ts';
 
 function compact(item) {
-  return item ? { product_identifier: item.product_identifier, isbn13: item.isbn13 || '', title: item.title, author: item.author || '', category: item.category || '', availability: item.availability || 'unknown', price: item.price || 0, origin: item.origin } : null;
+  const classification = item?.classification || item?.product_type || 'livre';
+  const label = classification === 'revue' ? 'revue' : classification === 'produit_editorial' ? 'produit éditorial' : classification === 'non_eligible' ? 'non éligible' : 'livre';
+  return item ? { product_identifier: item.product_identifier, isbn13: item.isbn13 || '', title: item.title, author: item.author || '', category: item.category || '', classification, classification_label: label, availability: item.availability || 'unknown', price: item.price || 0, origin: item.origin } : null;
 }
 
 function rankBooks(books, tokens, norm) {
@@ -39,6 +42,7 @@ export default async function(req) {
       pages.map(page => page.items || page || []).flat().forEach(book => { byId.set(book.id, book); counts.set(book.id, (counts.get(book.id) || 0) + 1); });
       books = rankBooks([...byId.values()].filter(book => counts.get(book.id) === tokens.length), tokens, norm);
     }
+    books = books.filter(isSearchVisible);
     const mainBook = books[0] || null;
     if (!mainBook) return Response.json({ main: null, suggestions: [], order_applied: 'same_author puis same_category; chaque groupe trié in_stock, out_of_stock, unknown puis prix', counts: { same_author: 0, same_category: 0 } });
     const offersMap = await fetchOffersByBookIds(base44, [mainBook.id]);

@@ -45,6 +45,25 @@
         "produit_editorial"
       ]
     },
+    "classification": {
+      "type": "string",
+      "enum": [
+        "livre",
+        "revue",
+        "produit_editorial",
+        "non_eligible"
+      ]
+    },
+    "classification_previous": {
+      "type": "string",
+      "description": "Ancienne valeur de product_type avant reclassement"
+    },
+    "classification_updated_at": {
+      "type": "string"
+    },
+    "classification_source": {
+      "type": "string"
+    },
     "import_date": {
       "type": "string"
     },

@@ -27,6 +27,28 @@
       ],
       "default": "livre"
     },
+    "classification": {
+      "type": "string",
+      "enum": [
+        "livre",
+        "revue",
+        "produit_editorial",
+        "non_eligible"
+      ],
+      "default": "livre"
+    },
+    "classification_previous": {
+      "type": "string",
+      "description": "Ancienne valeur de product_type avant reclassement"
+    },
+    "classification_updated_at": {
+      "type": "string",
+      "description": "Date ISO de derni\u00e8re classification"
+    },
+    "classification_source": {
+      "type": "string",
+      "description": "R\u00e8gle ou op\u00e9ration ayant produit la classification"
+    },
     "source_feed_id": {
       "type": "string",
       "description": "Flux Awin d'origine utilis\u00e9 lors du dernier import"

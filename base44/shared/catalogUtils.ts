@@ -1,3 +1,5 @@
+import { classifyCatalogRecord, isGenericAuthorName, isSuggestionEligible, normalizeAuthorForMatch } from './catalogClassification.ts';
+
 export function normalizeText(value = '') {
   return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 }
@@ -168,12 +170,19 @@ export function offerAvailable(offer = {}) { return offer?.availability === 'in_
 
 export function lightBook(book = {}, offers = [], origin = undefined) {
   const offer = bestOffer(offers);
+  const classification = book.classification || book.product_type || 'livre';
+  const classificationLabel = classification === 'revue' ? 'revue' : classification === 'produit_editorial' ? 'produit éditorial' : classification === 'non_eligible' ? 'non éligible' : 'livre';
   return {
     id: book.id,
     product_identifier: book.product_identifier || book.isbn13 || book.ean || book.id,
     identifier_type: book.identifier_type || (book.isbn13 ? 'isbn13' : 'merchant_id'),
     isbn_valid: book.isbn_valid === true,
     product_type: book.product_type || 'livre',
+    classification,
+    classification_label: classificationLabel,
+    classification_previous: book.classification_previous || '',
+    classification_updated_at: book.classification_updated_at || '',
+    classification_source: book.classification_source || '',
     isbn13: book.isbn_valid === false ? '' : (book.isbn13 || ''),
     ean: book.ean,
     title: book.title,
@@ -213,10 +222,13 @@ function sortAvailableThenPrice(a, b) { return availabilityRank(a.best_offer) - 
 
 export async function suggestionPoolsForBook(base44, book) {
   const seen = new Set([book?.id, book?.product_identifier, book?.isbn13].filter(Boolean));
-  const authorPage = book?.author_norm ? await base44.asServiceRole.entities.Books.filter({ author_norm: book.author_norm }, { sort: 'title_norm', limit: 50 }) : { items: [] };
+  const authorKey = normalizeAuthorForMatch(book?.author || book?.author_norm || '');
+  const canUseAuthor = Boolean(authorKey) && !isGenericAuthorName(authorKey);
+  const authorPage = canUseAuthor ? await base44.asServiceRole.entities.Books.filter({ author_norm: authorKey }, { sort: 'title_norm', limit: 50 }) : { items: [] };
   const categoryPage = book?.category_norm ? await base44.asServiceRole.entities.Books.filter({ category_norm: book.category_norm }, { sort: 'title_norm', limit: 60 }) : { items: [] };
-  const authorBooks = (authorPage.items || authorPage || []).filter(candidate => !seen.has(candidate.id) && !seen.has(candidate.product_identifier) && !seen.has(candidate.isbn13));
-  const categoryBooks = (categoryPage.items || categoryPage || []).filter(candidate => !seen.has(candidate.id) && !seen.has(candidate.product_identifier) && !seen.has(candidate.isbn13));
+  const keepCandidate = candidate => !seen.has(candidate.id) && !seen.has(candidate.product_identifier) && !seen.has(candidate.isbn13) && isSuggestionEligible(candidate);
+  const authorBooks = (authorPage.items || authorPage || []).filter(candidate => keepCandidate(candidate) && !isGenericAuthorName(candidate.author || candidate.author_norm || ''));
+  const categoryBooks = (categoryPage.items || categoryPage || []).filter(keepCandidate);
   const offersMap = await fetchOffersByBookIds(base44, [...authorBooks, ...categoryBooks].map(candidate => candidate.id));
   return {
     same_author: authorBooks.map(candidate => lightBook(candidate, offersMap.get(candidate.id) || [], 'same_author')).sort(sortAvailableThenPrice),

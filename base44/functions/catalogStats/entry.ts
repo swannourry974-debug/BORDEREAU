@@ -1,6 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { buildCatalogRelations, fetchAll } from '../../shared/catalogAuditUtils.ts';
 
+const CLASSIFICATIONS = ['livre', 'revue', 'produit_editorial', 'non_eligible'];
+
 function rowsFrom(page) {
   return page?.rows || page?.items || page || [];
 }
@@ -55,6 +57,8 @@ export default async function(req) {
       categoryGroups,
       rejectionReasonGroups,
       availabilityGroups,
+      classificationGroups,
+      quarantineClassificationGroups,
       lastImportLogsPage,
       booksWithAuthor,
       booksWithoutAuthor,
@@ -81,6 +85,8 @@ export default async function(req) {
       base44.asServiceRole.entities.Books.aggregate({ groupBy: 'category' }),
       base44.asServiceRole.entities.ImportRejection.aggregate({ groupBy: 'reason' }),
       base44.asServiceRole.entities.BookOffers.aggregate({ groupBy: 'availability' }),
+      base44.asServiceRole.entities.Books.aggregate({ groupBy: 'classification' }),
+      base44.asServiceRole.entities.ImportRejection.aggregate({ query: { reviewed: false }, groupBy: 'classification' }),
       base44.asServiceRole.entities.ImportLog.filter({}, { sort: '-started_at', limit: 5 }),
       base44.asServiceRole.entities.Books.count({ author: { $ne: '' } }),
       base44.asServiceRole.entities.Books.count({ $or: [{ author: '' }, { author: { $exists: false } }] }),
@@ -96,6 +102,7 @@ export default async function(req) {
     const relations = buildCatalogRelations(books, offers);
     const booksWithoutOffer = relations.booksWithoutOffer.length;
     const offersOrphanCount = relations.orphanOffers.length;
+    const classificationChangedCount = books.filter((book) => String(book.classification || '') && String(book.classification || '') !== String(book.classification_previous || book.product_type || '')).length;
 
     const lastImportLogs = rowsFrom(lastImportLogsPage).map((log) => ({
       started_at: log.started_at || log.created_date || '',
@@ -115,6 +122,8 @@ export default async function(req) {
       books_isbn_valid_false: booksIsbnValidFalse,
       product_type_livre: productTypeLivre,
       product_type_produit_editorial: productTypeEditorial,
+      total_by_classification: breakdownFromRows(rowsFrom(classificationGroups), 'classification', CLASSIFICATIONS),
+      classification_changed_count: classificationChangedCount,
       total_offers: totalOffers,
       offers_cultura: offersCultura,
       offers_other_retailers: offersOtherRetailers,
@@ -125,6 +134,7 @@ export default async function(req) {
       books_by_category: topCategories(rowsFrom(categoryGroups), 20),
       quarantine_total: quarantineTotal,
       quarantine_unreviewed: quarantineUnreviewed,
+      quarantine_par_classification: breakdownFromRows(rowsFrom(quarantineClassificationGroups), 'classification', CLASSIFICATIONS),
       quarantine_by_reason: breakdownFromRows(rowsFrom(rejectionReasonGroups), 'reason'),
       availability_breakdown: breakdownFromRows(rowsFrom(availabilityGroups), 'availability', ['in_stock', 'out_of_stock', 'unknown']),
       books_with_author: booksWithAuthor,

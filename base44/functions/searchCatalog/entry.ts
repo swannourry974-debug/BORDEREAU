@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { buildSuggestionsForBook, fetchOffersByBookIds, lightBook, normalizeIsbn, normalizeText, tokenizeTitle } from '../../shared/catalogUtils.ts';
+import { isSearchVisible } from '../../shared/catalogClassification.ts';
 
 function escapeRegex(value = '') { return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 function rankBooks(books, tokens, norm) {
@@ -49,6 +50,7 @@ export default async function(req) {
       }
       books = rankBooks(books, tokens, norm).slice(0, pageSize);
     }
+    books = books.filter(isSearchVisible);
     const offersMap = await fetchOffersByBookIds(base44, books.map(book => book.id));
     const items = books.map(book => lightBook(book, offersMap.get(book.id) || []));
     const mainBook = books[0] || null;

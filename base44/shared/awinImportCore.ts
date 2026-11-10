@@ -1,4 +1,5 @@
 import { cleanAuthorList, cleanEan, cleanPublisher, inferAuthor, inferProductType, isEditorialProduct, isStationeryProduct, isValidIsbn13, normalizeAvailability, normalizeAwinHeader, normalizeIsbn, normalizeText, parseCsvLine, parsePrice, safeUrl, tokenizeTitle } from './catalogUtils.ts';
+import { classifyCatalogRecord } from './catalogClassification.ts';
 
 export const AWIN_RETAILER = 'Cultura';
 export const AWIN_BATCH_SIZE = 300;
@@ -51,11 +52,16 @@ export function mergeBook(existing = {}, incoming = {}) {
   const existingHasAuthor = Boolean(existingAuthor) && normalizeText(existingAuthor) !== 'pas de marque';
   const existingPublisher = cleanPublisher(existing.publisher || '');
   const incomingPublisher = cleanPublisher(incoming.publisher || '');
+  const incomingClassification = incoming.classification || existing.classification || existing.product_type || incoming.product_type || 'livre';
   return {
     product_identifier: existing.product_identifier || incoming.product_identifier,
     identifier_type: existing.identifier_type || incoming.identifier_type,
     isbn_valid: existing.isbn_valid === true || incoming.isbn_valid === true,
     product_type: existing.product_type || incoming.product_type || 'livre',
+    classification: incomingClassification,
+    classification_previous: existing.classification_previous || existing.product_type || incoming.product_type || '',
+    classification_updated_at: incoming.classification ? (existing.classification === incoming.classification ? existing.classification_updated_at : incoming.classification_updated_at) : existing.classification_updated_at,
+    classification_source: incoming.classification_source || existing.classification_source || undefined,
     source_feed_id: incoming.source_feed_id || existing.source_feed_id,
     source_feed_name: incoming.source_feed_name || existing.source_feed_name,
     isbn13: existing.isbn13 || incoming.isbn13 || '',
@@ -136,6 +142,7 @@ export function productToCatalogRecord(row, importedAt, feed = {}, options = {})
   const author = inferAuthor(row);
   const availabilityRaw = String(row.stock_status || row.in_stock || row.availability || '').trim();
   const productType = inferProductType(category.category || explicitCategory, title, identifier.isbn_valid);
+  const classification = classifyCatalogRecord({ title, category: category.category || explicitCategory, product_type: productType, isbn_valid: identifier.isbn_valid });
   return {
     product_identifier: identifier.product_identifier,
     isbn13: identifier.isbn13,
@@ -146,6 +153,10 @@ export function productToCatalogRecord(row, importedAt, feed = {}, options = {})
       identifier_type: identifier.identifier_type,
       isbn_valid: identifier.isbn_valid,
       product_type: productType,
+      classification,
+      classification_previous: productType,
+      classification_updated_at: importedAt,
+      classification_source: 'awin_rules_v1',
       source_feed_id: feedId,
       source_feed_name: feedName,
       isbn13: identifier.isbn13,
@@ -267,7 +278,7 @@ export async function upsertBatch(base44, records, examples, exampleLimit = 10) 
     const existingOffer = offerByBook.get(book.id);
     if (existingOffer) offersToUpdate.push({ id: existingOffer.id, ...offer });
     else offersToCreate.push(offer);
-    if (examples.length < exampleLimit) examples.push({ product_identifier: record.book.product_identifier, identifier_type: record.book.identifier_type, isbn_valid: record.book.isbn_valid, product_type: record.book.product_type, isbn13: record.book.isbn13, title: record.book.title, price: record.offer.price, currency: 'EUR', availability: record.offer.availability, availability_raw: record.offer.availability_raw, author: record.book.author, author_source: record.book.author_source, category: record.book.category, category_source: record.book.category_source });
+    if (examples.length < exampleLimit) examples.push({ product_identifier: record.book.product_identifier, identifier_type: record.book.identifier_type, isbn_valid: record.book.isbn_valid, product_type: record.book.product_type, classification: record.book.classification, isbn13: record.book.isbn13, title: record.book.title, price: record.offer.price, currency: 'EUR', availability: record.offer.availability, availability_raw: record.offer.availability_raw, author: record.book.author, author_source: record.book.author_source, category: record.book.category, category_source: record.book.category_source });
   }
   if (offersToCreate.length) await base44.asServiceRole.entities.BookOffers.bulkCreate(offersToCreate);
   if (offersToUpdate.length) await base44.asServiceRole.entities.BookOffers.bulkUpdate(offersToUpdate);
