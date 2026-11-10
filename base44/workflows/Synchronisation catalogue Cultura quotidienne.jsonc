@@ -1,29 +1,6 @@
 {
-  "description": "Pr\u00e9pare la synchronisation quotidienne du catalogue Cultura FR \u00e0 03:00 Europe/Paris. D\u00e9sactiv\u00e9e jusqu'\u00e0 validation du test 1 000 produits.",
-  "definition": {
-    "document": {
-      "dsl": "1.0.0",
-      "name": "sync_catalogue_cultura_daily",
-      "version": "1.0",
-      "namespace": "base44"
-    },
-    "do": [
-      {
-        "import_catalogue": {
-          "call": "invoke_backend_function",
-          "with": {
-            "function_name": "importAwinCultura",
-            "args": {}
-          },
-          "then": "end",
-          "x-base44": {
-            "title": "Importer Cultura",
-            "description": "Catalogue quotidien"
-          }
-        }
-      }
-    ]
-  },
+  "name": "Synchronisation catalogue Cultura quotidienne",
+  "description": "Synchronise chaque jour \u00e0 03:00 Europe/Paris les flux livres Cultura FR, flux apr\u00e8s flux, avec reprise par checkpoint et sans suppression du catalogue existant.",
   "trigger": {
     "condition": null,
     "config": {
@@ -41,5 +18,31 @@
       "ends_after_count": null
     }
   },
-  "name": "Synchronisation catalogue Cultura quotidienne"
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "sync_catalogue_cultura_daily",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "import_catalogue": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "importAwinCultura",
+            "args": {
+              "mode": "full",
+              "resume": true
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Importer Cultura",
+            "description": "Multi-flux livres"
+          }
+        }
+      }
+    ]
+  }
 }

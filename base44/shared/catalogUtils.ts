@@ -10,6 +10,7 @@ export function normalizeText(value = '') {
 export function isValidIsbn13(value = '') {
   const digits = String(value || '').replace(/[^0-9]/g, '');
   if (!/^\d{13}$/.test(digits)) return false;
+  if (!/^97[89]/.test(digits)) return false;
   const sum = digits.slice(0, 12).split('').reduce((total, char, index) => total + Number(char) * (index % 2 ? 3 : 1), 0);
   const check = (10 - (sum % 10)) % 10;
   return check === Number(digits[12]);
@@ -384,6 +385,34 @@ function chooseCulturaFeed(rows = []) {
   return scored[0]?.row || null;
 }
 
+export async function resolveAwinFeedRow(configuredUrl, feedRow, token, options = {}) {
+  const timeoutMs = options.timeoutMs || 120000;
+  if (!feedRow?.url) throw new Error('Flux Awin sans URL téléchargeable');
+  const selectedUrl = new URL(feedRow.url, configuredUrl).toString();
+  const datafeed = await fetchAwinWithRedirects(selectedUrl, token, timeoutMs);
+  if (!datafeed.response?.ok || !datafeed.response?.body) {
+    throw new Error(`Téléchargement du datafeed Cultura impossible (${datafeed.response?.status || 'sans réponse'})`);
+  }
+  const dataProbe = await probeAwinStream(datafeed.response.body, datafeed.response.headers.get('content-encoding') || '');
+  return {
+    stream: dataProbe.stream,
+    gzip: dataProbe,
+    http: {
+      status: datafeed.response.status,
+      content_type: datafeed.response.headers.get('content-type') || '',
+      content_length: datafeed.response.headers.get('content-length') || '',
+      redirects: datafeed.redirects,
+      final_url_masked: maskAwinUrl(datafeed.finalUrl),
+      auth_mode: datafeed.auth_mode,
+    },
+    feed_resolution: {
+      method: 'feed_list',
+      selected_feed: sanitizeAwinFeedRow(feedRow),
+      advertisers_detected: [],
+    },
+  };
+}
+
 export async function resolveAwinDatafeed(configuredUrl, token, options = {}) {
   const timeoutMs = options.timeoutMs || 120000;
   const initial = await fetchAwinWithRedirects(configuredUrl, token, timeoutMs);
@@ -430,28 +459,12 @@ export async function resolveAwinDatafeed(configuredUrl, token, options = {}) {
     throw error;
   }
 
-  const selectedUrl = new URL(selected.url, configuredUrl).toString();
-  const datafeed = await fetchAwinWithRedirects(selectedUrl, token, timeoutMs);
-  if (!datafeed.response?.ok || !datafeed.response?.body) {
-    throw new Error(`Téléchargement du datafeed Cultura impossible (${datafeed.response?.status || 'sans réponse'})`);
-  }
-  const dataProbe = await probeAwinStream(datafeed.response.body, datafeed.response.headers.get('content-encoding') || '');
-
+  const resolved = await resolveAwinFeedRow(configuredUrl, selected, token, { timeoutMs });
   return {
-    stream: dataProbe.stream,
-    gzip: dataProbe,
+    ...resolved,
     http: {
-      status: datafeed.response.status,
-      content_type: datafeed.response.headers.get('content-type') || '',
-      content_length: datafeed.response.headers.get('content-length') || '',
-      redirects: initial.redirects + datafeed.redirects,
-      final_url_masked: maskAwinUrl(datafeed.finalUrl),
-      auth_mode: datafeed.auth_mode,
-    },
-    feed_resolution: {
-      method: 'feed_list',
-      selected_feed: sanitizeAwinFeedRow(selected),
-      advertisers_detected: [],
+      ...resolved.http,
+      redirects: initial.redirects + resolved.http.redirects,
     },
   };
 }

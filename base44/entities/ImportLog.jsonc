@@ -8,11 +8,42 @@
     "finished_at": {
       "type": "string"
     },
+    "import_mode": {
+      "type": "string",
+      "enum": [
+        "test",
+        "full",
+        "feed",
+        "execution"
+      ],
+      "default": "full"
+    },
+    "feed_id": {
+      "type": "string"
+    },
+    "feed_name": {
+      "type": "string"
+    },
+    "current_feed_id": {
+      "type": "string"
+    },
     "products_processed": {
       "type": "number",
       "default": 0
     },
+    "rows_rejected": {
+      "type": "number",
+      "default": 0
+    },
     "books_created": {
+      "type": "number",
+      "default": 0
+    },
+    "books_updated": {
+      "type": "number",
+      "default": 0
+    },
+    "offers_created": {
       "type": "number",
       "default": 0
     },
@@ -21,6 +52,10 @@
       "default": 0
     },
     "duplicates": {
+      "type": "number",
+      "default": 0
+    },
+    "duplicates_cross_feed": {
       "type": "number",
       "default": 0
     },
@@ -60,7 +95,7 @@
     },
     "control_report": {
       "type": "object",
-      "description": "Rapport de contr\u00f4le du test import : doublons, offres, suggestions"
+      "description": "Rapport de contr\u00f4le du test import : doublons, rejets, offres et exemples"
     }
   },
   "required": [
