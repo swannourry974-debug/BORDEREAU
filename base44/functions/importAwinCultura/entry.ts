@@ -73,6 +73,7 @@ export default async function(req) {
       const feedName = String(feed.feed_name || '').trim();
       const resumeFromLine = resume ? await latestCheckpoint(base44, feedId) : 0;
       const feedStats = emptyImportStats(resumeFromLine);
+      const seenFeed = new Set();
       const feedLog = await base44.asServiceRole.entities.ImportLog.create({
         started_at: new Date().toISOString(),
         import_mode: mode === 'test' ? 'test' : 'feed',
@@ -104,7 +105,7 @@ export default async function(req) {
           totals.productsProcessed += 1;
           totals.lineCheckpoint = lineNumber;
 
-          const record = productToCatalogRecord(row, importedAt, feed);
+          const record = productToCatalogRecord(row, importedAt, feed, { allowNonIsbnEditorial: true });
           if (record.error) {
             feedStats.rowsRejected += 1;
             totals.rowsRejected += 1;
@@ -112,7 +113,20 @@ export default async function(req) {
             continue;
           }
 
-          observedUniqueIsbn.add(record.isbn13);
+          const duplicateKey = record.product_identifier;
+          if (seenFeed.has(duplicateKey)) {
+            feedStats.duplicatesInFeed += 1;
+            totals.duplicatesInFeed += 1;
+            continue;
+          }
+          seenFeed.add(duplicateKey);
+          if (seenGlobal.has(duplicateKey)) {
+            feedStats.duplicatesCrossFeed += 1;
+            totals.duplicatesCrossFeed += 1;
+            continue;
+          }
+          seenGlobal.add(duplicateKey);
+          observedUniqueIsbn.add(duplicateKey);
           if (testLimit && acceptedForWrite >= testLimit) { stoppedForLimit = true; break; }
           batch.push(record);
           acceptedForWrite += 1;
@@ -177,7 +191,7 @@ export default async function(req) {
       duplicates_cross_feed: totals.duplicatesCrossFeed,
       examples_written: writtenExamples,
       current_totals: { books: bookCount, cultura_offers: culturaOfferCount },
-      expected_unique_references_estimate: { expected_products: expectedProducts, observed_unique_isbn: observedUniqueIsbn.size, observed_valid_isbn: observedValid, estimated_unique_references: estimatedUniqueReferences },
+      expected_unique_references_estimate: { expected_products: expectedProducts,       observed_unique_identifiers: observedUniqueIsbn.size, observed_valid_identifiers: observedValid, estimated_unique_references: estimatedUniqueReferences },
       stopped_for_limit: stoppedForLimit,
       stopped_for_runtime: stoppedForRuntime,
       feed_reports: feedReports,

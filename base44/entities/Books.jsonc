@@ -2,9 +2,41 @@
   "name": "Books",
   "type": "object",
   "properties": {
+    "product_identifier": {
+      "type": "string",
+      "description": "Identifiant unique de d\u00e9duplication: ISBN-13 valide ou EAN/merchant pr\u00e9fix\u00e9"
+    },
+    "identifier_type": {
+      "type": "string",
+      "enum": [
+        "isbn13",
+        "ean",
+        "merchant_id"
+      ],
+      "default": "isbn13"
+    },
+    "isbn_valid": {
+      "type": "boolean",
+      "default": false
+    },
+    "product_type": {
+      "type": "string",
+      "enum": [
+        "livre",
+        "produit_editorial"
+      ],
+      "default": "livre"
+    },
+    "source_feed_id": {
+      "type": "string",
+      "description": "Flux Awin d'origine utilis\u00e9 lors du dernier import"
+    },
+    "source_feed_name": {
+      "type": "string"
+    },
     "isbn13": {
       "type": "string",
-      "description": "ISBN-13 normalis\u00e9, identifiant fonctionnel unique appliqu\u00e9 par l'import serveur"
+      "description": "ISBN-13 uniquement quand il est valide; vide pour un EAN non-ISBN"
     },
     "ean": {
       "type": "string",
@@ -61,7 +93,7 @@
     },
     "category_norm": {
       "type": "string",
-      "description": "Cat\u00e9gorie normalis\u00e9e pour suggestions same_then_category"
+      "description": "Cat\u00e9gorie normalis\u00e9e pour suggestions same_author puis same_category"
     },
     "language": {
       "type": "string"
@@ -71,7 +103,6 @@
     }
   },
   "required": [
-    "isbn13",
     "title"
   ],
   "rls": {

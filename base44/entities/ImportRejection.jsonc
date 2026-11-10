@@ -24,6 +24,27 @@
     "feed_id": {
       "type": "string"
     },
+    "product_identifier": {
+      "type": "string"
+    },
+    "identifier_type": {
+      "type": "string",
+      "enum": [
+        "isbn13",
+        "ean",
+        "merchant_id"
+      ]
+    },
+    "isbn_valid": {
+      "type": "boolean"
+    },
+    "product_type": {
+      "type": "string",
+      "enum": [
+        "livre",
+        "produit_editorial"
+      ]
+    },
     "import_date": {
       "type": "string"
     },
