@@ -28,7 +28,7 @@ export default async function(req) {
     if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     const body = await req.json().catch(() => ({}));
-    const dryRun = body.dry_run !== false;
+    const dryRun = body.dry_run === true;
     const maxGroups = Math.max(1, Math.min(Number(body.max_groups || 50), 200));
     const maxUpdates = Math.max(1, Math.min(Number(body.max_updates || 500), 1000));
     const now = new Date().toISOString();

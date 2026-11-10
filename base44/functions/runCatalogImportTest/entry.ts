@@ -1,7 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { secrets } from 'base44:runtime';
 import { cleanEan, listAwinFeedRows, normalizeText, resolveAwinFeedRow, tokenizeTitle } from '../../shared/catalogUtils.ts';
-import { AWIN_MAX_TEST_LIMIT, AWIN_RETAILER, AWIN_ROMAN_FEED_ID, csvRowsFromAwinStream, emptyImportStats, emptyRejectionReasons, findCulturaFeedById, productToCatalogRecord, recordImportRejections, upsertBatch, writeImportProgress } from '../../shared/awinImportCore.ts';
+import { AWIN_MAX_TEST_LIMIT, AWIN_RETAILER, AWIN_ROMAN_FEED_ID, csvRowsFromAwinStream, emptyImportStats, emptyRejectionReasons, findCulturaFeedById, productToCatalogRecord, recordImportRejections, selectCulturaBookFeeds, upsertBatch, writeImportProgress } from '../../shared/awinImportCore.ts';
 import { fetchAll } from '../../shared/catalogAuditUtils.ts';
 
 function readSecret(name) { try { return secrets.get(name) || ''; } catch { return ''; } }
@@ -146,17 +146,28 @@ async function runEanCounterStep(base44, label, record) {
   };
 }
 
-async function eanCounterTest(base44, feedUrl, token, selectedFeed) {
+async function eanCounterTest(base44, feedUrl, token, selectedFeed, feedRows) {
   const existingIdentifiers = await existingProductIdentifierSet(base44);
-  const record = await findAbsentEanRecord(base44, feedUrl, token, selectedFeed, existingIdentifiers);
-  if (!record) return { ok: false, action: 'ean_counter_test', error: 'Aucun EAN inédit éligible trouvé dans le flux sélectionné' };
+  const candidates = [selectedFeed, ...selectCulturaBookFeeds(feedRows, false)];
+  const seenFeeds = new Set();
+  let chosenFeed = null;
+  let record = null;
+  for (const feed of candidates) {
+    const candidateFeedId = String(feed?.feed_id || feed?.data_feed_id || feed?.fid || '').trim();
+    if (!candidateFeedId || seenFeeds.has(candidateFeedId)) continue;
+    seenFeeds.add(candidateFeedId);
+    record = await findAbsentEanRecord(base44, feedUrl, token, feed, existingIdentifiers);
+    if (record) { chosenFeed = feed; break; }
+  }
+  if (!record || !chosenFeed) return { ok: false, action: 'ean_counter_test', error: 'Aucun EAN inédit éligible trouvé dans les flux livre Cultura sélectionnés' };
   const step1 = await runEanCounterStep(base44, 'step_1_new_ean_expected_1_create_0_update', record);
   const step2 = await runEanCounterStep(base44, 'step_2_same_ean_expected_0_create_1_update', record);
   const step3 = await runEanCounterStep(base44, 'step_3_existing_ean_with_offer_expected_0_create_1_update_1_offer', record);
   return {
     ok: true,
     action: 'ean_counter_test',
-    feed_id: String(selectedFeed.feed_id || selectedFeed.data_feed_id || selectedFeed.fid || '').trim(),
+    feed_id: String(chosenFeed.feed_id || chosenFeed.data_feed_id || chosenFeed.fid || '').trim(),
+    requested_feed_id: String(selectedFeed.feed_id || selectedFeed.data_feed_id || selectedFeed.fid || '').trim(),
     steps: [step1, step2, step3],
     no_deletion: true,
     no_secret_or_datafeed_url_exposed: true,
@@ -199,7 +210,7 @@ export default async function(req) {
     const selectedFeed = findCulturaFeedById(rows, feedId);
     if (!selectedFeed) throw new Error(`Flux ${feedId} introuvable`);
     const feedName = String(selectedFeed.feed_name || '').trim();
-    if (action === 'ean_counter_test') return Response.json(await eanCounterTest(base44, feedUrl, token, selectedFeed));
+    if (action === 'ean_counter_test') return Response.json(await eanCounterTest(base44, feedUrl, token, selectedFeed, rows));
 
     log = await base44.asServiceRole.entities.ImportLog.create({ started_at: startedAt, import_mode: 'test', feed_id: feedId, feed_name: feedName, products_processed: 0, rows_rejected: 0, books_created: 0, books_updated: 0, offers_created: 0, offers_updated: 0, duplicates: 0, duplicates_in_feed: 0, duplicates_cross_feed: 0, errors: 0, status: 'running', source_retailer: AWIN_RETAILER, test_limit: limit, control_report: { temporary_function: true, purpose: 'Validation écriture catalogue Cultura, à retirer après validation', feed_id: feedId, action: action || 'test_import' } });
 
