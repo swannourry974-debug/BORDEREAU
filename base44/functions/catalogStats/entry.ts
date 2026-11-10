@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
+import { buildCatalogRelations, fetchAll } from '../../shared/catalogAuditUtils.ts';
 
 function rowsFrom(page) {
   return page?.rows || page?.items || page || [];
@@ -88,14 +89,13 @@ export default async function(req) {
       base44.asServiceRole.entities.Books.count({ identifier_type: 'ean', product_type: 'produit_editorial' }),
     ]);
 
-    const bookIds = new Set(rowsFrom(bookIdGroups).map((row) => String(row.id || '').trim()).filter(Boolean));
-    const offerBookRows = rowsFrom(offerBookGroups);
-    const offerBookIds = new Set(offerBookRows.map((row) => String(row.book_id || '').trim()).filter(Boolean));
-    const booksWithoutOffer = rowsFrom(bookIdGroups).filter((row) => !offerBookIds.has(String(row.id || '').trim())).length;
-    const offersOrphanCount = offerBookRows.reduce((sum, row) => {
-      const bookId = String(row.book_id || '').trim();
-      return bookId && !bookIds.has(bookId) ? sum + Number(row.count || 0) : sum;
-    }, 0);
+    const [books, offers] = await Promise.all([
+      fetchAll(base44.asServiceRole.entities.Books, {}, { sort: '-created_date' }),
+      fetchAll(base44.asServiceRole.entities.BookOffers, {}, { sort: '-updated_date' }),
+    ]);
+    const relations = buildCatalogRelations(books, offers);
+    const booksWithoutOffer = relations.booksWithoutOffer.length;
+    const offersOrphanCount = relations.orphanOffers.length;
 
     const lastImportLogs = rowsFrom(lastImportLogsPage).map((log) => ({
       started_at: log.started_at || log.created_date || '',

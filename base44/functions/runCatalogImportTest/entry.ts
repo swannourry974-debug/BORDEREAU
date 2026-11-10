@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { secrets } from 'base44:runtime';
 import { cleanEan, listAwinFeedRows, normalizeText, resolveAwinFeedRow, tokenizeTitle } from '../../shared/catalogUtils.ts';
 import { AWIN_MAX_TEST_LIMIT, AWIN_RETAILER, AWIN_ROMAN_FEED_ID, csvRowsFromAwinStream, emptyImportStats, emptyRejectionReasons, findCulturaFeedById, productToCatalogRecord, recordImportRejections, upsertBatch, writeImportProgress } from '../../shared/awinImportCore.ts';
+import { fetchAll } from '../../shared/catalogAuditUtils.ts';
 
 function readSecret(name) { try { return secrets.get(name) || ''; } catch { return ''; } }
 function pageItems(page) { return page.items || page || []; }
@@ -115,14 +116,18 @@ async function countIdentifierLinks(base44, productIdentifier) {
   return { books_count: books.length, offers_count: offers.length };
 }
 
-async function findAbsentEanRecord(base44, feedUrl, token, selectedFeed) {
+async function existingProductIdentifierSet(base44) {
+  const books = await fetchAll(base44.asServiceRole.entities.Books, {}, { sort: '-created_date', maxPages: 80 });
+  return new Set(books.map(book => String(book.product_identifier || '').trim()).filter(Boolean));
+}
+
+async function findAbsentEanRecord(base44, feedUrl, token, selectedFeed, existingIdentifiers) {
   const resolved = await resolveAwinFeedRow(feedUrl, selectedFeed, token, { timeoutMs: 240000 });
   const importedAt = new Date().toISOString();
   for await (const { row } of csvRowsFromAwinStream(resolved.stream, resolved.gzip.is_gzip)) {
     const record = productToCatalogRecord(row, importedAt, selectedFeed, { allowNonIsbnEditorial: true });
     if (record.error || record.identifier_type !== 'ean' || record.isbn_valid !== false) continue;
-    const links = await countIdentifierLinks(base44, record.product_identifier);
-    if (links.books_count === 0) return record;
+    if (!existingIdentifiers.has(record.product_identifier)) return record;
   }
   return null;
 }
@@ -142,7 +147,8 @@ async function runEanCounterStep(base44, label, record) {
 }
 
 async function eanCounterTest(base44, feedUrl, token, selectedFeed) {
-  const record = await findAbsentEanRecord(base44, feedUrl, token, selectedFeed);
+  const existingIdentifiers = await existingProductIdentifierSet(base44);
+  const record = await findAbsentEanRecord(base44, feedUrl, token, selectedFeed, existingIdentifiers);
   if (!record) return { ok: false, action: 'ean_counter_test', error: 'Aucun EAN inédit éligible trouvé dans le flux sélectionné' };
   const step1 = await runEanCounterStep(base44, 'step_1_new_ean_expected_1_create_0_update', record);
   const step2 = await runEanCounterStep(base44, 'step_2_same_ean_expected_0_create_1_update', record);
