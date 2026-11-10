@@ -261,19 +261,36 @@ function mergeOffer(existing = {}, incoming = {}) {
   };
 }
 
-export async function upsertBatch(base44, records, examples, exampleLimit = 10) {
+function itemsFrom(page) { return page?.items || page || []; }
+function uniqueValues(values = []) { return [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))]; }
+function chunks(values = [], size = 500) { const output = []; for (let i = 0; i < values.length; i += size) output.push(values.slice(i, i + size)); return output; }
+async function limitedFilter(base44, limiter, entityName, query, options = {}) {
+  const run = () => base44.asServiceRole.entities[entityName].filter(query, options);
+  return limiter ? await limiter.list(run, `${entityName}.filter`) : await run();
+}
+async function filterInChunks(base44, limiter, entityName, field, values, extraQuery = {}) {
+  const output = [];
+  for (const chunk of chunks(uniqueValues(values), 500)) {
+    const page = await limitedFilter(base44, limiter, entityName, { ...extraQuery, [field]: { $in: chunk } }, { limit: chunk.length });
+    output.push(...itemsFrom(page));
+  }
+  return output;
+}
+
+export async function upsertBatch(base44, records, examples, exampleLimit = 10, options = {}) {
   const { rows } = uniquifyRecords(records);
-  if (!rows.length) return { booksCreated: 0, booksUpdated: 0, offersCreated: 0, offersUpdated: 0 };
-  const identifiers = rows.map(record => record.product_identifier).filter(Boolean);
-  const isbn13s = rows.map(record => record.isbn13).filter(Boolean);
-  const [existingByIdentifierPage, existingByIsbnPage] = await Promise.all([
-    identifiers.length ? base44.asServiceRole.entities.Books.filter({ product_identifier: { $in: identifiers } }, { limit: Math.min(500, identifiers.length) }) : { items: [] },
-    isbn13s.length ? base44.asServiceRole.entities.Books.filter({ isbn13: { $in: isbn13s } }, { limit: Math.min(500, isbn13s.length) }) : { items: [] },
+  const limiter = options.limiter || null;
+  if (!rows.length) return { booksCreated: 0, booksUpdated: 0, offersCreated: 0, offersUpdated: 0, diagnostics: { touched_book_ids: [], product_identifiers: [], isbn13s: [] } };
+  const identifiers = uniqueValues(rows.map(record => record.product_identifier));
+  const isbn13s = uniqueValues(rows.map(record => record.isbn13));
+  const [existingByIdentifier, existingByIsbn] = await Promise.all([
+    filterInChunks(base44, limiter, 'Books', 'product_identifier', identifiers),
+    filterInChunks(base44, limiter, 'Books', 'isbn13', isbn13s),
   ]);
   const identifierSet = new Set(identifiers);
   const isbnSet = new Set(isbn13s);
   const existingMap = new Map();
-  for (const book of [...(existingByIdentifierPage.items || existingByIdentifierPage || []), ...(existingByIsbnPage.items || existingByIsbnPage || [])]) {
+  for (const book of [...existingByIdentifier, ...existingByIsbn]) {
     if (book.product_identifier && identifierSet.has(book.product_identifier)) existingMap.set(book.id, book);
     else if (book.isbn13 && isbnSet.has(book.isbn13)) existingMap.set(book.id, book);
   }
@@ -292,23 +309,25 @@ export async function upsertBatch(base44, records, examples, exampleLimit = 10) 
   const allBooks = [...existingBooks, ...(created || [])];
   const bookByIdentifier = new Map(allBooks.map(book => [book.product_identifier || book.isbn13, book]));
   const bookByIsbn = new Map(allBooks.filter(book => book.isbn13).map(book => [book.isbn13, book]));
-  const bookIds = allBooks.map(book => book.id).filter(Boolean);
-  const offerPage = bookIds.length ? await base44.asServiceRole.entities.BookOffers.filter({ book_id: { $in: bookIds }, retailer_name: AWIN_RETAILER }, { limit: Math.min(500, bookIds.length) }) : { items: [] };
-  const offerByBook = new Map((offerPage.items || offerPage || []).map(offer => [offer.book_id, offer]));
+  const bookIds = uniqueValues(allBooks.map(book => book.id));
+  const existingOffers = await filterInChunks(base44, limiter, 'BookOffers', 'book_id', bookIds, { retailer_name: AWIN_RETAILER });
+  const offerByBook = new Map(existingOffers.map(offer => [offer.book_id, offer]));
+  const offerByRetailerProduct = new Map(existingOffers.map(offer => [String(offer.retailer_product_id || '').trim(), offer]).filter(([key]) => key));
   const offersToCreate = [];
   const offersToUpdate = [];
   for (const record of rows) {
     const book = bookByIdentifier.get(record.product_identifier) || (record.isbn13 ? bookByIsbn.get(record.isbn13) : null);
     if (!book?.id) continue;
     const offer = { ...record.offer, book_id: book.id };
-    const existingOffer = offerByBook.get(book.id);
+    const merchantKey = String(offer.retailer_product_id || '').trim();
+    const existingOffer = (merchantKey ? offerByRetailerProduct.get(merchantKey) : null) || offerByBook.get(book.id);
     if (existingOffer) offersToUpdate.push({ id: existingOffer.id, ...mergeOffer(existingOffer, offer) });
     else offersToCreate.push(offer);
     if (examples.length < exampleLimit) examples.push({ product_identifier: record.book.product_identifier, identifier_type: record.book.identifier_type, isbn_valid: record.book.isbn_valid, product_type: record.book.product_type, classification: record.book.classification, isbn13: record.book.isbn13, title: record.book.title, price: record.offer.price, currency: 'EUR', availability: record.offer.availability, availability_raw: record.offer.availability_raw, author: record.book.author, author_source: record.book.author_source, category: record.book.category, category_source: record.book.category_source });
   }
   if (offersToCreate.length) await base44.asServiceRole.entities.BookOffers.bulkCreate(offersToCreate);
   if (offersToUpdate.length) await base44.asServiceRole.entities.BookOffers.bulkUpdate(offersToUpdate);
-  return { booksCreated: booksToCreate.length, booksUpdated: booksToUpdate.length, offersCreated: offersToCreate.length, offersUpdated: offersToUpdate.length };
+  return { booksCreated: booksToCreate.length, booksUpdated: booksToUpdate.length, offersCreated: offersToCreate.length, offersUpdated: offersToUpdate.length, diagnostics: { touched_book_ids: bookIds, product_identifiers: identifiers, isbn13s, existing_books_loaded: existingBooks.length, existing_offers_loaded: existingOffers.length } };
 }
 
 export async function recordImportRejections(base44, rejections = []) {

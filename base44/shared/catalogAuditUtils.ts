@@ -9,7 +9,8 @@ export async function fetchAll(entity, query = {}, options = {}) {
   let cursor = undefined;
   const output = [];
   for (let pageIndex = 0; pageIndex < maxPages; pageIndex += 1) {
-    const page = await entity.filter(query, { limit, cursor, ...(sort ? { sort } : {}) });
+    const run = () => entity.filter(query, { limit, cursor, ...(sort ? { sort } : {}) });
+    const page = options.limiter ? await options.limiter.list(run, options.label || 'entity.filter') : await run();
     const items = rowsFrom(page);
     output.push(...items);
     if (!page?.has_more || !page?.next_cursor) break;
