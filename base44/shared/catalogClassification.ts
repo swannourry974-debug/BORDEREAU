@@ -38,15 +38,32 @@ function hasMagazineName(text) {
   return /\blire\b/.test(text) && (text.includes('magazine') || text.includes('hors serie') || /\b(?:numero|n)\s+\d+\b/.test(text));
 }
 
-export function classifyCatalogRecord({ title = '', category = '', product_type = '', isbn_valid = false } = {}) {
+function hasPedagogicalBookContext(text) {
+  return hasAny(text, ['livre de l eleve', 'manuel', 'methode', 'cahier d exercices']);
+}
+
+function hasPedagogicalPublisher(text) {
+  return hasAny(text, ['hachette fle', 'didier', 'cle international', 'maison des langues', 'nathan', 'bordas', 'hatier', 'magnard', 'belin', 'assimil', 'pearson', 'cambridge', 'oxford']);
+}
+
+function isStationeryAgenda(text) {
+  if (!text.includes('agenda')) return false;
+  return hasAny(text, ['semainier', 'agenda scolaire', 'agenda de bureau']) || /\b(?:19|20)\d{2}\b/.test(text);
+}
+
+export function classifyCatalogRecord({ title = '', category = '', product_type = '', isbn_valid = false, author = '', publisher = '' } = {}) {
   const text = normalizeBasic(`${category} ${title}`);
+  const sourceText = normalizeBasic(`${text} ${author} ${publisher}`);
   if (!text) return 'livre';
+
+  if (text.includes('agenda') && (hasPedagogicalBookContext(text) || (isbn_valid && hasPedagogicalPublisher(sourceText)))) return 'livre';
 
   if (hasAny(text, ['magazine', 'revue', 'periodique', 'hors serie', 'trimestriel', 'mensuel', 'bimensuel']) || /\b(?:numero|n)\s+\d+\b/.test(text) || hasMagazineName(text)) return 'revue';
 
-  const editorialAgenda = text.includes('agenda') && hasAny(text, ['sempe', 'litteraire', 'lecture', 'bd', 'manga', 'illustre', 'illustration', 'collector', 'edition']);
+  const stationeryAgenda = isStationeryAgenda(text);
+  const editorialAgenda = text.includes('agenda') && !stationeryAgenda && hasAny(text, ['sempe', 'litteraire', 'lecture', 'bd', 'manga', 'illustre', 'illustration', 'collector', 'edition']);
   const nonEligibleWords = ['pochette surprise', 'blind box', 'goodies', 'figurine', 'peluche', 't shirt', 'tee shirt', 'poster', 'carte postale', 'cartes postales', 'marque page', 'marque pages', 'dvd', 'blu ray', 'bluray', 'cd', 'coffret cd', 'jeu', 'jouet', 'papeterie', 'carnet', 'bloc notes', 'bloc note', 'stylo', 'stylos'];
-  if (hasAny(text, nonEligibleWords) || (text.includes('agenda') && !editorialAgenda)) return 'non_eligible';
+  if (hasAny(text, nonEligibleWords) || stationeryAgenda) return 'non_eligible';
 
   const editorialWords = ['coffret bd', 'coffret bande dessinee', 'coffret manga', 'integrale', 'pack de volumes', 'pack volumes', 'album illustre', 'agenda sempe', 'edition collector', 'collector'];
   if (editorialAgenda || hasAny(text, editorialWords)) return 'produit_editorial';

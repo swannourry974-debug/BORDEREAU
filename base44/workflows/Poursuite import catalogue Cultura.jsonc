@@ -5,7 +5,7 @@
       "trigger_type": "scheduled",
       "events": [],
       "schedule_mode": "recurring",
-      "cron_expression": "*/10 * * * *",
+      "cron_expression": "*/5 * * * *",
       "one_time_date": null,
       "timezone": "Europe/Paris",
       "interval_value": null,
@@ -31,18 +31,18 @@
             "function_name": "runCatalogImport",
             "args": {
               "action": "step",
-              "batch_size": 500
+              "batch_size": 2000
             }
           },
           "then": "end",
           "x-base44": {
             "title": "Traiter un lot",
-            "description": "500 lignes si actif"
+            "description": "2 000 lignes si actif"
           }
         }
       }
     ]
   },
-  "description": "Appelle toutes les 10 minutes le moteur d'import progressif Cultura. Ne traite rien tant qu'aucun flux n'est d\u00e9marr\u00e9.",
+  "description": "Appelle toutes les 5 minutes le moteur d'import progressif Cultura. Ne traite rien tant qu'aucun flux n'est d\u00e9marr\u00e9.",
   "name": "Poursuite import catalogue Cultura"
 }

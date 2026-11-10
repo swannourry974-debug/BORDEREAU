@@ -144,7 +144,8 @@ export function productToCatalogRecord(row, importedAt, feed = {}, options = {})
   const author = inferAuthor(row);
   const availabilityRaw = String(row.stock_status || row.in_stock || row.availability || '').trim();
   const productType = inferProductType(category.category || explicitCategory, title, identifier.isbn_valid);
-  const classification = classifyCatalogRecord({ title, category: category.category || explicitCategory, product_type: productType, isbn_valid: identifier.isbn_valid });
+  const publisher = cleanPublisher(row.brand_name || '');
+  const classification = classifyCatalogRecord({ title, category: category.category || explicitCategory, product_type: productType, isbn_valid: identifier.isbn_valid, author, publisher });
   return {
     product_identifier: identifier.product_identifier,
     isbn13: identifier.isbn13,

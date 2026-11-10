@@ -117,7 +117,7 @@ export function isStationeryProduct(title = '') {
   const excluded = ['carnet', 'bloc notes', 'bloc note', 'papeterie', 'marque page', 'marque pages', 'carte postale', 'cartes postales', 'poster', 'stylo', 'stylos'];
   if (excluded.some(word => text.includes(word))) return true;
   if (text.includes('cahier') && !text.includes('cahier d exercices')) return true;
-  if (text.includes('agenda') && text.includes('scolaire')) return true;
+  if (text.includes('agenda') && (text.includes('agenda scolaire') || text.includes('agenda de bureau') || text.includes('semainier') || /\b(?:19|20)\d{2}\b/.test(text))) return true;
   return false;
 }
 
