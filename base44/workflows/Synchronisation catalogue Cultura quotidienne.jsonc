@@ -1,6 +1,4 @@
 {
-  "name": "Synchronisation catalogue Cultura quotidienne",
-  "description": "Synchronise chaque jour \u00e0 03:00 Europe/Paris les flux livres Cultura FR, flux apr\u00e8s flux, avec reprise par checkpoint et sans suppression du catalogue existant.",
   "trigger": {
     "condition": null,
     "config": {
@@ -27,22 +25,23 @@
     },
     "do": [
       {
-        "import_catalogue": {
+        "preparer_synchronisation": {
           "call": "invoke_backend_function",
           "with": {
-            "function_name": "importAwinCultura",
+            "function_name": "runCatalogImport",
             "args": {
-              "mode": "full",
-              "resume": true
+              "action": "daily_sync_skeleton"
             }
           },
           "then": "end",
           "x-base44": {
-            "title": "Importer Cultura",
-            "description": "Multi-flux livres"
+            "title": "Pr\u00e9parer la synchro",
+            "description": "Squelette inactif"
           }
         }
       }
     ]
-  }
+  },
+  "description": "Squelette pr\u00eat pour une future synchronisation quotidienne \u00e0 03:00 Europe/Paris des 5 flux livres Cultura, sans suppression et avec marquage missing_since.",
+  "name": "Synchronisation catalogue Cultura quotidienne"
 }

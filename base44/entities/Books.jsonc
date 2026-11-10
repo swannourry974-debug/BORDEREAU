@@ -49,6 +49,14 @@
       "type": "string",
       "description": "R\u00e8gle ou op\u00e9ration ayant produit la classification"
     },
+    "last_seen_in_feed": {
+      "type": "string",
+      "description": "Derni\u00e8re date ISO \u00e0 laquelle la fiche a \u00e9t\u00e9 revue dans un flux marchand"
+    },
+    "missing_since": {
+      "type": "string",
+      "description": "Date ISO depuis laquelle la fiche n'a plus \u00e9t\u00e9 observ\u00e9e dans le flux source"
+    },
     "source_feed_id": {
       "type": "string",
       "description": "Flux Awin d'origine utilis\u00e9 lors du dernier import"

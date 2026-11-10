@@ -1,0 +1,114 @@
+{
+  "name": "ImportRun",
+  "type": "object",
+  "properties": {
+    "feed_id": {
+      "type": "string",
+      "description": "Identifiant du flux Cultura autoris\u00e9"
+    },
+    "feed_name": {
+      "type": "string"
+    },
+    "feed_order": {
+      "type": "number",
+      "description": "Ordre strict de traitement de 1 \u00e0 5"
+    },
+    "checkpoint_line": {
+      "type": "number",
+      "default": 0,
+      "description": "Derni\u00e8re ligne CSV trait\u00e9e pour reprise durable"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "running",
+        "paused",
+        "completed",
+        "failed"
+      ],
+      "default": "pending"
+    },
+    "lines_processed": {
+      "type": "number",
+      "default": 0
+    },
+    "books_created": {
+      "type": "number",
+      "default": 0
+    },
+    "books_updated": {
+      "type": "number",
+      "default": 0
+    },
+    "offers_created": {
+      "type": "number",
+      "default": 0
+    },
+    "offers_updated": {
+      "type": "number",
+      "default": 0
+    },
+    "rows_rejected": {
+      "type": "number",
+      "default": 0
+    },
+    "errors": {
+      "type": "number",
+      "default": 0
+    },
+    "checks_json": {
+      "type": "object",
+      "description": "Dernier rapport de contr\u00f4les automatiques"
+    },
+    "paused_reason": {
+      "type": "string"
+    },
+    "started_at": {
+      "type": "string"
+    },
+    "last_batch_at": {
+      "type": "string"
+    },
+    "finished_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "feed_id",
+    "feed_name",
+    "feed_order",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin_secondaire"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -46,6 +46,14 @@
     "last_updated": {
       "type": "string"
     },
+    "last_seen_in_feed": {
+      "type": "string",
+      "description": "Derni\u00e8re date ISO \u00e0 laquelle l'offre a \u00e9t\u00e9 revue dans le flux marchand"
+    },
+    "missing_since": {
+      "type": "string",
+      "description": "Date ISO depuis laquelle l'offre n'a plus \u00e9t\u00e9 observ\u00e9e dans le flux source"
+    },
     "merged": {
       "type": "boolean",
       "default": false,

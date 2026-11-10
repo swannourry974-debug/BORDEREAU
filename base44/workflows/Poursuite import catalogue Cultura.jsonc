@@ -1,0 +1,48 @@
+{
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "*/10 * * * *",
+      "one_time_date": null,
+      "timezone": "Europe/Paris",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "poursuite_import_catalogue_cultura",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "traiter_lot": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "runCatalogImport",
+            "args": {
+              "action": "step",
+              "batch_size": 500
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Traiter un lot",
+            "description": "500 lignes si actif"
+          }
+        }
+      }
+    ]
+  },
+  "description": "Appelle toutes les 10 minutes le moteur d'import progressif Cultura. Ne traite rien tant qu'aucun flux n'est d\u00e9marr\u00e9.",
+  "name": "Poursuite import catalogue Cultura"
+}

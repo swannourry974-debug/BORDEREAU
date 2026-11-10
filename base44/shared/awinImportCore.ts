@@ -80,6 +80,8 @@ export function mergeBook(existing = {}, incoming = {}) {
     category_norm: normalizeText(categoryMerge.category),
     language: existing.language || incoming.language || 'fr',
     publisher: existingPublisher || incomingPublisher,
+    last_seen_in_feed: incoming.last_seen_in_feed || existing.last_seen_in_feed || undefined,
+    missing_since: incoming.last_seen_in_feed ? '' : (existing.missing_since || undefined),
   };
 }
 
@@ -174,6 +176,8 @@ export function productToCatalogRecord(row, importedAt, feed = {}, options = {})
       category_norm: normalizeText(category.category),
       language: 'fr',
       publisher: cleanPublisher(row.brand_name || ''),
+      last_seen_in_feed: importedAt,
+      missing_since: '',
     },
     offer: {
       retailer_name: AWIN_RETAILER,
@@ -187,6 +191,8 @@ export function productToCatalogRecord(row, importedAt, feed = {}, options = {})
       merchant_url: safeUrl(row.merchant_deep_link || ''),
       affiliate_url: safeUrl(row.aw_deep_link || ''),
       last_updated: importedAt,
+      last_seen_in_feed: importedAt,
+      missing_since: '',
     },
   };
 }
@@ -235,6 +241,25 @@ function uniquifyRecords(records) {
   return { rows: out, duplicatesInBatch };
 }
 
+function keepNonEmpty(existingValue, incomingValue) {
+  const incoming = typeof incomingValue === 'string' ? incomingValue.trim() : incomingValue;
+  if (incoming === '' || incoming === null || incoming === undefined) return existingValue;
+  return incomingValue;
+}
+
+function mergeOffer(existing = {}, incoming = {}) {
+  return {
+    ...incoming,
+    retailer_product_id: keepNonEmpty(existing.retailer_product_id, incoming.retailer_product_id),
+    currency: keepNonEmpty(existing.currency, incoming.currency),
+    availability: keepNonEmpty(existing.availability, incoming.availability),
+    availability_raw: keepNonEmpty(existing.availability_raw, incoming.availability_raw),
+    merchant_url: keepNonEmpty(existing.merchant_url, incoming.merchant_url),
+    affiliate_url: keepNonEmpty(existing.affiliate_url, incoming.affiliate_url),
+    missing_since: incoming.last_seen_in_feed ? '' : (existing.missing_since || incoming.missing_since || ''),
+  };
+}
+
 export async function upsertBatch(base44, records, examples, exampleLimit = 10) {
   const { rows } = uniquifyRecords(records);
   if (!rows.length) return { booksCreated: 0, booksUpdated: 0, offersCreated: 0, offersUpdated: 0 };
@@ -276,7 +301,7 @@ export async function upsertBatch(base44, records, examples, exampleLimit = 10) 
     if (!book?.id) continue;
     const offer = { ...record.offer, book_id: book.id };
     const existingOffer = offerByBook.get(book.id);
-    if (existingOffer) offersToUpdate.push({ id: existingOffer.id, ...offer });
+    if (existingOffer) offersToUpdate.push({ id: existingOffer.id, ...mergeOffer(existingOffer, offer) });
     else offersToCreate.push(offer);
     if (examples.length < exampleLimit) examples.push({ product_identifier: record.book.product_identifier, identifier_type: record.book.identifier_type, isbn_valid: record.book.isbn_valid, product_type: record.book.product_type, classification: record.book.classification, isbn13: record.book.isbn13, title: record.book.title, price: record.offer.price, currency: 'EUR', availability: record.offer.availability, availability_raw: record.offer.availability_raw, author: record.book.author, author_source: record.book.author_source, category: record.book.category, category_source: record.book.category_source });
   }
