@@ -108,6 +108,55 @@ async function reintegrateQuarantine(base44, limit, feedUrl, token) {
   };
 }
 
+async function countIdentifierLinks(base44, productIdentifier) {
+  const books = pageItems(await base44.asServiceRole.entities.Books.filter({ product_identifier: productIdentifier }, { limit: 100 }));
+  const bookIds = books.map(book => book.id).filter(Boolean);
+  const offers = bookIds.length ? pageItems(await base44.asServiceRole.entities.BookOffers.filter({ book_id: { $in: bookIds }, retailer_name: AWIN_RETAILER }, { limit: 200 })) : [];
+  return { books_count: books.length, offers_count: offers.length };
+}
+
+async function findAbsentEanRecord(base44, feedUrl, token, selectedFeed) {
+  const resolved = await resolveAwinFeedRow(feedUrl, selectedFeed, token, { timeoutMs: 240000 });
+  const importedAt = new Date().toISOString();
+  for await (const { row } of csvRowsFromAwinStream(resolved.stream, resolved.gzip.is_gzip)) {
+    const record = productToCatalogRecord(row, importedAt, selectedFeed, { allowNonIsbnEditorial: true });
+    if (record.error || record.identifier_type !== 'ean' || record.isbn_valid !== false) continue;
+    const links = await countIdentifierLinks(base44, record.product_identifier);
+    if (links.books_count === 0) return record;
+  }
+  return null;
+}
+
+async function runEanCounterStep(base44, label, record) {
+  const before = await countIdentifierLinks(base44, record.product_identifier);
+  const examples = [];
+  const result = await upsertBatch(base44, [record], examples, 3);
+  const after = await countIdentifierLinks(base44, record.product_identifier);
+  return {
+    label,
+    product_identifier: record.product_identifier,
+    raw_counters: result,
+    before,
+    after,
+  };
+}
+
+async function eanCounterTest(base44, feedUrl, token, selectedFeed) {
+  const record = await findAbsentEanRecord(base44, feedUrl, token, selectedFeed);
+  if (!record) return { ok: false, action: 'ean_counter_test', error: 'Aucun EAN inédit éligible trouvé dans le flux sélectionné' };
+  const step1 = await runEanCounterStep(base44, 'step_1_new_ean_expected_1_create_0_update', record);
+  const step2 = await runEanCounterStep(base44, 'step_2_same_ean_expected_0_create_1_update', record);
+  const step3 = await runEanCounterStep(base44, 'step_3_existing_ean_with_offer_expected_0_create_1_update_1_offer', record);
+  return {
+    ok: true,
+    action: 'ean_counter_test',
+    feed_id: String(selectedFeed.feed_id || selectedFeed.data_feed_id || selectedFeed.fid || '').trim(),
+    steps: [step1, step2, step3],
+    no_deletion: true,
+    no_secret_or_datafeed_url_exposed: true,
+  };
+}
+
 export default async function(req) {
   const startedAt = new Date().toISOString();
   let log = null;
@@ -144,6 +193,7 @@ export default async function(req) {
     const selectedFeed = findCulturaFeedById(rows, feedId);
     if (!selectedFeed) throw new Error(`Flux ${feedId} introuvable`);
     const feedName = String(selectedFeed.feed_name || '').trim();
+    if (action === 'ean_counter_test') return Response.json(await eanCounterTest(base44, feedUrl, token, selectedFeed));
 
     log = await base44.asServiceRole.entities.ImportLog.create({ started_at: startedAt, import_mode: 'test', feed_id: feedId, feed_name: feedName, products_processed: 0, rows_rejected: 0, books_created: 0, books_updated: 0, offers_created: 0, offers_updated: 0, duplicates: 0, duplicates_in_feed: 0, duplicates_cross_feed: 0, errors: 0, status: 'running', source_retailer: AWIN_RETAILER, test_limit: limit, control_report: { temporary_function: true, purpose: 'Validation écriture catalogue Cultura, à retirer après validation', feed_id: feedId, action: action || 'test_import' } });
 

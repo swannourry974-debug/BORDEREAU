@@ -100,6 +100,19 @@
     },
     "publisher": {
       "type": "string"
+    },
+    "merged": {
+      "type": "boolean",
+      "default": false,
+      "description": "Fiche fusionn\u00e9e vers une fiche canonique sans suppression"
+    },
+    "merged_into": {
+      "type": "string",
+      "description": "ID de la fiche Books canonique"
+    },
+    "merged_at": {
+      "type": "string",
+      "description": "Date ISO de marquage de fusion"
     }
   },
   "required": [

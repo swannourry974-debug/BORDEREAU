@@ -233,8 +233,13 @@ export async function upsertBatch(base44, records, examples, exampleLimit = 10) 
     identifiers.length ? base44.asServiceRole.entities.Books.filter({ product_identifier: { $in: identifiers } }, { limit: Math.min(500, identifiers.length) }) : { items: [] },
     isbn13s.length ? base44.asServiceRole.entities.Books.filter({ isbn13: { $in: isbn13s } }, { limit: Math.min(500, isbn13s.length) }) : { items: [] },
   ]);
+  const identifierSet = new Set(identifiers);
+  const isbnSet = new Set(isbn13s);
   const existingMap = new Map();
-  for (const book of [...(existingByIdentifierPage.items || existingByIdentifierPage || []), ...(existingByIsbnPage.items || existingByIsbnPage || [])]) existingMap.set(book.id, book);
+  for (const book of [...(existingByIdentifierPage.items || existingByIdentifierPage || []), ...(existingByIsbnPage.items || existingByIsbnPage || [])]) {
+    if (book.product_identifier && identifierSet.has(book.product_identifier)) existingMap.set(book.id, book);
+    else if (book.isbn13 && isbnSet.has(book.isbn13)) existingMap.set(book.id, book);
+  }
   const existingBooks = [...existingMap.values()];
   const byIdentifier = new Map(existingBooks.map(book => [book.product_identifier || book.isbn13, book]));
   const byIsbn = new Map(existingBooks.filter(book => book.isbn13).map(book => [book.isbn13, book]));

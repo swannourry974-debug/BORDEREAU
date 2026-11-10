@@ -45,6 +45,19 @@
     },
     "last_updated": {
       "type": "string"
+    },
+    "merged": {
+      "type": "boolean",
+      "default": false,
+      "description": "Offre fusionn\u00e9e vers une offre canonique sans suppression"
+    },
+    "merged_into": {
+      "type": "string",
+      "description": "ID de l\u2019offre canonique conserv\u00e9e"
+    },
+    "merged_at": {
+      "type": "string",
+      "description": "Date ISO de marquage de fusion"
     }
   },
   "required": [

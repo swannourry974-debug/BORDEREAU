@@ -57,6 +57,9 @@ export default async function(req) {
       lastImportLogsPage,
       booksWithAuthor,
       booksWithoutAuthor,
+      booksMerged,
+      offersMerged,
+      editorialEanCount,
     ] = await Promise.all([
       base44.asServiceRole.entities.Books.count({}),
       base44.asServiceRole.entities.Books.count({ identifier_type: 'isbn13' }),
@@ -73,21 +76,26 @@ export default async function(req) {
       base44.asServiceRole.entities.Books.aggregate({ groupBy: 'product_identifier' }),
       base44.asServiceRole.entities.Books.aggregate({ query: { isbn13: { $ne: '' } }, groupBy: 'isbn13' }),
       base44.asServiceRole.entities.Books.aggregate({ groupBy: 'id' }),
-      base44.asServiceRole.entities.BookOffers.aggregate({ query: { book_id: { $ne: '' } }, groupBy: 'book_id' }),
+      base44.asServiceRole.entities.BookOffers.aggregate({ groupBy: 'book_id' }),
       base44.asServiceRole.entities.Books.aggregate({ groupBy: 'category' }),
       base44.asServiceRole.entities.ImportRejection.aggregate({ groupBy: 'reason' }),
       base44.asServiceRole.entities.BookOffers.aggregate({ groupBy: 'availability' }),
       base44.asServiceRole.entities.ImportLog.filter({}, { sort: '-started_at', limit: 5 }),
       base44.asServiceRole.entities.Books.count({ author: { $ne: '' } }),
       base44.asServiceRole.entities.Books.count({ $or: [{ author: '' }, { author: { $exists: false } }] }),
+      base44.asServiceRole.entities.Books.count({ merged: true }),
+      base44.asServiceRole.entities.BookOffers.count({ merged: true }),
+      base44.asServiceRole.entities.Books.count({ identifier_type: 'ean', product_type: 'produit_editorial' }),
     ]);
 
-    const offerBookIds = new Set(rowsFrom(offerBookGroups)
-      .map((row) => String(row.book_id || '').trim())
-      .filter(Boolean));
-    const booksWithoutOffer = rowsFrom(bookIdGroups)
-      .filter((row) => !offerBookIds.has(String(row.id || '').trim()))
-      .length;
+    const bookIds = new Set(rowsFrom(bookIdGroups).map((row) => String(row.id || '').trim()).filter(Boolean));
+    const offerBookRows = rowsFrom(offerBookGroups);
+    const offerBookIds = new Set(offerBookRows.map((row) => String(row.book_id || '').trim()).filter(Boolean));
+    const booksWithoutOffer = rowsFrom(bookIdGroups).filter((row) => !offerBookIds.has(String(row.id || '').trim())).length;
+    const offersOrphanCount = offerBookRows.reduce((sum, row) => {
+      const bookId = String(row.book_id || '').trim();
+      return bookId && !bookIds.has(bookId) ? sum + Number(row.count || 0) : sum;
+    }, 0);
 
     const lastImportLogs = rowsFrom(lastImportLogsPage).map((log) => ({
       started_at: log.started_at || log.created_date || '',
@@ -113,6 +121,7 @@ export default async function(req) {
       duplicate_product_identifiers: countDuplicateGroups(rowsFrom(productIdentifierGroups), 'product_identifier'),
       duplicate_isbn13: countDuplicateGroups(rowsFrom(isbn13Groups), 'isbn13'),
       books_without_offer: booksWithoutOffer,
+      books_without_offer_count: booksWithoutOffer,
       books_by_category: topCategories(rowsFrom(categoryGroups), 20),
       quarantine_total: quarantineTotal,
       quarantine_unreviewed: quarantineUnreviewed,
@@ -121,6 +130,12 @@ export default async function(req) {
       books_with_author: booksWithAuthor,
       books_without_author: booksWithoutAuthor,
       last_import_log: lastImportLogs,
+      books_merged: booksMerged,
+      offers_merged: offersMerged,
+      distinct_product_identifiers: rowsFrom(productIdentifierGroups).filter((row) => normalizeGroupValue(row.product_identifier, '')).length,
+      isbn_count: rowsFrom(isbn13Groups).filter((row) => normalizeGroupValue(row.isbn13, '')).length,
+      editorial_ean_count: editorialEanCount,
+      offers_orphan_count: offersOrphanCount,
     });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
