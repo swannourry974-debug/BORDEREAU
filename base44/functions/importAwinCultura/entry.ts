@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { secrets } from 'base44:runtime';
 import { listAwinFeedRows, resolveAwinFeedRow } from '../../shared/catalogUtils.ts';
 import { AWIN_BATCH_SIZE, AWIN_MAX_TEST_LIMIT, AWIN_RETAILER, countProducts, csvRowsFromAwinStream, emptyImportStats, emptyRejectionReasons, latestCheckpoint, productToCatalogRecord, selectCulturaBookFeeds, upsertBatch, writeImportProgress } from '../../shared/awinImportCore.ts';
+import { requireCatalogImportAdmin } from '../../shared/catalogImportAccess.ts';
 
 const MAX_RUNTIME_MS = 260000;
 
@@ -19,9 +20,8 @@ export default async function(req) {
   let executionLog = null;
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
-    if (!user) return Response.json({ error: 'Authentification requise' }, { status: 401 });
-    if (user.role !== 'admin') return Response.json({ error: 'Accès administrateur requis' }, { status: 403 });
+    const access = await requireCatalogImportAdmin(base44);
+    if (access.response) return access.response;
 
     const body = await req.json().catch(() => ({}));
     const mode = body.mode === 'test' || (body.limit && body.mode !== 'full') ? 'test' : 'full';
