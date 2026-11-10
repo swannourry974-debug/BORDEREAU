@@ -2,7 +2,6 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { secrets } from 'base44:runtime';
 import { listAwinFeedRows, resolveAwinFeedRow } from '../../shared/catalogUtils.ts';
 import { AWIN_MAX_TEST_LIMIT, AWIN_RETAILER, AWIN_ROMAN_FEED_ID, csvRowsFromAwinStream, emptyImportStats, emptyRejectionReasons, findRomanFeed, productToCatalogRecord, upsertBatch, writeImportProgress } from '../../shared/awinImportCore.ts';
-import { requireCatalogImportAdmin } from '../../shared/catalogImportAccess.ts';
 
 function readSecret(name) {
   try {
@@ -17,9 +16,6 @@ export default async function(req) {
   let log = null;
   try {
     const base44 = createClientFromRequest(req);
-    const access = await requireCatalogImportAdmin(base44);
-    if (access.response) return access.response;
-
     const body = await req.json().catch(() => ({}));
     const mode = String(body.mode || 'test').trim();
     const limit = Number(body.limit || AWIN_MAX_TEST_LIMIT);
