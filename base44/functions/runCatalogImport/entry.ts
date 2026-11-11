@@ -163,8 +163,8 @@ async function resolveFeed(feedUrl, token, feedId) {
 }
 
 async function runControls(base44, batchStats = {}, limiter = null) {
-  const books = await fetchAll(base44.asServiceRole.entities.Books, {}, { sort: '-updated_date', maxPages: 80, limiter, label: 'Books.filter' });
-  const offers = await fetchAll(base44.asServiceRole.entities.BookOffers, {}, { sort: '-updated_date', maxPages: 80, limiter, label: 'BookOffers.filter' });
+  const books = await fetchAll(base44.asServiceRole.entities.Books, {}, { sort: '-updated_date', maxPages: 120, limiter, label: 'Books.filter' });
+  const offers = await fetchAll(base44.asServiceRole.entities.BookOffers, {}, { sort: '-updated_date', maxPages: 120, limiter, label: 'BookOffers.filter' });
   return buildGlobalChecks(books, offers, batchStats);
 }
 
@@ -408,8 +408,8 @@ async function handleStep(base44, batchSize, limiter) {
 async function handleDedupe(base44, limit, limiter) {
   const startedAt = new Date().toISOString();
   const maxGroups = Math.max(1, Math.min(Number(limit || 500), 500));
-  const books = await fetchAll(base44.asServiceRole.entities.Books, {}, { sort: 'created_date', maxPages: 80, limiter, label: 'Books.filter' });
-  const offers = await fetchAll(base44.asServiceRole.entities.BookOffers, {}, { sort: 'created_date', maxPages: 80, limiter, label: 'BookOffers.filter' });
+  const books = await fetchAll(base44.asServiceRole.entities.Books, {}, { sort: 'created_date', maxPages: 120, limiter, label: 'Books.filter' });
+  const offers = await fetchAll(base44.asServiceRole.entities.BookOffers, {}, { sort: 'created_date', maxPages: 120, limiter, label: 'BookOffers.filter' });
   const relations = buildCatalogRelations(books, offers);
   const duplicateBooks = duplicateBookGroups(books);
   const components = duplicateComponents(duplicateBooks).slice(0, maxGroups);
