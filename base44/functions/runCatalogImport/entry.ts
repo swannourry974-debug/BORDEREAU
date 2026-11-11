@@ -19,6 +19,48 @@ function sum(runs, field) { return runs.reduce((total, run) => total + Number(ru
 function feedMeta(feedId) { return FEEDS.find(feed => feed.feed_id === String(feedId || '').trim()) || null; }
 function emptyChecks() { return { ok: true, failed: [], metrics: {}, thresholds: { missing_row_field_rate: 0.05, rejection_rate: 0.4 }, no_deletion: true }; }
 function failCheck(checks, key, value, threshold) { checks.ok = false; checks.failed.push(key); checks.metrics[key] = { value, threshold }; }
+function buildGlobalChecks(books = [], offers = [], batchStats = {}) {
+  const checks = emptyChecks();
+  const relations = buildCatalogRelations(books, offers);
+  const duplicates = duplicateBookGroups(books);
+  const activeBooks = relations.activeBooks.length || 1;
+  const activeOffers = relations.activeOffers.length || 1;
+  const missingPriceRate = relations.activeOffers.filter(offer => !Number(offer.price || 0)).length / activeOffers;
+  const missingImageRate = relations.activeBooks.filter(book => !String(book.image_url || '').trim()).length / activeBooks;
+  const missingMerchantUrlRate = relations.activeOffers.filter(offer => !String(offer.merchant_url || offer.affiliate_url || '').trim()).length / activeOffers;
+  const batchLines = Math.max(1, Number(batchStats.lines || 0));
+  const rejectionRate = Number(batchStats.rows_rejected || 0) / batchLines;
+  checks.scan_scope = 'global';
+  checks.scope = 'global';
+  checks.scanned_total_books = books.length;
+  checks.scanned_total_offers = offers.length;
+  checks.metrics = {
+    orphan_offers: relations.orphanOffers.length + relations.offersWithoutBookId.length,
+    books_without_offer: relations.booksWithoutOffer.length,
+    duplicate_product_identifiers: duplicates.product_identifier.length,
+    duplicate_isbn13: duplicates.isbn13.length,
+    duplicate_cultura_offer_pairs: relations.duplicateOfferGroups.filter(group => group.offers.some(offer => offer.retailer_name === AWIN_RETAILER)).length,
+    missing_price_rate: missingPriceRate,
+    missing_image_rate: missingImageRate,
+    missing_merchant_url_rate: missingMerchantUrlRate,
+    rejection_rate: rejectionRate,
+    write_errors: Number(batchStats.errors || 0),
+    scanned_books: books.length,
+    scanned_offers: offers.length,
+  };
+  if (checks.metrics.orphan_offers > 0) failCheck(checks, 'orphan_offers', checks.metrics.orphan_offers, 0);
+  if (checks.metrics.books_without_offer > 0) failCheck(checks, 'books_without_offer', checks.metrics.books_without_offer, 0);
+  if (checks.metrics.duplicate_product_identifiers > 0) failCheck(checks, 'duplicate_product_identifiers', checks.metrics.duplicate_product_identifiers, 0);
+  if (checks.metrics.duplicate_isbn13 > 0) failCheck(checks, 'duplicate_isbn13', checks.metrics.duplicate_isbn13, 0);
+  if (checks.metrics.duplicate_cultura_offer_pairs > 0) failCheck(checks, 'duplicate_cultura_offer_pairs', checks.metrics.duplicate_cultura_offer_pairs, 0);
+  if (missingPriceRate > 0.05) failCheck(checks, 'missing_price_rate', missingPriceRate, 0.05);
+  if (missingImageRate > 0.05) failCheck(checks, 'missing_image_rate', missingImageRate, 0.05);
+  if (missingMerchantUrlRate > 0.05) failCheck(checks, 'missing_merchant_url_rate', missingMerchantUrlRate, 0.05);
+  if (rejectionRate > 0.4) failCheck(checks, 'rejection_rate', rejectionRate, 0.4);
+  if (checks.metrics.write_errors > 0) failCheck(checks, 'write_errors', checks.metrics.write_errors, 0);
+  checks.checked_at = new Date().toISOString();
+  return checks;
+}
 function uniqueValues(values = []) { return [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))]; }
 function chunks(values = [], size = 500) { const output = []; for (let i = 0; i < values.length; i += size) output.push(values.slice(i, i + size)); return output; }
 async function limitedList(limiter, label, run) { return limiter ? await limiter.list(run, label) : await run(); }
@@ -29,6 +71,80 @@ async function filterInChunks(base44, limiter, entityName, field, values, extraQ
     output.push(...rowsFrom(page));
   }
   return output;
+}
+
+function isPresent(value) {
+  if (Array.isArray(value)) return value.length > 0;
+  if (value && typeof value === 'object') return Object.keys(value).length > 0;
+  return value !== undefined && value !== null && String(value).trim() !== '';
+}
+
+const BOOK_MERGE_SKIP_FIELDS = new Set(['id', 'created_date', 'updated_date', 'created_by', 'created_by_id', 'is_sample', 'merged', 'merged_into', 'merged_at']);
+
+function fillCanonicalFromDuplicates(canonical, duplicates) {
+  const update = { id: canonical.id };
+  for (const book of duplicates) {
+    for (const [key, value] of Object.entries(book)) {
+      if (BOOK_MERGE_SKIP_FIELDS.has(key)) continue;
+      if (!isPresent(canonical[key]) && isPresent(value)) {
+        canonical[key] = value;
+        update[key] = value;
+      }
+    }
+  }
+  return Object.keys(update).length > 1 ? update : null;
+}
+
+function chooseCanonicalBook(group, offersByBook) {
+  return [...group].sort((a, b) => {
+    const aHasOffer = (offersByBook.get(a.id) || []).some(offer => offer.merged !== true);
+    const bHasOffer = (offersByBook.get(b.id) || []).some(offer => offer.merged !== true);
+    if (aHasOffer !== bHasOffer) return bHasOffer ? 1 : -1;
+    return String(a.created_date || a.updated_date || '').localeCompare(String(b.created_date || b.updated_date || ''));
+  })[0];
+}
+
+function duplicateComponents(duplicateBooks) {
+  const groups = [...duplicateBooks.product_identifier, ...duplicateBooks.isbn13].map(([, group]) => group);
+  const byId = new Map();
+  const parent = new Map();
+  const find = (id) => {
+    if (parent.get(id) !== id) parent.set(id, find(parent.get(id)));
+    return parent.get(id);
+  };
+  const union = (a, b) => {
+    const rootA = find(a);
+    const rootB = find(b);
+    if (rootA !== rootB) parent.set(rootB, rootA);
+  };
+  for (const group of groups) {
+    for (const book of group) {
+      byId.set(book.id, book);
+      if (!parent.has(book.id)) parent.set(book.id, book.id);
+    }
+    for (let i = 1; i < group.length; i += 1) union(group[0].id, group[i].id);
+  }
+  const components = new Map();
+  for (const book of byId.values()) {
+    const root = find(book.id);
+    if (!components.has(root)) components.set(root, []);
+    components.get(root).push(book);
+  }
+  return [...components.values()].filter(group => group.length > 1);
+}
+
+function uniqueUpdatesById(updates) {
+  return [...new Map(updates.map(update => [update.id, update])).values()];
+}
+
+function newestOffer(offers = []) {
+  return [...offers].sort((a, b) => String(b.last_updated || b.updated_date || b.created_date || '').localeCompare(String(a.last_updated || a.updated_date || a.created_date || '')))[0] || null;
+}
+
+async function applyBulkUpdate(entity, updates, limiter, label) {
+  for (let i = 0; i < updates.length; i += 500) {
+    await limiter.write(() => entity.bulkUpdate(updates.slice(i, i + 500)), label);
+  }
 }
 
 async function ensureRuns(base44, limiter = null) {
@@ -46,63 +162,10 @@ async function resolveFeed(feedUrl, token, feedId) {
   return selected;
 }
 
-async function runControls(base44, batchStats = {}, limiter = null, scope = {}) {
-  const checks = emptyChecks();
-  const scopedIdentifiers = uniqueValues(scope.product_identifiers || []);
-  const scopedIsbn13s = uniqueValues(scope.isbn13s || []);
-  const scopedBookIds = uniqueValues(scope.book_ids || []);
-  let books = [];
-  let offers = [];
-  if (scopedIdentifiers.length || scopedIsbn13s.length || scopedBookIds.length) {
-    const [byId, byIdentifier, byIsbn] = await Promise.all([
-      filterInChunks(base44, limiter, 'Books', 'id', scopedBookIds),
-      filterInChunks(base44, limiter, 'Books', 'product_identifier', scopedIdentifiers),
-      filterInChunks(base44, limiter, 'Books', 'isbn13', scopedIsbn13s),
-    ]);
-    const byBookId = new Map([...byId, ...byIdentifier, ...byIsbn].map(book => [book.id, book]));
-    books = [...byBookId.values()];
-    offers = await filterInChunks(base44, limiter, 'BookOffers', 'book_id', books.map(book => book.id));
-    checks.scope = 'lot';
-  } else {
-    books = await fetchAll(base44.asServiceRole.entities.Books, {}, { sort: '-updated_date', maxPages: 80, limiter, label: 'Books.filter' });
-    offers = await fetchAll(base44.asServiceRole.entities.BookOffers, {}, { sort: '-updated_date', maxPages: 80, limiter, label: 'BookOffers.filter' });
-    checks.scope = 'global_cap_40000';
-  }
-  const relations = buildCatalogRelations(books, offers);
-  const duplicates = duplicateBookGroups(books);
-  const batchLines = Math.max(1, Number(batchStats.lines || 0));
-  const missingPriceRate = Number(batchStats.missing_price || 0) / batchLines;
-  const missingImageRate = Number(batchStats.missing_image || 0) / batchLines;
-  const missingMerchantUrlRate = Number(batchStats.missing_merchant_url || 0) / batchLines;
-  const rejectionRate = Number(batchStats.rows_rejected || 0) / batchLines;
-
-  checks.metrics = {
-    orphan_offers: relations.orphanOffers.length + relations.offersWithoutBookId.length,
-    books_without_offer: relations.booksWithoutOffer.length,
-    duplicate_product_identifiers: duplicates.product_identifier.length,
-    duplicate_isbn13: duplicates.isbn13.length,
-    duplicate_cultura_offer_pairs: relations.duplicateOfferGroups.filter(group => group.offers.some(offer => offer.retailer_name === AWIN_RETAILER)).length,
-    missing_price_rate: missingPriceRate,
-    missing_image_rate: missingImageRate,
-    missing_merchant_url_rate: missingMerchantUrlRate,
-    rejection_rate: rejectionRate,
-    write_errors: Number(batchStats.errors || 0),
-    scanned_books: books.length,
-    scanned_offers: offers.length,
-  };
-
-  if (checks.metrics.orphan_offers > 0) failCheck(checks, 'orphan_offers', checks.metrics.orphan_offers, 0);
-  if (checks.metrics.books_without_offer > 0) failCheck(checks, 'books_without_offer', checks.metrics.books_without_offer, 0);
-  if (checks.metrics.duplicate_product_identifiers > 0) failCheck(checks, 'duplicate_product_identifiers', checks.metrics.duplicate_product_identifiers, 0);
-  if (checks.metrics.duplicate_isbn13 > 0) failCheck(checks, 'duplicate_isbn13', checks.metrics.duplicate_isbn13, 0);
-  if (checks.metrics.duplicate_cultura_offer_pairs > 0) failCheck(checks, 'duplicate_cultura_offer_pairs', checks.metrics.duplicate_cultura_offer_pairs, 0);
-  if (missingPriceRate > 0.05) failCheck(checks, 'missing_price_rate', missingPriceRate, 0.05);
-  if (missingImageRate > 0.05) failCheck(checks, 'missing_image_rate', missingImageRate, 0.05);
-  if (missingMerchantUrlRate > 0.05) failCheck(checks, 'missing_merchant_url_rate', missingMerchantUrlRate, 0.05);
-  if (rejectionRate > 0.4) failCheck(checks, 'rejection_rate', rejectionRate, 0.4);
-  if (checks.metrics.write_errors > 0) failCheck(checks, 'write_errors', checks.metrics.write_errors, 0);
-  checks.checked_at = new Date().toISOString();
-  return checks;
+async function runControls(base44, batchStats = {}, limiter = null) {
+  const books = await fetchAll(base44.asServiceRole.entities.Books, {}, { sort: '-updated_date', maxPages: 80, limiter, label: 'Books.filter' });
+  const offers = await fetchAll(base44.asServiceRole.entities.BookOffers, {}, { sort: '-updated_date', maxPages: 80, limiter, label: 'BookOffers.filter' });
+  return buildGlobalChecks(books, offers, batchStats);
 }
 
 function statusPayload(runs, checks) {
@@ -134,6 +197,15 @@ async function handleStart(base44, limiter) {
   const firstRunnable = runs.find((run, index) => ['pending', 'paused'].includes(run.status) && (index === 0 || runs[index - 1]?.status === 'completed'));
   if (firstRunnable) await base44.asServiceRole.entities.ImportRun.update(firstRunnable.id, { status: 'running', paused_reason: '', started_at: firstRunnable.started_at || now, last_batch_at: now });
   return statusPayload(await ensureRuns(base44, limiter), null);
+}
+
+async function handleResume(base44, limiter) {
+  const runs = await ensureRuns(base44, limiter);
+  const now = new Date().toISOString();
+  const paused = runs.find(run => run.status === 'paused');
+  if (!paused) return { ok: true, resumed: false, reason: 'Aucun flux paused à reprendre', ...(await handleStatus(base44, limiter)) };
+  await base44.asServiceRole.entities.ImportRun.update(paused.id, { status: 'running', paused_reason: '', last_batch_at: now, finished_at: null });
+  return { ok: true, resumed: true, feed_id: paused.feed_id, feed_name: paused.feed_name, checkpoint_line: Number(paused.checkpoint_line || 0), ...(await handleStatus(base44, limiter)) };
 }
 
 async function handlePause(base44, reason, limiter) {
@@ -278,20 +350,24 @@ async function handleStep(base44, batchSize, limiter) {
     throw error;
   }
 
-  let checks;
+  const completed = reachedEnd && scanned < size;
+  const previousLines = Number(run.lines_processed || 0);
+  const nextLines = previousLines + scanned;
+  const globalCheckWindow = Math.max(1, size) * 5;
+  const shouldRunGlobalChecks = completed || previousLines === 0 || Math.floor(previousLines / globalCheckWindow) !== Math.floor(nextLines / globalCheckWindow);
+  let checks = run.checks_json && run.checks_json.scan_scope === 'global' ? run.checks_json : emptyChecks();
   try {
-    checks = await runControls(base44, { lines: scanned, rows_rejected: stats.rowsRejected, errors: stats.errors, ...rawQuality }, limiter, { book_ids: writeDiagnostics.touched_book_ids, product_identifiers: writeDiagnostics.product_identifiers, isbn13s: writeDiagnostics.isbn13s });
+    if (shouldRunGlobalChecks) checks = await runControls(base44, { lines: scanned, rows_rejected: stats.rowsRejected, errors: stats.errors, ...rawQuality }, limiter);
   } catch (error) {
     if (isRateLimitError(error)) return await pauseAfterRateLimit(base44, run, log, stats, error, confirmedLine, limiter);
     throw error;
   }
 
   const now = new Date().toISOString();
-  const paused = !checks.ok;
-  const completed = reachedEnd && scanned < size;
+  const paused = shouldRunGlobalChecks && !checks.ok;
   const nextStatus = paused ? 'paused' : (completed ? 'completed' : 'running');
-  const pausedReason = paused ? `Contrôle échoué: ${checks.failed.join(', ')}` : '';
-  const diagnostics = { limiter: limiter.metrics(), entity_list_requests_per_lot: limiter.metrics().list_requests, average_list_reads_per_book: batch.length ? Math.round((limiter.metrics().list_requests / batch.length) * 1000) / 1000 : 0, list_reads_per_minute: limiter.metrics().list_requests_per_minute, simultaneous_treatments: 1, rate_limit_retries: limiter.metrics().rate_limit_retries, checkpoint_start: confirmedStartLine, checkpoint_confirmed: confirmedLine, written_before_interruption: stats.booksCreated + stats.booksUpdated + stats.offersCreated + stats.offersUpdated, write_diagnostics: writeDiagnostics };
+  const pausedReason = paused ? `Contrôle global échoué: ${checks.failed.join(', ')}` : '';
+  const diagnostics = { limiter: limiter.metrics(), global_checks_ran: shouldRunGlobalChecks, entity_list_requests_per_lot: limiter.metrics().list_requests, average_list_reads_per_book: batch.length ? Math.round((limiter.metrics().list_requests / batch.length) * 1000) / 1000 : 0, list_reads_per_minute: limiter.metrics().list_requests_per_minute, simultaneous_treatments: 1, rate_limit_retries: limiter.metrics().rate_limit_retries, checkpoint_start: confirmedStartLine, checkpoint_confirmed: confirmedLine, written_before_interruption: stats.booksCreated + stats.booksUpdated + stats.offersCreated + stats.offersUpdated, write_diagnostics: writeDiagnostics };
 
   await base44.asServiceRole.entities.ImportLog.update(log.id, {
     finished_at: now,
@@ -320,13 +396,99 @@ async function handleStep(base44, batchSize, limiter) {
     offers_updated: Number(run.offers_updated || 0) + stats.offersUpdated,
     rows_rejected: Number(run.rows_rejected || 0) + stats.rowsRejected,
     errors: Number(run.errors || 0) + stats.errors,
-    checks_json: { ...checks, diagnostics },
+    checks_json: shouldRunGlobalChecks ? { ...checks, diagnostics } : run.checks_json,
     paused_reason: pausedReason,
     last_batch_at: now,
     finished_at: completed ? now : run.finished_at,
   });
 
   return { ok: checks.ok, action: 'step', feed_id: run.feed_id, feed_name: run.feed_name, scanned_lines: scanned, checkpoint_line: confirmedLine, completed, paused, paused_reason: pausedReason, stats, rejection_reasons: rejectionReasons, checks, diagnostics, examples_written: examples, no_deletion: true, no_secret_or_datafeed_url_exposed: true };
+}
+
+async function handleDedupe(base44, limit, limiter) {
+  const startedAt = new Date().toISOString();
+  const maxGroups = Math.max(1, Math.min(Number(limit || 500), 500));
+  const books = await fetchAll(base44.asServiceRole.entities.Books, {}, { sort: 'created_date', maxPages: 80, limiter, label: 'Books.filter' });
+  const offers = await fetchAll(base44.asServiceRole.entities.BookOffers, {}, { sort: 'created_date', maxPages: 80, limiter, label: 'BookOffers.filter' });
+  const relations = buildCatalogRelations(books, offers);
+  const duplicateBooks = duplicateBookGroups(books);
+  const components = duplicateComponents(duplicateBooks).slice(0, maxGroups);
+  const now = new Date().toISOString();
+  const simulatedBooks = books.map(book => ({ ...book }));
+  const simulatedOffers = offers.map(offer => ({ ...offer }));
+  const simulatedBookById = new Map(simulatedBooks.map(book => [book.id, book]));
+  const bookUpdates = [];
+  const canonicalUpdates = [];
+  const offerReassignments = [];
+
+  for (const component of components) {
+    const activeGroup = component.map(book => simulatedBookById.get(book.id)).filter(book => book && book.merged !== true);
+    if (activeGroup.length < 2) continue;
+    const canonical = chooseCanonicalBook(activeGroup, relations.offersByBook);
+    const duplicateRecords = activeGroup.filter(book => book.id !== canonical.id);
+    const canonicalUpdate = fillCanonicalFromDuplicates(canonical, duplicateRecords);
+    if (canonicalUpdate) canonicalUpdates.push(canonicalUpdate);
+    for (const book of duplicateRecords) {
+      const bookOffers = simulatedOffers.filter(offer => offer.book_id === book.id && offer.merged !== true);
+      for (const offer of bookOffers) {
+        offer.book_id = canonical.id;
+        offerReassignments.push({ id: offer.id, book_id: canonical.id });
+      }
+      book.merged = true;
+      book.merged_into = canonical.id;
+      book.merged_at = now;
+      bookUpdates.push({ id: book.id, merged: true, merged_into: canonical.id, merged_at: now });
+    }
+  }
+
+  const afterReassignRelations = buildCatalogRelations(simulatedBooks, simulatedOffers);
+  const offerMergeUpdates = [];
+  for (const group of afterReassignRelations.duplicateOfferGroups) {
+    if (!group.offers.some(offer => offer.retailer_name === AWIN_RETAILER)) continue;
+    const keep = newestOffer(group.offers);
+    for (const offer of group.offers) {
+      if (!keep || offer.id === keep.id) continue;
+      offer.merged = true;
+      offer.merged_into = keep.id;
+      offer.merged_at = now;
+      offerMergeUpdates.push({ id: offer.id, merged: true, merged_into: keep.id, merged_at: now });
+    }
+  }
+
+  const finalOfferReassignments = uniqueUpdatesById(offerReassignments);
+  const finalCanonicalUpdates = uniqueUpdatesById(canonicalUpdates);
+  const finalBookUpdates = uniqueUpdatesById(bookUpdates);
+  const finalOfferMergeUpdates = uniqueUpdatesById(offerMergeUpdates);
+
+  if (finalOfferReassignments.length) await applyBulkUpdate(base44.asServiceRole.entities.BookOffers, finalOfferReassignments, limiter, 'BookOffers.bulkUpdate');
+  if (finalCanonicalUpdates.length) await applyBulkUpdate(base44.asServiceRole.entities.Books, finalCanonicalUpdates, limiter, 'Books.bulkUpdate');
+  if (finalBookUpdates.length) await applyBulkUpdate(base44.asServiceRole.entities.Books, finalBookUpdates, limiter, 'Books.bulkUpdate');
+  if (finalOfferMergeUpdates.length) await applyBulkUpdate(base44.asServiceRole.entities.BookOffers, finalOfferMergeUpdates, limiter, 'BookOffers.bulkUpdate');
+
+  const checks = buildGlobalChecks(simulatedBooks, simulatedOffers, { lines: 1 });
+  const runs = await ensureRuns(base44, limiter);
+  const target = runs.find(run => run.status === 'running') || runs.find(run => run.status === 'paused') || runs[0];
+  if (target) await base44.asServiceRole.entities.ImportRun.update(target.id, { checks_json: { ...checks, diagnostics: { limiter: limiter.metrics(), dedupe_checked_at: now } } });
+  await base44.asServiceRole.entities.ImportLog.create({
+    started_at: startedAt,
+    finished_at: new Date().toISOString(),
+    import_mode: 'execution',
+    feed_id: 'dedupe',
+    feed_name: 'Dédoublonnage catalogue',
+    products_processed: components.length,
+    rows_rejected: 0,
+    books_created: 0,
+    books_updated: finalCanonicalUpdates.length + finalBookUpdates.length,
+    offers_created: 0,
+    offers_updated: finalOfferReassignments.length + finalOfferMergeUpdates.length,
+    duplicates: components.length,
+    errors: 0,
+    status: checks.ok ? 'success' : 'partial',
+    source_retailer: AWIN_RETAILER,
+    control_report: { checks, groups_processed: components.length, offers_reassigned: finalOfferReassignments.length, books_marked_merged: finalBookUpdates.length, canonical_books_completed: finalCanonicalUpdates.length, duplicate_offers_marked_merged: finalOfferMergeUpdates.length, no_deletion: true, no_secret_or_datafeed_url_exposed: true },
+  });
+
+  return { ok: checks.ok, action: 'dedupe', limit: maxGroups, groups_processed: components.length, offers_reassigned: finalOfferReassignments.length, books_marked_merged: finalBookUpdates.length, canonical_books_completed: finalCanonicalUpdates.length, duplicate_offers_marked_merged: finalOfferMergeUpdates.length, checks, limiter: limiter.metrics(), no_deletion: true, no_secret_or_datafeed_url_exposed: true };
 }
 
 async function handleDailySkeleton(base44, limiter) {
@@ -342,10 +504,12 @@ export default async function(req) {
     const limiter = createEntityRateLimiter({ listPerMinute: 105, writePerMinute: 38, maxAttempts: 4 });
     await ensureRuns(base44, limiter);
     if (action === 'start') return Response.json(await handleStart(base44, limiter));
+    if (action === 'resume') return Response.json(await handleResume(base44, limiter));
     if (action === 'pause') return Response.json(await handlePause(base44, String(body.reason || '').trim(), limiter));
     if (action === 'status') return Response.json({ ...(await handleStatus(base44, limiter)), diagnostics: { limiter: limiter.metrics() } });
     if (action === 'checks') return Response.json({ ...(await handleChecks(base44, limiter)), diagnostics: { limiter: limiter.metrics() } });
     if (action === 'step') return Response.json(await handleStep(base44, body.batch_size, limiter));
+    if (action === 'dedupe') return Response.json(await handleDedupe(base44, body.limit, limiter));
     if (action === 'daily_sync_skeleton') return Response.json(await handleDailySkeleton(base44, limiter));
     return Response.json({ error: 'Action inconnue' }, { status: 400 });
   } catch (error) {
