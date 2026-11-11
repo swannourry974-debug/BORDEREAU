@@ -1,47 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
-
-function rowsFrom(page) {
-  return page?.items || page || [];
-}
-
-async function scanAll(entity, label) {
-  const limit = 500;
-  let cursor = undefined;
-  let pageIndex = 0;
-  const output = [];
-
-  while (true) {
-    const page = await entity.filter({}, { limit, cursor, sort: 'created_date' });
-    const items = rowsFrom(page);
-    output.push(...items);
-    pageIndex += 1;
-
-    if (!page?.has_more) {
-      return {
-        label,
-        total_scanned: output.length,
-        pages_scanned: pageIndex,
-        records: output,
-        stopped_on_has_more_false: true,
-      };
-    }
-
-    if (!page.next_cursor) {
-      throw new Error(`${label}: pagination incomplète, has_more=true sans next_cursor après ${pageIndex} pages`);
-    }
-
-    cursor = page.next_cursor;
-  }
-}
-
-function normalizeText(value = '') {
-  return String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, ' ')
-    .trim();
-}
+import { createEntityRateLimiter, isRateLimitError } from '../../shared/entityRateLimiter.ts';
+import { normalizeText, scanAllEntityPages } from '../../shared/catalogAuditPagination.ts';
 
 function firstMeaningful(values) {
   return values.map(value => String(value || '').trim()).filter(Boolean)[0] || '';
@@ -138,24 +97,28 @@ function concernedOffers(groups) {
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
+    const limiter = createEntityRateLimiter({ listPerMinute: 105, writePerMinute: 1, maxAttempts: 4 });
 
     const [booksScan, offersScan, realBooksTotal, realOffersTotal] = await Promise.all([
-      scanAll(base44.asServiceRole.entities.Books, 'Books'),
-      scanAll(base44.asServiceRole.entities.BookOffers, 'BookOffers'),
+      scanAllEntityPages(base44.asServiceRole.entities.Books, {}, 'Books', limiter),
+      scanAllEntityPages(base44.asServiceRole.entities.BookOffers, {}, 'BookOffers', limiter),
       base44.asServiceRole.entities.Books.count(),
       base44.asServiceRole.entities.BookOffers.count(),
     ]);
 
+    const activeBooks = booksScan.records.filter(book => book.merged !== true);
+    const activeOffers = offersScan.records.filter(offer => offer.merged !== true);
+
     const offersByBookId = new Map();
-    for (const offer of offersScan.records) {
+    for (const offer of activeOffers) {
       const bookId = String(offer.book_id || '').trim();
       if (!bookId) continue;
       if (!offersByBookId.has(bookId)) offersByBookId.set(bookId, []);
       offersByBookId.get(bookId).push(offer);
     }
 
-    const groupsByProductIdentifier = duplicateGroups(booksScan.records, offersByBookId, 'product_identifier');
-    const groupsByIsbn13 = duplicateGroups(booksScan.records, offersByBookId, 'isbn13');
+    const groupsByProductIdentifier = duplicateGroups(activeBooks, offersByBookId, 'product_identifier');
+    const groupsByIsbn13 = duplicateGroups(activeBooks, offersByBookId, 'isbn13');
     const allGroups = [...groupsByProductIdentifier, ...groupsByIsbn13];
     const uniqueIdentifiers = new Set(allGroups.map(group => group.identifier));
 
@@ -170,6 +133,7 @@ export default async function(req) {
         books_pages_scanned: booksScan.pages_scanned,
         offers_pages_scanned: offersScan.pages_scanned,
         stopped_on_has_more_false: booksScan.stopped_on_has_more_false && offersScan.stopped_on_has_more_false,
+        limiter: limiter.metrics(),
       },
       verification: {
         total_books_scanned: booksScan.total_scanned,
@@ -178,6 +142,11 @@ export default async function(req) {
         real_offers_total: realOffersTotal,
         total_books_scanned_equals_real_books_total: booksScan.total_scanned === realBooksTotal,
         total_offers_scanned_equals_real_offers_total: offersScan.total_scanned === realOffersTotal,
+        duplicate_scope: 'active_records_excluding_merged_true',
+        active_books_scanned: activeBooks.length,
+        active_offers_scanned: activeOffers.length,
+        merged_books_excluded_from_duplicate_groups: booksScan.total_scanned - activeBooks.length,
+        merged_offers_excluded_from_duplicate_groups: offersScan.total_scanned - activeOffers.length,
       },
       totals: {
         groups_by_product_identifier: groupsByProductIdentifier.length,
@@ -192,6 +161,7 @@ export default async function(req) {
       groups_by_isbn13: groupsByIsbn13,
     });
   } catch (error) {
-    return Response.json({ error: error.message, read_only: true, no_write: true }, { status: 500 });
+    const status = isRateLimitError(error) ? 429 : 500;
+    return Response.json({ error: error.message, rate_limited: isRateLimitError(error), retryable: isRateLimitError(error), read_only: true, no_write: true }, { status });
   }
 }
