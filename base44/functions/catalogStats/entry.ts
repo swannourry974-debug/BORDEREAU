@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { buildCatalogRelations, fetchAll } from '../../shared/catalogAuditUtils.ts';
+import { createEntityRateLimiter, isRateLimitError } from '../../shared/entityRateLimiter.ts';
 
 const CLASSIFICATIONS = ['livre', 'revue', 'produit_editorial', 'non_eligible'];
 
@@ -36,6 +37,7 @@ function topCategories(rows, limit = 20) {
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
+    const limiter = createEntityRateLimiter({ listPerMinute: 105, writePerMinute: 38, maxAttempts: 4 });
 
     const [
       totalBooks,
@@ -78,10 +80,10 @@ export default async function(req) {
       base44.asServiceRole.entities.BookOffers.count({ retailer_name: { $ne: 'Cultura' } }),
       base44.asServiceRole.entities.ImportRejection.count({}),
       base44.asServiceRole.entities.ImportRejection.count({ reviewed: false }),
-      base44.asServiceRole.entities.Books.aggregate({ groupBy: 'product_identifier' }),
-      base44.asServiceRole.entities.Books.aggregate({ query: { isbn13: { $ne: '' } }, groupBy: 'isbn13' }),
-      base44.asServiceRole.entities.Books.aggregate({ groupBy: 'id' }),
-      base44.asServiceRole.entities.BookOffers.aggregate({ groupBy: 'book_id' }),
+      base44.asServiceRole.entities.Books.aggregate({ query: { merged: { $ne: true } }, groupBy: 'product_identifier' }),
+      base44.asServiceRole.entities.Books.aggregate({ query: { merged: { $ne: true }, isbn13: { $ne: '' } }, groupBy: 'isbn13' }),
+      base44.asServiceRole.entities.Books.aggregate({ query: { merged: { $ne: true } }, groupBy: 'id' }),
+      base44.asServiceRole.entities.BookOffers.aggregate({ query: { merged: { $ne: true } }, groupBy: 'book_id' }),
       base44.asServiceRole.entities.Books.aggregate({ groupBy: 'category' }),
       base44.asServiceRole.entities.ImportRejection.aggregate({ groupBy: 'reason' }),
       base44.asServiceRole.entities.BookOffers.aggregate({ groupBy: 'availability' }),
@@ -96,8 +98,8 @@ export default async function(req) {
     ]);
 
     const [books, offers] = await Promise.all([
-      fetchAll(base44.asServiceRole.entities.Books, {}, { sort: '-created_date' }),
-      fetchAll(base44.asServiceRole.entities.BookOffers, {}, { sort: '-updated_date' }),
+      fetchAll(base44.asServiceRole.entities.Books, {}, { sort: '-created_date', limiter, label: 'Books.filter' }),
+      fetchAll(base44.asServiceRole.entities.BookOffers, {}, { sort: '-updated_date', limiter, label: 'BookOffers.filter' }),
     ]);
     const relations = buildCatalogRelations(books, offers);
     const booksWithoutOffer = relations.booksWithoutOffer.length;
@@ -148,6 +150,7 @@ export default async function(req) {
       offers_orphan_count: offersOrphanCount,
     });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    const status = isRateLimitError(error) ? 429 : 500;
+    return Response.json({ error: error.message, rate_limited: isRateLimitError(error), retryable: isRateLimitError(error) }, { status });
   }
 }
