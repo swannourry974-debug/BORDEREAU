@@ -10,6 +10,10 @@
       "type": "string",
       "description": "ID de la commande associ\u00e9e"
     },
+    "commande_livre_ref": {
+      "type": "string",
+      "description": "Cl\u00e9 idempotente commande + livre pour emp\u00eacher les doublons"
+    },
     "mode_livraison": {
       "type": "string",
       "enum": [
@@ -42,7 +46,51 @@
     "ville_destination": {
       "type": "string"
     },
+    "zone_id": {
+      "type": "string"
+    },
+    "point_relais_id": {
+      "type": "string"
+    },
+    "point_relais_nom": {
+      "type": "string"
+    },
+    "depart_ville": {
+      "type": "string"
+    },
+    "trajet_label": {
+      "type": "string"
+    },
     "date_limite": {
+      "type": "string"
+    },
+    "annonce_expire_at": {
+      "type": "string",
+      "description": "Date ISO d'expiration apr\u00e8s 7 jours sans prise en charge"
+    },
+    "expiree_at": {
+      "type": "string"
+    },
+    "acceptee_at": {
+      "type": "string"
+    },
+    "deposee_relais_at": {
+      "type": "string"
+    },
+    "retiree_at": {
+      "type": "string"
+    },
+    "annulee_at": {
+      "type": "string"
+    },
+    "annulation_source": {
+      "type": "string"
+    },
+    "annonce_anonyme": {
+      "type": "boolean",
+      "default": true
+    },
+    "annonce_source": {
       "type": "string"
     },
     "statut": {
@@ -51,7 +99,12 @@
         "disponible",
         "acceptee",
         "engagee",
-        "livree"
+        "en_transit",
+        "deposee_relais",
+        "livree",
+        "retiree",
+        "expiree",
+        "annulee"
       ],
       "default": "disponible"
     },
@@ -88,18 +141,13 @@
     "create": {
       "$or": [
         {
-          "$and": [
-            {
-              "data.voyageur_email": "{{user.email}}"
-            },
-            {
-              "data.mode_livraison": "express"
-            }
-          ]
+          "user_condition": {
+            "role": "admin"
+          }
         },
         {
           "user_condition": {
-            "role": "admin"
+            "role": "admin_secondaire"
           }
         }
       ]
@@ -107,22 +155,39 @@
     "read": {
       "$or": [
         {
-          "$and": [
-            {
-              "data.statut": "disponible"
-            },
-            {
-              "data.mode_livraison": "express"
-            }
-          ]
+          "data.voyageur_email": "{{user.email}}"
         },
         {
           "$and": [
             {
-              "data.voyageur_email": "{{user.email}}"
+              "data.mode_livraison": "express"
             },
             {
-              "data.mode_livraison": "express"
+              "data.statut": {
+                "$in": [
+                  "disponible",
+                  "expiree"
+                ]
+              }
+            },
+            {
+              "$or": [
+                {
+                  "user_condition": {
+                    "role": "voyageur"
+                  }
+                },
+                {
+                  "user_condition": {
+                    "role": "admin"
+                  }
+                },
+                {
+                  "user_condition": {
+                    "role": "admin_secondaire"
+                  }
+                }
+              ]
             }
           ]
         },
@@ -141,28 +206,16 @@
     "update": {
       "$or": [
         {
-          "$and": [
-            {
-              "data.statut": "disponible"
-            },
-            {
-              "data.mode_livraison": "express"
-            }
-          ]
-        },
-        {
-          "$and": [
-            {
-              "data.voyageur_email": "{{user.email}}"
-            },
-            {
-              "data.mode_livraison": "express"
-            }
-          ]
+          "data.voyageur_email": "{{user.email}}"
         },
         {
           "user_condition": {
             "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin_secondaire"
           }
         }
       ]
@@ -170,18 +223,13 @@
     "delete": {
       "$or": [
         {
-          "$and": [
-            {
-              "data.voyageur_email": "{{user.email}}"
-            },
-            {
-              "data.mode_livraison": "express"
-            }
-          ]
+          "user_condition": {
+            "role": "admin"
+          }
         },
         {
           "user_condition": {
-            "role": "admin"
+            "role": "admin_secondaire"
           }
         }
       ]

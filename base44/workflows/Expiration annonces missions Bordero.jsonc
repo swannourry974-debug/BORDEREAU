@@ -1,0 +1,45 @@
+{
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "0 8 * * *",
+      "one_time_date": null,
+      "timezone": "Europe/Paris",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "name": "Expiration annonces missions Bordero",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "expiration_annonces_missions_bordero",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "expirer_annonces": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "expirerMissionAnnonces",
+            "args": {}
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Expirer les annonces",
+            "description": "Apr\u00e8s 7 jours sans prise"
+          }
+        }
+      }
+    ]
+  },
+  "description": "Expire les annonces de missions Express rest\u00e9es sans prise en charge apr\u00e8s 7 jours et pr\u00e9vient le lecteur."
+}

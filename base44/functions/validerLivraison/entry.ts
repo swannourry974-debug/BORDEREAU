@@ -57,7 +57,7 @@ export default async function(req) {
     if (linkedMissionId) {
       const mission = await base44.asServiceRole.entities.MissionVoyageur.get(linkedMissionId).catch(() => null);
       if (mission && (user.role === 'admin' || mission.voyageur_email === user.email)) {
-        await base44.asServiceRole.entities.MissionVoyageur.update(mission.id, { statut: 'livree' });
+        await base44.asServiceRole.entities.MissionVoyageur.update(mission.id, { statut: 'retiree', retiree_at: new Date().toISOString() });
       }
     }
 

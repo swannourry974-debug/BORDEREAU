@@ -10,6 +10,7 @@ import CalendrierVoyageur from '@/components/voyageur/CalendrierVoyageur';
 import CalculatriceRevenus from '@/components/voyageur/CalculatriceRevenus';
 import QuotaJauge from '@/components/voyageur/QuotaJauge';
 import MissionEnCoursCard from '@/components/voyageur/MissionEnCoursCard';
+import MissionAnnouncementList from '@/components/voyageur/MissionAnnouncementList';
 import VoyageurSectionTabs from '@/components/voyageur/VoyageurSectionTabs';
 import CollapsedMissionList from '@/components/voyageur/CollapsedMissionList';
 import VoyageurSecondarySearch from '@/components/voyageur/VoyageurSecondarySearch';
@@ -37,6 +38,11 @@ function formatMissionRecord(record) {
     id: record.id,
     source: 'db',
     ville: record.ville_destination || 'Destination',
+    ville_destination: record.ville_destination || 'Destination',
+    depart_ville: record.depart_ville || '',
+    trajet_label: record.trajet_label || '',
+    point_relais_nom: record.point_relais_nom || '',
+    statut: record.statut,
     date: record.date_limite ? `Accepte jusqu'au ${new Date(record.date_limite).toLocaleDateString('fr-FR')}` : 'Mission disponible',
     livre: record.livre || 'Livre',
     type: record.type || 'Poche',
@@ -142,8 +148,8 @@ function MissionCard({ mission, rang, onAccept, disabled, onScan, onRemove }) {
             <BtnCoupon onClick={() => onScan && onScan(mission, 'scan')} secondary style={{ borderColor: '#1a3a5c', color: '#1a3a5c' }}>📷 Scanner l'achat</BtnCoupon>
           )
         ) : (
-          <BtnCoupon onClick={handleAccept} disabled={disabled || loading}>
-            {loading ? '⟳ ...' : disabled ? '⛔ Valise pleine' : 'Accepter'}
+          <BtnCoupon onClick={handleAccept} disabled={disabled || loading || mission.statut === 'expiree'}>
+            {loading ? '⟳ ...' : disabled ? '⛔ Valise pleine' : mission.statut === 'expiree' ? 'Expirée' : 'Accepter la mission'}
           </BtnCoupon>
         )}
       </div>
@@ -181,16 +187,21 @@ export default function PanelMissions() {
   const [wallet] = useState({ soldeDisponible: 12.50, gainsPrevisionnels: 5.00, virementSuspendu: false });
 
   const loadAvailableMissions = async () => {
-    const missions = await base44.entities.MissionVoyageur.filter({ statut: 'disponible', mode_livraison: 'express' }, '-created_date', 80);
-    setAvailable(missions?.length ? missions.map(formatMissionRecord) : []);
+    const missions = await base44.entities.MissionVoyageur.filter({ statut: { $in: ['disponible', 'expiree'] }, mode_livraison: 'express' }, { sort: '-created_date', limit: 80 });
+    const rows = missions?.items || missions || [];
+    setAvailable(rows.length ? rows.map(formatMissionRecord) : []);
   };
 
   useEffect(() => {
     base44.auth.me().then(async (u) => {
       setUser(u);
       if (!u) return;
-      const voyages = await base44.entities.Voyage.filter({ voyageur_email: u.email });
+      const [voyages, missionsVoyageur] = await Promise.all([
+        base44.entities.Voyage.filter({ voyageur_email: u.email }),
+        base44.entities.MissionVoyageur.filter({ voyageur_email: u.email }, { sort: '-updated_date', limit: 80 }),
+      ]);
       setVoyages(voyages || []);
+      setEngagees((missionsVoyageur?.items || missionsVoyageur || []).filter(m => ['acceptee', 'engagee', 'en_transit', 'deposee_relais', 'livree', 'retiree'].includes(m.statut)).map((m, index) => ({ ...formatMissionRecord(m), engaged: true, status: ['livree', 'retiree'].includes(m.statut) ? 'livree' : ['en_transit', 'deposee_relais'].includes(m.statut) ? 'en_transit' : 'engagee', rang: m.numero_ordre || index + 1 })));
       const dernierVoyage = voyages[0];
       setVoyageurValidationStatus(u.voyageur_validation_status || dernierVoyage?.validation_admin || 'aucune');
       const voyageValide = voyages.find(v => v.actif && v.validation_admin === 'valide');
@@ -226,7 +237,7 @@ export default function PanelMissions() {
   const quotaKg = getQuotaKg(zoneVoyage);
 
   const missionsActives = engagees.filter(m => m.status !== 'livree');
-  const missionsArchivees = engagees.filter(m => m.status === 'livree');
+  const missionsArchivees = engagees.filter(m => m.status === 'livree' || m.statut === 'retiree');
   const validationBloquee = user?.voyageur_bloque || voyageurValidationStatus === 'bloque';
   const validationEnAttente = ['en_attente', 'suspendu'].includes(voyageurValidationStatus);
 
@@ -292,15 +303,18 @@ export default function PanelMissions() {
     setAvailable(prev => prev.filter(m => m.id !== id));
 
     const persist = mission.source === 'db'
-      ? base44.entities.MissionVoyageur.update(mission.id, {
-          voyageur_email: user?.email || '',
-          statut: 'engagee',
+      ? base44.functions.invoke('accepterMissionAnnonce', {
+          mission_id: mission.id,
           numero_ordre: rang,
           commission,
         })
       : Promise.resolve();
 
-    persist.then(() => {
+    persist.then((response) => {
+      const savedMission = response?.data?.mission;
+      if (savedMission) {
+        setEngagees(prev => prev.map(m => m.id === mission.id ? { ...formatMissionRecord(savedMission), engaged: true, status: 'engagee', rang, commission } : m));
+      }
       if (nouveaux.length > 0) {
         const badge = BADGES_CONFIG.find(b => b.id === nouveaux[0]);
         if (badge) setTimeout(() => setNewBadge(badge), 500);
@@ -407,6 +421,7 @@ export default function PanelMissions() {
           onDeposit={(mission) => openMissionAction(mission, 'scan')}
         />
 
+        <MissionAnnouncementList title="Livres en route" missions={searchedMissionsActives} grouped emptyText="Aucune annonce pour l’instant." />
         <CollapsedMissionList
           title="Missions acceptées"
           missions={searchedMissionsActives}
@@ -449,14 +464,17 @@ export default function PanelMissions() {
 
             {missionsFiltered.length === 0 && !limitAtteinte && (
               <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))', textAlign: 'center', padding: 20 }}>
-                {missionSearch ? 'Aucune mission ne correspond à cette recherche.' : voyageActif ? `Aucune mission pour "${voyageActif.arrivee_ville}" pour le moment.` : 'Aucune mission disponible pour ce trajet.'}
+                {missionSearch ? 'Aucune mission ne correspond à cette recherche.' : 'Aucune annonce pour l’instant.'}
               </div>
             )}
 
-            {missionsFiltered.map((mission) => {
-              const rang = livresActifs + 1;
-              return <MissionCard key={mission.id} mission={mission} rang={rang} onAccept={acceptMission} disabled={limitAtteinte} />;
-            })}
+            <MissionAnnouncementList
+              title="Annonces ouvertes récentes"
+              missions={missionsFiltered}
+              emptyText="Aucune annonce pour l’instant."
+              onAccept={(mission) => acceptMission(mission.id, mission.commission || getCommission(Object.values(ZONES).find(z => z.id === mission.zone_id) || zoneVoyage, livresActifs + 1))}
+              disabled={limitAtteinte || validationBloquee || !voyageActif}
+            />
           </>
         )}
 

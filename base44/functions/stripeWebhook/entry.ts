@@ -12,6 +12,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import Stripe from 'npm:stripe@14.21.0';
 import { waitUntil } from 'base44:runtime';
+import { ensureMissionAnnouncementsForCommande, cancelMissionAnnouncementsForCommande } from '../../shared/missionAnnouncements.ts';
 
 export default async function(req: Request): Promise<Response> {
   const stripeSecret = Deno.env.get('STRIPE_SECRET_KEY');
@@ -37,17 +38,30 @@ export default async function(req: Request): Promise<Response> {
     return Response.json({ error: 'Signature invalide' }, { status: 400 });
   }
 
-  // On ne traite que cet événement
+  // Le webhook n'a pas de cookie utilisateur — on crée un client à partir de la requête
+  // et on utilise asServiceRole pour les opérations d'écriture
+  const base44 = createClientFromRequest(req);
+
+  if (event.type === 'charge.refunded') {
+    const charge = event.data.object as Stripe.Charge;
+    const paymentIntentId = typeof charge.payment_intent === 'string' ? charge.payment_intent : (charge.payment_intent as any)?.id || '';
+    const sessions = paymentIntentId ? await stripe.checkout.sessions.list({ payment_intent: paymentIntentId, limit: 1 }).catch(() => null) : null;
+    const sessionId = sessions?.data?.[0]?.id || '';
+    const commandes = sessionId ? await base44.asServiceRole.entities.Commande.filter({ stripe_session_id: sessionId }, '-created_date', 10).catch(() => []) : [];
+    for (const commande of commandes || []) {
+      await base44.asServiceRole.entities.Commande.update(commande.id, { statut: 'annulee', notes: `${commande.notes || ''}\nRemboursement Stripe détecté.`.trim() });
+      await cancelMissionAnnouncementsForCommande(base44, commande, 'remboursement');
+    }
+    return Response.json({ received: true, refunded: true, commandes: commandes?.length || 0 });
+  }
+
+  // On ne traite que cet événement de paiement confirmé pour publier les annonces
   if (event.type !== 'checkout.session.completed') {
     return Response.json({ received: true, skipped: event.type });
   }
 
   const session = event.data.object as Stripe.Checkout.Session;
   const meta = session.metadata || {};
-
-  // Le webhook n'a pas de cookie utilisateur — on crée un client à partir de la requête
-  // et on utilise asServiceRole pour les opérations d'écriture
-  const base44 = createClientFromRequest(req);
 
   // Idempotence : éviter de créer deux fois la même commande
   const existing = await base44.asServiceRole.entities.Commande.filter({ stripe_session_id: session.id }, '-created_date', 1).catch(() => []);
@@ -129,6 +143,9 @@ export default async function(req: Request): Promise<Response> {
 
   // Déclencher les suites de paiement en arrière-plan (non bloquant)
   waitUntil(Promise.all([
+    ensureMissionAnnouncementsForCommande(base44, commande, { notifyReader: true, notifyTravelers: true }).catch(e =>
+      console.warn('[stripeWebhook] Publication mission échouée:', e.message)
+    ),
     base44.asServiceRole.functions.invoke('notifierSuiviCommande', { commande_id: commande.id }).catch(e =>
       console.warn('[stripeWebhook] Notification suivi échouée:', e.message)
     ),

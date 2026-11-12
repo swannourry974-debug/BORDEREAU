@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { secrets } from 'base44:runtime';
 import { getFormatLivre, hashSecurity, parseToken, assertFormatCoherent } from '../../shared/borderoSecurity.ts';
+import { syncMissionStatusForCommande } from '../../shared/missionAnnouncements.ts';
 
 const SECURITY_FAILURE = 'Échec d\'authentification de sécurité Bordero : incohérence entre le visuel de commande et le code de validation.';
 
@@ -109,6 +110,7 @@ export default async function(req: Request): Promise<Response> {
     }
 
     const updated = await base44.asServiceRole.entities.Commande.update(commande.id, updates);
+    await syncMissionStatusForCommande(base44, commande.id, action === 'reception_relais' ? 'deposee_relais' : 'retiree', action === 'reception_relais' ? { deposee_relais_at: now.toISOString() } : { retiree_at: now.toISOString() });
 
     const relais = relaisAutorise ? [relaisAutorise] : await base44.asServiceRole.entities.PointRelais.filter({ gerant_email: user.email }, '-updated_date', 1).catch(() => []);
     if (relais?.[0]) {

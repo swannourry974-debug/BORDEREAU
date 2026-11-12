@@ -2,25 +2,31 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { SectionTitle, PerfoStrip } from '@/components/bordereau/shared';
 import VoyageurStatsCard from './VoyageurStatsCard';
+import MissionAnnouncementList from './MissionAnnouncementList';
 import LangSwitcher from '@/components/shared/LangSwitcher';
 
 export default function PanelAccueilVoyageur() {
   const [user, setUser] = useState(null);
   const [missions, setMissions] = useState([]);
+  const [annonces, setAnnonces] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     base44.auth.me().then(async (u) => {
       setUser(u);
       if (!u) { setLoading(false); return; }
-      const allMissions = await base44.entities.MissionVoyageur.filter({ voyageur_email: u.email });
-      setMissions(allMissions || []);
+      const [allMissions, annoncesOuvertes] = await Promise.all([
+        base44.entities.MissionVoyageur.filter({ voyageur_email: u.email }, { sort: '-updated_date', limit: 80 }),
+        base44.entities.MissionVoyageur.filter({ statut: { $in: ['disponible', 'expiree'] }, mode_livraison: 'express' }, { sort: '-created_date', limit: 12 }),
+      ]);
+      setMissions(allMissions?.items || allMissions || []);
+      setAnnonces(annoncesOuvertes?.items || annoncesOuvertes || []);
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
 
   const livresEnCours = missions.filter(m => ['acceptee', 'engagee'].includes(m.statut));
-  const livresLivres = missions.filter(m => m.statut === 'livree');
+  const livresLivres = missions.filter(m => ['livree', 'retiree'].includes(m.statut));
 
   if (loading) {
     return <div className="text-center py-10 font-fell italic text-encre/45">Chargement…</div>;
@@ -33,9 +39,12 @@ export default function PanelAccueilVoyageur() {
           Bonjour {user?.full_name?.split(' ')[0] || 'Voyageur'} ✦
         </div>
         <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.5)', marginTop: 2 }}>
-          Langue, niveau et livres transportés
+          Annonces anonymes, niveau et livres en route
         </div>
       </div>
+
+      <MissionAnnouncementList title="Annonces ouvertes récentes" missions={annonces} emptyText="Aucune annonce pour l’instant." />
+      <MissionAnnouncementList title="Livres en route" missions={livresEnCours} grouped emptyText="Aucune annonce pour l’instant." />
 
       <SectionTitle>Choix de la langue</SectionTitle>
       <div style={{ background: 'var(--papier)', border: '1.5px solid rgba(26,16,8,0.2)', padding: 16, marginBottom: 18, boxShadow: '3px 3px 0 rgba(26,16,8,0.10)' }}>
