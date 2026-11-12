@@ -158,7 +158,7 @@ export default function LandingRelais() {
         {checking && <div className="font-fell" style={{ textAlign: 'center', fontStyle: 'italic', color: 'rgba(26,16,8,0.45)' }}>Chargement…</div>}
 
         {!checking && (user || entryMode === 'signup') && (
-          <form onSubmit={handleSubmit} style={{ background: 'var(--papier)', border: '2px solid rgba(26,16,8,0.18)', padding: 18, boxShadow: '5px 5px 0 rgba(26,16,8,0.10)', color: '#111111' }}>
+          <form className="bordero-readable-auth-form" onSubmit={handleSubmit} style={{ background: 'var(--papier)', border: '2px solid rgba(26,16,8,0.18)', padding: 18, boxShadow: '5px 5px 0 rgba(26,16,8,0.10)', color: '#111111' }}>
             {[
               ['nom_enseigne', "Nom de l'enseigne", 'Librairie du quartier'],
               ['identifiant_connexion', 'Identifiant relais souhaité', 'librairie-quartier'],

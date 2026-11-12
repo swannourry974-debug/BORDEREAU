@@ -223,6 +223,113 @@ input:focus, textarea:focus, select:focus, button:focus-visible, a:focus-visible
   box-shadow: 0 0 0 5px rgba(199, 161, 90, 0.18) !important;
 }
 
+.bordero-readable-auth-form label,
+.bordero-readable-auth-form .field-label {
+  color: #374151 !important;
+}
+
+.bordero-readable-auth-form input:not([type="checkbox"]):not([type="radio"]),
+.bordero-readable-auth-form textarea,
+.bordero-readable-auth-form select {
+  background: #ffffff !important;
+  color: #4B5563 !important;
+  -webkit-text-fill-color: #4B5563 !important;
+  caret-color: #4B5563 !important;
+  border-color: #D1D5DB !important;
+}
+
+.bordero-readable-auth-form input::placeholder,
+.bordero-readable-auth-form textarea::placeholder {
+  color: #9CA3AF !important;
+  -webkit-text-fill-color: #9CA3AF !important;
+  opacity: 1 !important;
+}
+
+.bordero-readable-auth-form input:focus,
+.bordero-readable-auth-form textarea:focus,
+.bordero-readable-auth-form select:focus {
+  color: #4B5563 !important;
+  -webkit-text-fill-color: #4B5563 !important;
+  background: #ffffff !important;
+  border-color: #C7A15A !important;
+}
+
+.bordero-readable-auth-form input:disabled,
+.bordero-readable-auth-form textarea:disabled,
+.bordero-readable-auth-form select:disabled {
+  background: #F3F4F6 !important;
+  color: #6B7280 !important;
+  -webkit-text-fill-color: #6B7280 !important;
+  opacity: 1 !important;
+}
+
+.bordero-readable-auth-form input[aria-invalid="true"],
+.bordero-readable-auth-form textarea[aria-invalid="true"],
+.bordero-readable-auth-form select[aria-invalid="true"] {
+  color: #991B1B !important;
+  -webkit-text-fill-color: #991B1B !important;
+  border-color: #991B1B !important;
+}
+
+.bordero-readable-auth-form .text-red-600,
+.bordero-readable-auth-form .text-red-700,
+.bordero-readable-auth-form [data-error="true"] {
+  color: #991B1B !important;
+}
+
+.bordero-readable-auth-form input[type="checkbox"],
+.bordero-readable-auth-form input[type="radio"] {
+  accent-color: #6E1E2E;
+}
+
+.bordero-readable-auth-form button[type="button"] svg,
+.bordero-readable-auth-form [aria-label*="mot de passe"] svg,
+.bordero-readable-auth-form [aria-label*="password"] svg {
+  color: #374151 !important;
+  stroke: #374151 !important;
+}
+
+.bordero-readable-auth-form input:-webkit-autofill,
+.bordero-readable-auth-form input:-webkit-autofill:hover,
+.bordero-readable-auth-form input:-webkit-autofill:focus,
+.bordero-readable-auth-form textarea:-webkit-autofill,
+.bordero-readable-auth-form textarea:-webkit-autofill:hover,
+.bordero-readable-auth-form textarea:-webkit-autofill:focus,
+.bordero-readable-auth-form select:-webkit-autofill,
+.bordero-readable-auth-form select:-webkit-autofill:hover,
+.bordero-readable-auth-form select:-webkit-autofill:focus {
+  -webkit-text-fill-color: #4B5563 !important;
+  caret-color: #4B5563 !important;
+  box-shadow: 0 0 0 1000px #ffffff inset, 0 0 0 5px rgba(199, 161, 90, 0.18) !important;
+  border-color: #C7A15A !important;
+  transition: background-color 9999s ease-out 0s;
+}
+
+input[type="email"],
+input[type="password"] {
+  color: #4B5563 !important;
+  -webkit-text-fill-color: #4B5563 !important;
+  caret-color: #4B5563 !important;
+}
+
+input[type="email"]::placeholder,
+input[type="password"]::placeholder {
+  color: #9CA3AF !important;
+  -webkit-text-fill-color: #9CA3AF !important;
+  opacity: 1 !important;
+}
+
+input[type="email"]:-webkit-autofill,
+input[type="email"]:-webkit-autofill:hover,
+input[type="email"]:-webkit-autofill:focus,
+input[type="password"]:-webkit-autofill,
+input[type="password"]:-webkit-autofill:hover,
+input[type="password"]:-webkit-autofill:focus {
+  -webkit-text-fill-color: #4B5563 !important;
+  caret-color: #4B5563 !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+}
+
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: rgba(243, 232, 210, 0.65); }
 ::-webkit-scrollbar-thumb {

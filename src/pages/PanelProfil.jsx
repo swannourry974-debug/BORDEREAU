@@ -140,7 +140,7 @@ export default function PanelProfil() {
             <div className="font-fell" style={{ fontSize: 12, fontStyle: 'italic', color: 'var(--muted-foreground)', marginBottom: 14, lineHeight: 1.6 }}>
               Renseignez les informations de votre boutique pour envoyer votre demande de validation.
             </div>
-            <form onSubmit={handleRelaisSubmit} style={{ display: 'grid', gap: 10 }}>
+            <form className="bordero-readable-auth-form" onSubmit={handleRelaisSubmit} style={{ display: 'grid', gap: 10 }}>
               {[
                 ['nom', 'Nom de la boutique'],
                 ['adresse', 'Adresse complète'],

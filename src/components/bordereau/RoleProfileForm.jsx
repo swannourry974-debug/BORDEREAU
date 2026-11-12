@@ -29,7 +29,7 @@ export default function RoleProfileForm({ role, currentUser, onSave, onBack, onC
   };
 
   return (
-    <form onSubmit={submit} className="space-y-3">
+    <form onSubmit={submit} className="bordero-readable-auth-form space-y-3">
       <button type="button" onClick={onBack} className="text-[11px] text-bordeaux underline">← Changer de rôle</button>
       <h3 className="font-heading text-[22px] text-encre">Fiche d’accès {role === 'lecteur' ? 'Lecteur' : 'Voyageur'}</h3>
       <p className="text-[12px] text-encre/60 leading-relaxed">Ces informations restent sur votre compte pour vous reconnecter et retrouver directement votre espace Bordero. Le mot de passe est géré par la connexion sécurisée Bordero.</p>
