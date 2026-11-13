@@ -83,8 +83,10 @@ function buildIncrementalChecks(batchStats = {}, rawQuality = {}) {
   const missingMerchantUrlRate = Number(rawQuality.missing_merchant_url || 0) / lines;
   checks.scan_scope = 'incremental';
   checks.scope = 'current_batch';
+  const duplicateRate = Number(batchStats.duplicates_in_feed || 0) / lines;
   checks.metrics = {
     rejection_rate: rejectionRate,
+    duplicate_rate: duplicateRate,
     missing_price_rate: missingPriceRate,
     missing_image_rate: missingImageRate,
     missing_merchant_url_rate: missingMerchantUrlRate,
@@ -92,7 +94,8 @@ function buildIncrementalChecks(batchStats = {}, rawQuality = {}) {
     lines,
   };
   if (rejectionRate > 0.4) failCheck(checks, 'rejection_rate', rejectionRate, 0.4);
-  if (checks.metrics.write_errors > 0) failCheck(checks, 'write_errors', checks.metrics.write_errors, 0);
+  if (duplicateRate > 0.4) failCheck(checks, 'duplicate_rate', duplicateRate, 0.4);
+  if (checks.metrics.write_errors > 50) failCheck(checks, 'write_errors', checks.metrics.write_errors, 50);
   checks.checked_at = new Date().toISOString();
   return checks;
 }
@@ -107,6 +110,57 @@ async function filterInChunks(base44, limiter, entityName, field, values, extraQ
     output.push(...rowsFrom(page));
   }
   return output;
+}
+
+function incidentCause(error) {
+  if (error === 'non_book') return 'non_book';
+  if (error === 'ean_not_isbn' || error === 'invalid_isbn') return 'ean_invalide';
+  if (error === 'invalid_price') return 'prix_absent';
+  if (error === 'missing_title') return 'titre_absent';
+  return 'autre';
+}
+
+function incidentFromRejection(rejection = {}, lineNumber = 0, feed = {}, batchId = '', now = new Date().toISOString()) {
+  return {
+    feed_id: String(feed.feed_id || '').trim(),
+    feed_name: String(feed.feed_name || '').trim(),
+    checkpoint_line: Number(lineNumber || 0),
+    product_identifier: rejection.product_identifier || '',
+    isbn13: rejection.isbn13 || '',
+    ean: rejection.ean_raw || rejection.ean || '',
+    title: rejection.title || '',
+    cause: incidentCause(rejection.reason),
+    message_technique: rejection.reason || 'ligne refusée',
+    attempts: 3,
+    status: 'parked',
+    first_seen_at: now,
+    last_attempt_at: now,
+    batch_id: batchId,
+  };
+}
+
+function incidentFromRecord(record = {}, lineNumber = 0, feed = {}, batchId = '', cause = 'erreur_ecriture', message = '', now = new Date().toISOString()) {
+  return {
+    feed_id: String(feed.feed_id || '').trim(),
+    feed_name: String(feed.feed_name || '').trim(),
+    checkpoint_line: Number(lineNumber || 0),
+    product_identifier: record.product_identifier || record.book?.product_identifier || '',
+    isbn13: record.isbn13 || record.book?.isbn13 || '',
+    ean: record.book?.ean || '',
+    title: record.book?.title || '',
+    cause,
+    message_technique: message || cause,
+    attempts: 3,
+    status: 'parked',
+    first_seen_at: now,
+    last_attempt_at: now,
+    batch_id: batchId,
+  };
+}
+
+async function recordImportIncidents(base44, incidents = [], limiter = null) {
+  if (!incidents.length) return;
+  for (const chunk of chunks(incidents, 400)) await limitedWrite(limiter, 'ImportIncident.bulkCreate', () => base44.asServiceRole.entities.ImportIncident.bulkCreate(chunk));
 }
 
 function isPresent(value) {
@@ -365,9 +419,16 @@ async function currentRunForStep(base44, limiter) {
 }
 
 async function activeImportLogs(base44, limiter, feedId) {
-  const page = await limitedList(limiter, 'ImportLog.filter', () => base44.asServiceRole.entities.ImportLog.filter({ source_retailer: AWIN_RETAILER, status: 'running' }, { sort: '-started_at', limit: 10 }));
-  const cutoff = Date.now() - 8 * 60 * 1000;
-  return rowsFrom(page).filter(log => String(log.feed_id || '') === String(feedId || '') && Date.parse(log.started_at || log.created_date || '') >= cutoff);
+  const page = await limitedList(limiter, 'ImportLog.filter', () => base44.asServiceRole.entities.ImportLog.filter({ source_retailer: AWIN_RETAILER, status: 'running' }, { sort: '-started_at', limit: 20 }));
+  const now = Date.now();
+  const staleCutoff = now - 6 * 60 * 1000;
+  const activeCutoff = now - 6 * 60 * 1000;
+  const matching = rowsFrom(page).filter(log => String(log.feed_id || '') === String(feedId || ''));
+  const stale = matching.filter(log => (Date.parse(log.started_at || log.created_date || '') || 0) < staleCutoff);
+  if (stale.length) {
+    await applyBulkUpdate(base44.asServiceRole.entities.ImportLog, stale.map(log => ({ id: log.id, status: 'partial', finished_at: new Date().toISOString(), error_message: 'Lot running orphelin fermé automatiquement pour continuité import', control_report: { ...(log.control_report || {}), event_type: 'stale_running_log_closed', no_deletion: true, no_merge: true } })), limiter, 'ImportLog.bulkUpdate.stale');
+  }
+  return matching.filter(log => (Date.parse(log.started_at || log.created_date || '') || 0) >= activeCutoff);
 }
 
 async function pauseAfterRateLimit(base44, run, log, stats, error, confirmedLine, limiter) {
@@ -396,9 +457,11 @@ async function handleStepSingle(base44, batchSize, limiter, options = {}) {
   const selectedFeed = await resolveFeed(feedUrl, token, run.feed_id);
   const resolved = await resolveAwinFeedRow(feedUrl, selectedFeed, token, { timeoutMs: 240000 });
   const confirmedStartLine = Number(run.checkpoint_line || 0);
+  const batchId = `${run.feed_id}-${confirmedStartLine + 1}-${Date.now()}`;
   const stats = emptyImportStats(confirmedStartLine);
   const rejectionReasons = emptyRejectionReasons();
   const rejections = [];
+  const incidents = [];
   const examples = [];
   const seenInLot = new Set();
   const rawQuality = { missing_price: 0, missing_image: 0, missing_merchant_url: 0 };
@@ -445,7 +508,10 @@ async function handleStepSingle(base44, batchSize, limiter, options = {}) {
       if (record.error) {
         stats.rowsRejected += 1;
         rejectionReasons[record.error] = (rejectionReasons[record.error] || 0) + 1;
-        if (record.rejection) rejections.push(record.rejection);
+        if (record.rejection) {
+          rejections.push(record.rejection);
+          incidents.push(incidentFromRejection(record.rejection, lineNumber, selectedFeed, batchId, startedAt));
+        }
         continue;
       }
       const duplicateKey = record.product_identifier || cleanEan(record.ean || '');
@@ -455,14 +521,21 @@ async function handleStepSingle(base44, batchSize, limiter, options = {}) {
     }
 
     if (batch.length) {
-      const result = await upsertBatch(base44, batch, examples, 10, { limiter });
-      stats.booksCreated += result.booksCreated;
-      stats.booksUpdated += result.booksUpdated;
-      stats.offersCreated += result.offersCreated;
-      stats.offersUpdated += result.offersUpdated;
-      writeDiagnostics = result.diagnostics || writeDiagnostics;
+      try {
+        const result = await upsertBatch(base44, batch, examples, 10, { limiter });
+        stats.booksCreated += result.booksCreated;
+        stats.booksUpdated += result.booksUpdated;
+        stats.offersCreated += result.offersCreated;
+        stats.offersUpdated += result.offersUpdated;
+        writeDiagnostics = result.diagnostics || writeDiagnostics;
+      } catch (error) {
+        stats.errors += batch.length;
+        for (const record of batch) incidents.push(incidentFromRecord(record, lastLine, selectedFeed, batchId, 'erreur_ecriture', error.message, startedAt));
+        writeDiagnostics = { ...writeDiagnostics, batch_write_error: error.message, parked_records: batch.length };
+      }
     }
     await recordImportRejections(base44, rejections);
+    await recordImportIncidents(base44, incidents, limiter);
     confirmedLine = lastLine;
   } catch (error) {
     stats.errors += 1;
@@ -475,7 +548,7 @@ async function handleStepSingle(base44, batchSize, limiter, options = {}) {
 
   const completed = reachedEnd && scanned < size;
   const shouldRunGlobalChecks = options.allowGlobalCheck === true && (completed || ageMs(run.last_global_check_at) > GLOBAL_CHECK_MIN_INTERVAL_MS);
-  let checks = buildIncrementalChecks({ lines: scanned, rows_rejected: stats.rowsRejected, errors: stats.errors }, rawQuality);
+  let checks = buildIncrementalChecks({ lines: scanned, rows_rejected: stats.rowsRejected, errors: stats.errors, duplicates_in_feed: stats.duplicatesInFeed }, rawQuality);
   try {
     if (shouldRunGlobalChecks) checks = await runControls(base44, { lines: scanned, rows_rejected: stats.rowsRejected, errors: stats.errors, ...rawQuality }, limiter);
   } catch (error) {
@@ -503,7 +576,7 @@ async function handleStepSingle(base44, batchSize, limiter, options = {}) {
     errors: stats.errors,
     line_checkpoint: confirmedLine,
     status: paused ? 'partial' : 'success',
-    control_report: { checks, diagnostics, rejection_reasons: rejectionReasons, examples_written: examples, no_deletion: true, no_secret_or_datafeed_url_exposed: true },
+    control_report: { checks, diagnostics, rejection_reasons: rejectionReasons, incidents_parked: incidents.length, examples_written: examples, no_deletion: true, no_merge: true, no_secret_or_datafeed_url_exposed: true },
   });
 
   await base44.asServiceRole.entities.ImportRun.update(run.id, {
@@ -526,7 +599,7 @@ async function handleStepSingle(base44, batchSize, limiter, options = {}) {
     stop_requested: false,
   });
 
-  return { ok: checks.ok, action: 'step', feed_id: run.feed_id, feed_name: run.feed_name, scanned_lines: scanned, checkpoint_line: confirmedLine, completed, paused, paused_reason: pausedReason, stats, rejection_reasons: rejectionReasons, checks, diagnostics, examples_written: examples, no_deletion: true, no_secret_or_datafeed_url_exposed: true };
+  return { ok: checks.ok, action: 'step', feed_id: run.feed_id, feed_name: run.feed_name, scanned_lines: scanned, checkpoint_line: confirmedLine, completed, paused, paused_reason: pausedReason, stats, rejection_reasons: rejectionReasons, incidents_parked: incidents.length, checks, diagnostics, examples_written: examples, no_deletion: true, no_secret_or_datafeed_url_exposed: true };
 }
 
 async function handleStep(base44, batchSize, limiter, options = {}) {
@@ -567,8 +640,9 @@ async function handleAutomationStep(base44, body, limiter) {
     try {
       const result = await handleStep(base44, body.batch_size, limiter, { autoChain: true, maxSteps: body.max_steps || 8, maxMs: AUTOMATION_SAFE_MAX_MS, allowGlobalCheck: false });
       const lastResult = [...(result.results || [])].reverse().find(item => item?.checkpoint_line) || result;
-      if (active) await updateAutomationHeartbeat(base44, limiter, active, { status: result.ok === false ? 'error' : 'ok', ok: result.ok !== false, duration_ms: Date.now() - startedAt, steps_executed: result.steps_executed || 1, checkpoint_line: lastResult.checkpoint_line || active.checkpoint_line, error: result.ok === false ? (result.reason || 'Résultat import négatif') : '', attempt });
-      return { ok: result.ok !== false, action: 'automation_step', steps_executed: result.steps_executed || 1, checkpoint_line: lastResult.checkpoint_line || active?.checkpoint_line || 0, duration_ms: Date.now() - startedAt, recoveries: result.recoveries || [], no_deletion: true, no_secret_or_datafeed_url_exposed: true };
+      if (result.ok === false) throw new Error(result.reason || result.recovery?.reason || 'Résultat import négatif');
+      if (active) await updateAutomationHeartbeat(base44, limiter, active, { status: 'ok', ok: true, duration_ms: Date.now() - startedAt, steps_executed: result.steps_executed || 1, checkpoint_line: lastResult.checkpoint_line || active.checkpoint_line, error: '', attempt });
+      return { ok: true, action: 'automation_step', steps_executed: result.steps_executed || 1, checkpoint_line: lastResult.checkpoint_line || active?.checkpoint_line || 0, duration_ms: Date.now() - startedAt, recoveries: result.recoveries || [], no_deletion: true, no_secret_or_datafeed_url_exposed: true };
     } catch (error) {
       lastError = error;
       if (active) await updateAutomationHeartbeat(base44, limiter, active, { status: 'error', ok: false, duration_ms: Date.now() - startedAt, steps_executed: 0, checkpoint_line: active.checkpoint_line, error: error.message, attempt });
@@ -676,6 +750,67 @@ async function handleDailySkeleton(base44, limiter) {
   return { ok: true, action: 'daily_sync_skeleton', ready: true, active: false, feeds: FEEDS, runs, behavior: 'Marquage missing_since prévu sans suppression lors de l’activation de la synchronisation quotidienne.' };
 }
 
+async function aggregateIncidents(base44, field) {
+  try {
+    const result = await base44.asServiceRole.entities.ImportIncident.aggregate({ groupBy: field });
+    return rowsFrom(result.rows || result).map(row => ({ key: row[field] || row._id || row.key || '—', count: row.count || 0 }));
+  } catch {
+    const page = await base44.asServiceRole.entities.ImportIncident.filter({}, { limit: 5000 });
+    const counts = rowsFrom(page).reduce((acc, item) => { const key = item[field] || '—'; acc[key] = (acc[key] || 0) + 1; return acc; }, {});
+    return Object.entries(counts).map(([key, count]) => ({ key, count }));
+  }
+}
+
+async function handleIncidents(base44) {
+  const [total, quarantine, byCause, byFeed, latest] = await Promise.all([
+    base44.asServiceRole.entities.ImportIncident.count({}),
+    base44.asServiceRole.entities.ImportIncident.count({ status: 'parked' }),
+    aggregateIncidents(base44, 'cause'),
+    aggregateIncidents(base44, 'feed_name'),
+    base44.asServiceRole.entities.ImportIncident.filter({}, { sort: '-last_attempt_at', limit: 50 }),
+  ]);
+  return {
+    ok: true,
+    action: 'incidents',
+    total_incidents: total,
+    repartition_par_cause: byCause,
+    repartition_par_flux: byFeed,
+    quarantaine_non_revue: quarantine,
+    derniers_50: rowsFrom(latest).map(item => ({ id: item.id, feed_id: item.feed_id, feed_name: item.feed_name, checkpoint_line: item.checkpoint_line, product_identifier: item.product_identifier, isbn13: item.isbn13, ean: item.ean, title: item.title, cause: item.cause, attempts: item.attempts, status: item.status, last_attempt_at: item.last_attempt_at })),
+    read_only: true,
+    no_deletion: true,
+    no_merge: true,
+  };
+}
+
+async function handleRetryIncidents(base44, limit, limiter) {
+  const max = Math.max(1, Math.min(Number(limit || 200), 200));
+  const page = await base44.asServiceRole.entities.ImportIncident.filter({ status: 'parked' }, { sort: 'first_seen_at', limit: max });
+  const incidents = rowsFrom(page);
+  const now = new Date().toISOString();
+  const updates = [];
+  let resolved = 0;
+  for (const incident of incidents) {
+    const queries = [];
+    if (incident.product_identifier) queries.push({ product_identifier: incident.product_identifier });
+    if (incident.isbn13) queries.push({ isbn13: incident.isbn13 });
+    if (incident.ean) queries.push({ ean: incident.ean });
+    let found = [];
+    for (const query of queries) {
+      const rows = rowsFrom(await limitedList(limiter, 'Books.filter.incident_retry', () => base44.asServiceRole.entities.Books.filter(query, { limit: 1 })));
+      if (rows.length) { found = rows; break; }
+    }
+    if (found.length) {
+      resolved += 1;
+      updates.push({ id: incident.id, status: 'resolved', attempts: Number(incident.attempts || 0) + 1, last_attempt_at: now, message_technique: `${incident.message_technique || ''}\nRésolu: fiche catalogue retrouvée`.trim() });
+    } else {
+      updates.push({ id: incident.id, status: 'parked', attempts: Number(incident.attempts || 0) + 1, last_attempt_at: now });
+    }
+  }
+  if (updates.length) await applyBulkUpdate(base44.asServiceRole.entities.ImportIncident, updates, limiter, 'ImportIncident.bulkUpdate');
+  return { ok: true, action: 'retry_incidents', checked: incidents.length, resolved, still_parked: incidents.length - resolved, no_deletion: true, no_merge: true };
+}
+
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -692,6 +827,8 @@ export default async function(req) {
     if (action === 'step' && body.automation === true) return Response.json(await handleAutomationStep(base44, body, limiter));
     if (action === 'step') return Response.json(await handleStep(base44, body.batch_size, limiter, { autoChain: body.auto_chain === true, maxSteps: body.max_steps, allowGlobalCheck: body.force_global_check === true }));
     if (action === 'dedupe') return Response.json(await handleDedupe(base44, body.limit, limiter));
+    if (action === 'incidents') return Response.json(await handleIncidents(base44));
+    if (action === 'retry_incidents') return Response.json(await handleRetryIncidents(base44, body.limit, limiter));
     if (action === 'daily_sync_skeleton') return Response.json(await handleDailySkeleton(base44, limiter));
     return Response.json({ error: 'Action inconnue' }, { status: 400 });
   } catch (error) {

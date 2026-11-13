@@ -1,0 +1,102 @@
+{
+  "name": "ImportIncident",
+  "type": "object",
+  "properties": {
+    "feed_id": {
+      "type": "string"
+    },
+    "feed_name": {
+      "type": "string"
+    },
+    "checkpoint_line": {
+      "type": "number"
+    },
+    "product_identifier": {
+      "type": "string"
+    },
+    "isbn13": {
+      "type": "string"
+    },
+    "ean": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "cause": {
+      "type": "string",
+      "enum": [
+        "non_book",
+        "ean_invalide",
+        "prix_absent",
+        "titre_absent",
+        "erreur_ecriture",
+        "offre_refusee",
+        "autre"
+      ],
+      "default": "autre"
+    },
+    "message_technique": {
+      "type": "string"
+    },
+    "attempts": {
+      "type": "number",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "parked",
+        "retried",
+        "resolved"
+      ],
+      "default": "parked"
+    },
+    "first_seen_at": {
+      "type": "string"
+    },
+    "last_attempt_at": {
+      "type": "string"
+    },
+    "batch_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "feed_id",
+    "cause",
+    "status",
+    "first_seen_at"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin_secondaire"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
