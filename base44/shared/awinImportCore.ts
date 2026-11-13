@@ -261,9 +261,35 @@ function mergeOffer(existing = {}, incoming = {}) {
   };
 }
 
+const WRITE_CHUNK_SIZE = 400;
+
 function itemsFrom(page) { return page?.items || page || []; }
 function uniqueValues(values = []) { return [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))]; }
 function chunks(values = [], size = 500) { const output = []; for (let i = 0; i < values.length; i += size) output.push(values.slice(i, i + size)); return output; }
+function countReturned(result, fallback) { return Array.isArray(result) ? result.length : Number(result?.count || result?.updated || result?.created || fallback || 0); }
+async function limitedWrite(limiter, label, run) { return limiter ? await limiter.write(run, label) : await run(); }
+async function bulkCreateInChunks(entity, records, limiter, label) {
+  const created = [];
+  let written = 0;
+  let chunksUsed = 0;
+  for (const chunk of chunks(records, WRITE_CHUNK_SIZE)) {
+    chunksUsed += 1;
+    const result = await limitedWrite(limiter, label, () => entity.bulkCreate(chunk));
+    written += countReturned(result, chunk.length);
+    created.push(...itemsFrom(result));
+  }
+  return { records: created, written, chunksUsed };
+}
+async function bulkUpdateInChunks(entity, records, limiter, label) {
+  let written = 0;
+  let chunksUsed = 0;
+  for (const chunk of chunks(records, WRITE_CHUNK_SIZE)) {
+    chunksUsed += 1;
+    const result = await limitedWrite(limiter, label, () => entity.bulkUpdate(chunk));
+    written += countReturned(result, chunk.length);
+  }
+  return { written, chunksUsed };
+}
 async function limitedFilter(base44, limiter, entityName, query, options = {}) {
   const run = () => base44.asServiceRole.entities[entityName].filter(query, options);
   return limiter ? await limiter.list(run, `${entityName}.filter`) : await run();
@@ -304,9 +330,9 @@ export async function upsertBatch(base44, records, examples, exampleLimit = 10, 
     if (existing) booksToUpdate.push({ id: existing.id, ...mergeBook(existing, record.book) });
     else booksToCreate.push(record.book);
   }
-  const created = booksToCreate.length ? await base44.asServiceRole.entities.Books.bulkCreate(booksToCreate) : [];
-  if (booksToUpdate.length) await base44.asServiceRole.entities.Books.bulkUpdate(booksToUpdate);
-  const allBooks = [...existingBooks, ...(created || [])];
+  const createdBooks = booksToCreate.length ? await bulkCreateInChunks(base44.asServiceRole.entities.Books, booksToCreate, limiter, 'Books.bulkCreate') : { records: [], written: 0, chunksUsed: 0 };
+  const updatedBooks = booksToUpdate.length ? await bulkUpdateInChunks(base44.asServiceRole.entities.Books, booksToUpdate, limiter, 'Books.bulkUpdate') : { written: 0, chunksUsed: 0 };
+  const allBooks = [...existingBooks, ...(createdBooks.records || [])];
   const bookByIdentifier = new Map(allBooks.map(book => [book.product_identifier || book.isbn13, book]));
   const bookByIsbn = new Map(allBooks.filter(book => book.isbn13).map(book => [book.isbn13, book]));
   const bookIds = uniqueValues(allBooks.map(book => book.id));
@@ -325,14 +351,34 @@ export async function upsertBatch(base44, records, examples, exampleLimit = 10, 
     else offersToCreate.push(offer);
     if (examples.length < exampleLimit) examples.push({ product_identifier: record.book.product_identifier, identifier_type: record.book.identifier_type, isbn_valid: record.book.isbn_valid, product_type: record.book.product_type, classification: record.book.classification, isbn13: record.book.isbn13, title: record.book.title, price: record.offer.price, currency: 'EUR', availability: record.offer.availability, availability_raw: record.offer.availability_raw, author: record.book.author, author_source: record.book.author_source, category: record.book.category, category_source: record.book.category_source });
   }
-  if (offersToCreate.length) await base44.asServiceRole.entities.BookOffers.bulkCreate(offersToCreate);
-  if (offersToUpdate.length) await base44.asServiceRole.entities.BookOffers.bulkUpdate(offersToUpdate);
-  return { booksCreated: booksToCreate.length, booksUpdated: booksToUpdate.length, offersCreated: offersToCreate.length, offersUpdated: offersToUpdate.length, diagnostics: { touched_book_ids: bookIds, product_identifiers: identifiers, isbn13s, existing_books_loaded: existingBooks.length, existing_offers_loaded: existingOffers.length } };
+  const createdOffers = offersToCreate.length ? await bulkCreateInChunks(base44.asServiceRole.entities.BookOffers, offersToCreate, limiter, 'BookOffers.bulkCreate') : { written: 0, chunksUsed: 0 };
+  const updatedOffers = offersToUpdate.length ? await bulkUpdateInChunks(base44.asServiceRole.entities.BookOffers, offersToUpdate, limiter, 'BookOffers.bulkUpdate') : { written: 0, chunksUsed: 0 };
+  return {
+    booksCreated: createdBooks.written,
+    booksUpdated: updatedBooks.written,
+    offersCreated: createdOffers.written,
+    offersUpdated: updatedOffers.written,
+    diagnostics: {
+      touched_book_ids: bookIds,
+      product_identifiers: identifiers,
+      isbn13s,
+      existing_books_loaded: existingBooks.length,
+      existing_offers_loaded: existingOffers.length,
+      write_chunk_size: WRITE_CHUNK_SIZE,
+      write_chunks: {
+        books_create: createdBooks.chunksUsed,
+        books_update: updatedBooks.chunksUsed,
+        offers_create: createdOffers.chunksUsed,
+        offers_update: updatedOffers.chunksUsed,
+        total: createdBooks.chunksUsed + updatedBooks.chunksUsed + createdOffers.chunksUsed + updatedOffers.chunksUsed,
+      },
+    }
+  };
 }
 
 export async function recordImportRejections(base44, rejections = []) {
   if (!rejections.length) return;
-  for (let i = 0; i < rejections.length; i += 500) await base44.asServiceRole.entities.ImportRejection.bulkCreate(rejections.slice(i, i + 500));
+  for (const chunk of chunks(rejections, WRITE_CHUNK_SIZE)) await base44.asServiceRole.entities.ImportRejection.bulkCreate(chunk);
 }
 
 export async function writeImportProgress(base44, logId, stats, status = 'running', extra = {}) {

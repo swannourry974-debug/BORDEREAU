@@ -142,8 +142,8 @@ function newestOffer(offers = []) {
 }
 
 async function applyBulkUpdate(entity, updates, limiter, label) {
-  for (let i = 0; i < updates.length; i += 500) {
-    await limiter.write(() => entity.bulkUpdate(updates.slice(i, i + 500)), label);
+  for (let i = 0; i < updates.length; i += 400) {
+    await limiter.write(() => entity.bulkUpdate(updates.slice(i, i + 400)), label);
   }
 }
 
@@ -202,10 +202,10 @@ async function handleStart(base44, limiter) {
 async function handleResume(base44, limiter) {
   const runs = await ensureRuns(base44, limiter);
   const now = new Date().toISOString();
-  const paused = runs.find(run => run.status === 'paused');
-  if (!paused) return { ok: true, resumed: false, reason: 'Aucun flux paused à reprendre', ...(await handleStatus(base44, limiter)) };
-  await base44.asServiceRole.entities.ImportRun.update(paused.id, { status: 'running', paused_reason: '', last_batch_at: now, finished_at: null });
-  return { ok: true, resumed: true, feed_id: paused.feed_id, feed_name: paused.feed_name, checkpoint_line: Number(paused.checkpoint_line || 0), ...(await handleStatus(base44, limiter)) };
+  const resumable = runs.find(run => ['paused', 'failed'].includes(run.status));
+  if (!resumable) return { ok: true, resumed: false, reason: 'Aucun flux paused ou failed à reprendre', ...(await handleStatus(base44, limiter)) };
+  await base44.asServiceRole.entities.ImportRun.update(resumable.id, { status: 'running', paused_reason: '', last_batch_at: now, finished_at: null });
+  return { ok: true, resumed: true, feed_id: resumable.feed_id, feed_name: resumable.feed_name, previous_status: resumable.status, checkpoint_line: Number(resumable.checkpoint_line || 0), counters_preserved: { lines_processed: Number(resumable.lines_processed || 0), books_created: Number(resumable.books_created || 0), books_updated: Number(resumable.books_updated || 0), offers_created: Number(resumable.offers_created || 0), offers_updated: Number(resumable.offers_updated || 0), rows_rejected: Number(resumable.rows_rejected || 0), errors: Number(resumable.errors || 0) }, ...(await handleStatus(base44, limiter)) };
 }
 
 async function handlePause(base44, reason, limiter) {
@@ -367,7 +367,7 @@ async function handleStep(base44, batchSize, limiter) {
   const paused = shouldRunGlobalChecks && !checks.ok;
   const nextStatus = paused ? 'paused' : (completed ? 'completed' : 'running');
   const pausedReason = paused ? `Contrôle global échoué: ${checks.failed.join(', ')}` : '';
-  const diagnostics = { limiter: limiter.metrics(), global_checks_ran: shouldRunGlobalChecks, entity_list_requests_per_lot: limiter.metrics().list_requests, average_list_reads_per_book: batch.length ? Math.round((limiter.metrics().list_requests / batch.length) * 1000) / 1000 : 0, list_reads_per_minute: limiter.metrics().list_requests_per_minute, simultaneous_treatments: 1, rate_limit_retries: limiter.metrics().rate_limit_retries, checkpoint_start: confirmedStartLine, checkpoint_confirmed: confirmedLine, written_before_interruption: stats.booksCreated + stats.booksUpdated + stats.offersCreated + stats.offersUpdated, write_diagnostics: writeDiagnostics };
+  const diagnostics = { limiter: limiter.metrics(), global_checks_ran: shouldRunGlobalChecks, entity_list_requests_per_lot: limiter.metrics().list_requests, average_list_reads_per_book: batch.length ? Math.round((limiter.metrics().list_requests / batch.length) * 1000) / 1000 : 0, list_reads_per_minute: limiter.metrics().list_requests_per_minute, simultaneous_treatments: 1, rate_limit_retries: limiter.metrics().rate_limit_retries, checkpoint_start: confirmedStartLine, checkpoint_confirmed: confirmedLine, write_chunk_size: writeDiagnostics.write_chunk_size || 400, write_chunks: writeDiagnostics.write_chunks || {}, written_before_interruption: stats.booksCreated + stats.booksUpdated + stats.offersCreated + stats.offersUpdated, write_diagnostics: writeDiagnostics };
 
   await base44.asServiceRole.entities.ImportLog.update(log.id, {
     finished_at: now,
@@ -395,7 +395,7 @@ async function handleStep(base44, batchSize, limiter) {
     offers_created: Number(run.offers_created || 0) + stats.offersCreated,
     offers_updated: Number(run.offers_updated || 0) + stats.offersUpdated,
     rows_rejected: Number(run.rows_rejected || 0) + stats.rowsRejected,
-    errors: Number(run.errors || 0) + stats.errors,
+    errors: stats.errors ? Number(run.errors || 0) + stats.errors : Number(run.errors || 0),
     checks_json: shouldRunGlobalChecks ? { ...checks, diagnostics } : run.checks_json,
     paused_reason: pausedReason,
     last_batch_at: now,
