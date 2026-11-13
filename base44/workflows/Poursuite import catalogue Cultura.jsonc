@@ -20,7 +20,7 @@
     "document": {
       "dsl": "1.0.0",
       "name": "poursuite_import_catalogue_cultura",
-      "version": "1.1",
+      "version": "1.2",
       "namespace": "base44"
     },
     "do": [
@@ -33,18 +33,19 @@
               "action": "step",
               "batch_size": 2000,
               "auto_chain": true,
-              "max_steps": 3
+              "automation": true,
+              "max_steps": 8
             }
           },
           "then": "end",
           "x-base44": {
-            "title": "Relancer l\u2019import",
-            "description": "2 000 lignes, auto-reprise"
+            "title": "Battement import",
+            "description": "Lots sans scan global"
           }
         }
       }
     ]
   },
-  "description": "Toutes les 5 minutes, lance runCatalogImport en mode reprise automatique. Le planificateur Base44 n\u2019autorise pas moins de 5 minutes; la fonction encha\u00eene plusieurs lots si le dernier lot date de plus de 5 minutes.",
+  "description": "Toutes les 5 minutes, d\u00e9clenche runCatalogImport avec heartbeat, rattrapage born\u00e9 et contr\u00f4le incr\u00e9mental uniquement. Le contr\u00f4le global complet reste r\u00e9serv\u00e9 \u00e0 l\u2019action checks.",
   "name": "Poursuite import catalogue Cultura"
 }

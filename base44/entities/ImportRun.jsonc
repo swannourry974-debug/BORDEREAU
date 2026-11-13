@@ -55,6 +55,18 @@
     "last_blockage_detected_at": {
       "type": "string"
     },
+    "last_automation_beat": {
+      "type": "string",
+      "description": "Dernier d\u00e9clenchement constat\u00e9 de l'automatisation planifi\u00e9e"
+    },
+    "last_automation_beat_result": {
+      "type": "object",
+      "description": "R\u00e9sultat du dernier d\u00e9clenchement: statut, dur\u00e9e, erreur, lots trait\u00e9s"
+    },
+    "last_global_check_at": {
+      "type": "string",
+      "description": "Dernier contr\u00f4le global complet volontaire ou horaire"
+    },
     "lines_processed": {
       "type": "number",
       "default": 0

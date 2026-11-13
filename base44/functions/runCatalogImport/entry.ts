@@ -16,6 +16,8 @@ const FEEDS = [
 const RUNNING_BLOCKED_MS = 10 * 60 * 1000;
 const AUTO_CHAIN_STALE_MS = 5 * 60 * 1000;
 const AUTO_CHAIN_MAX_MS = 260 * 1000;
+const AUTOMATION_SAFE_MAX_MS = 235 * 1000;
+const GLOBAL_CHECK_MIN_INTERVAL_MS = 60 * 60 * 1000;
 const AUTO_RETRY_DELAYS_MINUTES = [1, 2, 5, 10, 20];
 
 function readSecret(name) { try { return secrets.get(name) || ''; } catch { return ''; } }
@@ -27,6 +29,7 @@ function isStopRequested(run = {}) { return run.stop_requested === true; }
 function ageMs(iso) { const t = Date.parse(iso || ''); return Number.isFinite(t) ? Date.now() - t : Infinity; }
 function isoInMinutes(minutes) { return new Date(Date.now() + minutes * 60 * 1000).toISOString(); }
 function retryDelayMinutes(attempt) { return AUTO_RETRY_DELAYS_MINUTES[Math.min(Math.max(0, attempt - 1), AUTO_RETRY_DELAYS_MINUTES.length - 1)]; }
+function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 function failCheck(checks, key, value, threshold) { checks.ok = false; checks.failed.push(key); checks.metrics[key] = { value, threshold }; }
 function buildGlobalChecks(books = [], offers = [], batchStats = {}) {
   const checks = emptyChecks();
@@ -65,6 +68,29 @@ function buildGlobalChecks(books = [], offers = [], batchStats = {}) {
   if (missingPriceRate > 0.05) failCheck(checks, 'missing_price_rate', missingPriceRate, 0.05);
   if (missingImageRate > 0.05) failCheck(checks, 'missing_image_rate', missingImageRate, 0.05);
   if (missingMerchantUrlRate > 0.05) failCheck(checks, 'missing_merchant_url_rate', missingMerchantUrlRate, 0.05);
+  if (rejectionRate > 0.4) failCheck(checks, 'rejection_rate', rejectionRate, 0.4);
+  if (checks.metrics.write_errors > 0) failCheck(checks, 'write_errors', checks.metrics.write_errors, 0);
+  checks.checked_at = new Date().toISOString();
+  return checks;
+}
+
+function buildIncrementalChecks(batchStats = {}, rawQuality = {}) {
+  const checks = emptyChecks();
+  const lines = Math.max(1, Number(batchStats.lines || batchStats.productsProcessed || 0));
+  const rejectionRate = Number(batchStats.rows_rejected || 0) / lines;
+  const missingPriceRate = Number(rawQuality.missing_price || 0) / lines;
+  const missingImageRate = Number(rawQuality.missing_image || 0) / lines;
+  const missingMerchantUrlRate = Number(rawQuality.missing_merchant_url || 0) / lines;
+  checks.scan_scope = 'incremental';
+  checks.scope = 'current_batch';
+  checks.metrics = {
+    rejection_rate: rejectionRate,
+    missing_price_rate: missingPriceRate,
+    missing_image_rate: missingImageRate,
+    missing_merchant_url_rate: missingMerchantUrlRate,
+    write_errors: Number(batchStats.errors || 0),
+    lines,
+  };
   if (rejectionRate > 0.4) failCheck(checks, 'rejection_rate', rejectionRate, 0.4);
   if (checks.metrics.write_errors > 0) failCheck(checks, 'write_errors', checks.metrics.write_errors, 0);
   checks.checked_at = new Date().toISOString();
@@ -160,7 +186,7 @@ async function applyBulkUpdate(entity, updates, limiter, label) {
 async function ensureRuns(base44, limiter = null) {
   const existing = rowsFrom(await limitedList(limiter, 'ImportRun.filter', () => base44.asServiceRole.entities.ImportRun.filter({}, { sort: 'feed_order', limit: 20 })));
   const byFeed = new Map(existing.map(run => [run.feed_id, run]));
-  const missing = FEEDS.filter(feed => !byFeed.has(feed.feed_id)).map(feed => ({ ...feed, checkpoint_line: 0, status: 'pending', stop_requested: false, auto_recovery_attempts: 0, lines_processed: 0, books_created: 0, books_updated: 0, offers_created: 0, offers_updated: 0, rows_rejected: 0, errors: 0, checks_json: emptyChecks() }));
+  const missing = FEEDS.filter(feed => !byFeed.has(feed.feed_id)).map(feed => ({ ...feed, checkpoint_line: 0, status: 'pending', stop_requested: false, auto_recovery_attempts: 0, last_automation_beat_result: {}, lines_processed: 0, books_created: 0, books_updated: 0, offers_created: 0, offers_updated: 0, rows_rejected: 0, errors: 0, checks_json: emptyChecks() }));
   if (missing.length) await base44.asServiceRole.entities.ImportRun.bulkCreate(missing);
   return rowsFrom(await limitedList(limiter, 'ImportRun.filter', () => base44.asServiceRole.entities.ImportRun.filter({}, { sort: 'feed_order', limit: 20 }))).filter(run => FEEDS.some(feed => feed.feed_id === run.feed_id));
 }
@@ -197,6 +223,24 @@ async function logImportEvent(base44, limiter, run, eventType, cause, extra = {}
     control_report: { event_type: eventType, cause, checkpoint_line: Number(run?.checkpoint_line || 0), previous_status: run?.status || '', stop_requested: isStopRequested(run), ...extra, no_deletion: true, no_merge: true, no_secret_or_datafeed_url_exposed: true },
   };
   await limitedWrite(limiter, 'ImportLog.create', () => base44.asServiceRole.entities.ImportLog.create(payload));
+}
+
+async function updateAutomationHeartbeat(base44, limiter, run, result = {}) {
+  if (!run?.id) return;
+  const now = new Date().toISOString();
+  await limitedWrite(limiter, 'ImportRun.update.heartbeat', () => base44.asServiceRole.entities.ImportRun.update(run.id, {
+    last_automation_beat: now,
+    last_automation_beat_result: {
+      at: now,
+      status: result.status || 'ok',
+      ok: result.ok !== false,
+      duration_ms: Number(result.duration_ms || 0),
+      steps_executed: Number(result.steps_executed || 0),
+      checkpoint_line: Number(result.checkpoint_line || run.checkpoint_line || 0),
+      error: result.error || '',
+      attempt: Number(result.attempt || 0),
+    },
+  }));
 }
 
 async function recoverImportState(base44, limiter, trigger = 'step') {
@@ -301,7 +345,7 @@ async function handleChecks(base44, limiter) {
   const checks = await runControls(base44, { lines: 1 }, limiter);
   const runs = await ensureRuns(base44, limiter);
   const target = runs.find(run => run.status === 'running') || runs.find(run => run.status === 'paused') || runs[0];
-  if (target) await base44.asServiceRole.entities.ImportRun.update(target.id, { checks_json: checks });
+  if (target) await base44.asServiceRole.entities.ImportRun.update(target.id, { checks_json: checks, last_global_check_at: new Date().toISOString() });
   return statusPayload(await ensureRuns(base44, limiter), checks);
 }
 
@@ -334,7 +378,7 @@ async function pauseAfterRateLimit(base44, run, log, stats, error, confirmedLine
   return { ok: false, action: 'step', paused: true, rate_limited: true, checkpoint_line: confirmedLine, stats, limiter: limiter.metrics(), no_deletion: true, no_secret_or_datafeed_url_exposed: true };
 }
 
-async function handleStepSingle(base44, batchSize, limiter) {
+async function handleStepSingle(base44, batchSize, limiter, options = {}) {
   const size = Math.max(1, Math.min(Number(batchSize || 500), 2000));
   const run = await currentRunForStep(base44, limiter);
   if (!run) return { ok: true, idle: true, reason: 'Aucun flux running, ou import non démarré', ...(await handleStatus(base44, limiter)) };
@@ -430,11 +474,8 @@ async function handleStepSingle(base44, batchSize, limiter) {
   }
 
   const completed = reachedEnd && scanned < size;
-  const previousLines = Number(run.lines_processed || 0);
-  const nextLines = previousLines + scanned;
-  const globalCheckWindow = Math.max(1, size) * 5;
-  const shouldRunGlobalChecks = completed || previousLines === 0 || Math.floor(previousLines / globalCheckWindow) !== Math.floor(nextLines / globalCheckWindow);
-  let checks = run.checks_json && run.checks_json.scan_scope === 'global' ? run.checks_json : emptyChecks();
+  const shouldRunGlobalChecks = options.allowGlobalCheck === true && (completed || ageMs(run.last_global_check_at) > GLOBAL_CHECK_MIN_INTERVAL_MS);
+  let checks = buildIncrementalChecks({ lines: scanned, rows_rejected: stats.rowsRejected, errors: stats.errors }, rawQuality);
   try {
     if (shouldRunGlobalChecks) checks = await runControls(base44, { lines: scanned, rows_rejected: stats.rowsRejected, errors: stats.errors, ...rawQuality }, limiter);
   } catch (error) {
@@ -443,10 +484,10 @@ async function handleStepSingle(base44, batchSize, limiter) {
   }
 
   const now = new Date().toISOString();
-  const paused = shouldRunGlobalChecks && !checks.ok;
+  const paused = !checks.ok;
   const nextStatus = paused ? 'paused' : (completed ? 'completed' : 'running');
-  const pausedReason = paused ? `Contrôle global échoué: ${checks.failed.join(', ')}` : '';
-  const diagnostics = { limiter: limiter.metrics(), global_checks_ran: shouldRunGlobalChecks, entity_list_requests_per_lot: limiter.metrics().list_requests, average_list_reads_per_book: batch.length ? Math.round((limiter.metrics().list_requests / batch.length) * 1000) / 1000 : 0, list_reads_per_minute: limiter.metrics().list_requests_per_minute, simultaneous_treatments: 1, rate_limit_retries: limiter.metrics().rate_limit_retries, checkpoint_start: confirmedStartLine, checkpoint_confirmed: confirmedLine, write_chunk_size: writeDiagnostics.write_chunk_size || 400, write_chunks: writeDiagnostics.write_chunks || {}, written_before_interruption: stats.booksCreated + stats.booksUpdated + stats.offersCreated + stats.offersUpdated, write_diagnostics: writeDiagnostics };
+  const pausedReason = paused ? `Anomalie de données détectée: ${checks.failed.join(', ')}` : '';
+  const diagnostics = { limiter: limiter.metrics(), global_checks_ran: shouldRunGlobalChecks, incremental_check: checks.scan_scope === 'incremental', entity_list_requests_per_lot: limiter.metrics().list_requests, average_list_reads_per_book: batch.length ? Math.round((limiter.metrics().list_requests / batch.length) * 1000) / 1000 : 0, list_reads_per_minute: limiter.metrics().list_requests_per_minute, simultaneous_treatments: 1, rate_limit_retries: limiter.metrics().rate_limit_retries, checkpoint_start: confirmedStartLine, checkpoint_confirmed: confirmedLine, write_chunk_size: writeDiagnostics.write_chunk_size || 400, write_chunks: writeDiagnostics.write_chunks || {}, written_before_interruption: stats.booksCreated + stats.booksUpdated + stats.offersCreated + stats.offersUpdated, write_diagnostics: writeDiagnostics };
 
   await base44.asServiceRole.entities.ImportLog.update(log.id, {
     finished_at: now,
@@ -475,7 +516,8 @@ async function handleStepSingle(base44, batchSize, limiter) {
     offers_updated: Number(run.offers_updated || 0) + stats.offersUpdated,
     rows_rejected: Number(run.rows_rejected || 0) + stats.rowsRejected,
     errors: stats.errors ? Number(run.errors || 0) + stats.errors : Number(run.errors || 0),
-    checks_json: shouldRunGlobalChecks ? { ...checks, diagnostics } : run.checks_json,
+    checks_json: { ...checks, diagnostics },
+    last_global_check_at: shouldRunGlobalChecks ? now : run.last_global_check_at,
     paused_reason: pausedReason,
     last_batch_at: now,
     finished_at: completed ? now : run.finished_at,
@@ -492,7 +534,8 @@ async function handleStep(base44, batchSize, limiter, options = {}) {
   const initialRunning = runs.find(run => run.status === 'running' && !isStopRequested(run));
   const staleAtStart = initialRunning ? ageMs(initialRunning.last_batch_at || initialRunning.started_at) > AUTO_CHAIN_STALE_MS : false;
   const autoChain = options.autoChain === true || staleAtStart;
-  const maxSteps = autoChain ? Math.max(1, Math.min(Number(options.maxSteps || 3), 10)) : 1;
+  const maxSteps = autoChain ? Math.max(1, Math.min(Number(options.maxSteps || 3), 12)) : 1;
+  const maxMs = Math.max(30000, Math.min(Number(options.maxMs || AUTO_CHAIN_MAX_MS), AUTO_CHAIN_MAX_MS));
   const startedAt = Date.now();
   const results = [];
   const recoveries = [];
@@ -502,14 +545,44 @@ async function handleStep(base44, batchSize, limiter, options = {}) {
     if (recovery.recovered) recoveries.push(recovery);
     if (recovery.stopped || recovery.waiting_retry) return { ok: true, action: 'step', auto_chain: autoChain, stopped: recovery.stopped || false, waiting_retry: recovery.waiting_retry || false, recovery, steps_executed: results.length, results, no_deletion: true, no_secret_or_datafeed_url_exposed: true };
 
-    const result = await handleStepSingle(base44, batchSize, limiter);
+    const result = await handleStepSingle(base44, batchSize, limiter, { allowGlobalCheck: options.allowGlobalCheck === true });
     results.push(result);
     if (!autoChain || result.busy || result.paused || result.completed || result.ok === false) break;
-    if (Date.now() - startedAt > AUTO_CHAIN_MAX_MS) break;
+    if (Date.now() - startedAt > maxMs) break;
   }
 
   if (!autoChain && results.length === 1) return { ...results[0], recoveries };
   return { ok: results.every(result => result.ok !== false), action: 'step_auto_chain', auto_chain: true, steps_executed: results.length, recoveries, results, no_deletion: true, no_secret_or_datafeed_url_exposed: true };
+}
+
+async function handleAutomationStep(base44, body, limiter) {
+  const startedAt = Date.now();
+  const runs = await ensureRuns(base44, limiter);
+  const active = runs.find(run => ['running', 'paused', 'failed'].includes(run.status)) || runs.find(run => run.status === 'pending') || runs[0];
+  if (active) await updateAutomationHeartbeat(base44, limiter, active, { status: 'started', ok: true, duration_ms: 0, checkpoint_line: active.checkpoint_line });
+  const retryDelays = [3000, 9000, 18000];
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    try {
+      const result = await handleStep(base44, body.batch_size, limiter, { autoChain: true, maxSteps: body.max_steps || 8, maxMs: AUTOMATION_SAFE_MAX_MS, allowGlobalCheck: false });
+      const lastResult = [...(result.results || [])].reverse().find(item => item?.checkpoint_line) || result;
+      if (active) await updateAutomationHeartbeat(base44, limiter, active, { status: result.ok === false ? 'error' : 'ok', ok: result.ok !== false, duration_ms: Date.now() - startedAt, steps_executed: result.steps_executed || 1, checkpoint_line: lastResult.checkpoint_line || active.checkpoint_line, error: result.ok === false ? (result.reason || 'Résultat import négatif') : '', attempt });
+      return { ok: result.ok !== false, action: 'automation_step', steps_executed: result.steps_executed || 1, checkpoint_line: lastResult.checkpoint_line || active?.checkpoint_line || 0, duration_ms: Date.now() - startedAt, recoveries: result.recoveries || [], no_deletion: true, no_secret_or_datafeed_url_exposed: true };
+    } catch (error) {
+      lastError = error;
+      if (active) await updateAutomationHeartbeat(base44, limiter, active, { status: 'error', ok: false, duration_ms: Date.now() - startedAt, steps_executed: 0, checkpoint_line: active.checkpoint_line, error: error.message, attempt });
+      if (attempt < 3) await sleep(retryDelays[attempt - 1]);
+    }
+  }
+
+  const refreshed = active?.id ? await base44.asServiceRole.entities.ImportRun.get(active.id).catch(() => active) : active;
+  if (refreshed?.id) {
+    const cause = `Échec automatisation après 3 essais: ${lastError?.message || 'erreur inconnue'}`;
+    await logImportEvent(base44, limiter, refreshed, 'automation_failure', cause, { duration_ms: Date.now() - startedAt, retries: 3 });
+    await base44.asServiceRole.entities.ImportRun.update(refreshed.id, { status: isStopRequested(refreshed) ? refreshed.status : 'running', paused_reason: cause, next_retry_at: isoInMinutes(1), last_auto_recovery_at: new Date().toISOString() });
+  }
+  return { ok: false, action: 'automation_step', error: lastError?.message || 'erreur inconnue', duration_ms: Date.now() - startedAt, retries: 3, no_deletion: true, no_secret_or_datafeed_url_exposed: true };
 }
 
 async function handleDedupe(base44, limit, limiter) {
@@ -616,7 +689,8 @@ export default async function(req) {
     if (action === 'stop') return Response.json(await handleStop(base44, String(body.reason || '').trim(), limiter));
     if (action === 'status') return Response.json({ ...(await handleStatus(base44, limiter)), diagnostics: { limiter: limiter.metrics() } });
     if (action === 'checks') return Response.json({ ...(await handleChecks(base44, limiter)), diagnostics: { limiter: limiter.metrics() } });
-    if (action === 'step') return Response.json(await handleStep(base44, body.batch_size, limiter, { autoChain: body.auto_chain === true, maxSteps: body.max_steps }));
+    if (action === 'step' && body.automation === true) return Response.json(await handleAutomationStep(base44, body, limiter));
+    if (action === 'step') return Response.json(await handleStep(base44, body.batch_size, limiter, { autoChain: body.auto_chain === true, maxSteps: body.max_steps, allowGlobalCheck: body.force_global_check === true }));
     if (action === 'dedupe') return Response.json(await handleDedupe(base44, body.limit, limiter));
     if (action === 'daily_sync_skeleton') return Response.json(await handleDailySkeleton(base44, limiter));
     return Response.json({ error: 'Action inconnue' }, { status: 400 });
