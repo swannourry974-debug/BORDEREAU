@@ -29,6 +29,32 @@
       ],
       "default": "pending"
     },
+    "stop_requested": {
+      "type": "boolean",
+      "default": false,
+      "description": "Arr\u00eat volontaire explicite demand\u00e9 par Swanny; seul motif autoris\u00e9 pour ne pas relancer automatiquement"
+    },
+    "stop_requested_at": {
+      "type": "string"
+    },
+    "stop_requested_reason": {
+      "type": "string"
+    },
+    "auto_recovery_attempts": {
+      "type": "number",
+      "default": 0,
+      "description": "Nombre de tentatives de relance automatique depuis le dernier lot r\u00e9ussi"
+    },
+    "next_retry_at": {
+      "type": "string",
+      "description": "Date ISO de prochaine tentative automatique apr\u00e8s \u00e9chec technique"
+    },
+    "last_auto_recovery_at": {
+      "type": "string"
+    },
+    "last_blockage_detected_at": {
+      "type": "string"
+    },
     "lines_processed": {
       "type": "number",
       "default": 0

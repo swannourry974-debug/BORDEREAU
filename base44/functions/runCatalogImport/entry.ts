@@ -13,11 +13,20 @@ const FEEDS = [
   { feed_id: '101385', feed_name: 'LITTERATURE', feed_order: 5, expected_lines: 47 },
 ];
 
+const RUNNING_BLOCKED_MS = 10 * 60 * 1000;
+const AUTO_CHAIN_STALE_MS = 5 * 60 * 1000;
+const AUTO_CHAIN_MAX_MS = 260 * 1000;
+const AUTO_RETRY_DELAYS_MINUTES = [1, 2, 5, 10, 20];
+
 function readSecret(name) { try { return secrets.get(name) || ''; } catch { return ''; } }
 function rowsFrom(page) { return page.items || page || []; }
 function sum(runs, field) { return runs.reduce((total, run) => total + Number(run[field] || 0), 0); }
 function feedMeta(feedId) { return FEEDS.find(feed => feed.feed_id === String(feedId || '').trim()) || null; }
 function emptyChecks() { return { ok: true, failed: [], metrics: {}, thresholds: { missing_row_field_rate: 0.05, rejection_rate: 0.4 }, no_deletion: true }; }
+function isStopRequested(run = {}) { return run.stop_requested === true; }
+function ageMs(iso) { const t = Date.parse(iso || ''); return Number.isFinite(t) ? Date.now() - t : Infinity; }
+function isoInMinutes(minutes) { return new Date(Date.now() + minutes * 60 * 1000).toISOString(); }
+function retryDelayMinutes(attempt) { return AUTO_RETRY_DELAYS_MINUTES[Math.min(Math.max(0, attempt - 1), AUTO_RETRY_DELAYS_MINUTES.length - 1)]; }
 function failCheck(checks, key, value, threshold) { checks.ok = false; checks.failed.push(key); checks.metrics[key] = { value, threshold }; }
 function buildGlobalChecks(books = [], offers = [], batchStats = {}) {
   const checks = emptyChecks();
@@ -64,6 +73,7 @@ function buildGlobalChecks(books = [], offers = [], batchStats = {}) {
 function uniqueValues(values = []) { return [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))]; }
 function chunks(values = [], size = 500) { const output = []; for (let i = 0; i < values.length; i += size) output.push(values.slice(i, i + size)); return output; }
 async function limitedList(limiter, label, run) { return limiter ? await limiter.list(run, label) : await run(); }
+async function limitedWrite(limiter, label, run) { return limiter ? await limiter.write(run, label) : await run(); }
 async function filterInChunks(base44, limiter, entityName, field, values, extraQuery = {}) {
   const output = [];
   for (const chunk of chunks(uniqueValues(values), 500)) {
@@ -150,7 +160,7 @@ async function applyBulkUpdate(entity, updates, limiter, label) {
 async function ensureRuns(base44, limiter = null) {
   const existing = rowsFrom(await limitedList(limiter, 'ImportRun.filter', () => base44.asServiceRole.entities.ImportRun.filter({}, { sort: 'feed_order', limit: 20 })));
   const byFeed = new Map(existing.map(run => [run.feed_id, run]));
-  const missing = FEEDS.filter(feed => !byFeed.has(feed.feed_id)).map(feed => ({ ...feed, checkpoint_line: 0, status: 'pending', lines_processed: 0, books_created: 0, books_updated: 0, offers_created: 0, offers_updated: 0, rows_rejected: 0, errors: 0, checks_json: emptyChecks() }));
+  const missing = FEEDS.filter(feed => !byFeed.has(feed.feed_id)).map(feed => ({ ...feed, checkpoint_line: 0, status: 'pending', stop_requested: false, auto_recovery_attempts: 0, lines_processed: 0, books_created: 0, books_updated: 0, offers_created: 0, offers_updated: 0, rows_rejected: 0, errors: 0, checks_json: emptyChecks() }));
   if (missing.length) await base44.asServiceRole.entities.ImportRun.bulkCreate(missing);
   return rowsFrom(await limitedList(limiter, 'ImportRun.filter', () => base44.asServiceRole.entities.ImportRun.filter({}, { sort: 'feed_order', limit: 20 }))).filter(run => FEEDS.some(feed => feed.feed_id === run.feed_id));
 }
@@ -160,6 +170,61 @@ async function resolveFeed(feedUrl, token, feedId) {
   const selected = findCulturaFeedById(rows, feedId);
   if (!selected) throw new Error(`Flux Cultura ${feedId} introuvable dans la liste Awin`);
   return selected;
+}
+
+async function logImportEvent(base44, limiter, run, eventType, cause, extra = {}) {
+  const now = new Date().toISOString();
+  const payload = {
+    started_at: now,
+    finished_at: now,
+    import_mode: 'execution',
+    feed_id: run?.feed_id || '',
+    feed_name: run?.feed_name || '',
+    products_processed: 0,
+    rows_rejected: 0,
+    books_created: 0,
+    books_updated: 0,
+    offers_created: 0,
+    offers_updated: 0,
+    duplicates: 0,
+    duplicates_in_feed: 0,
+    duplicates_cross_feed: 0,
+    errors: eventType === 'failure' ? 1 : 0,
+    status: eventType === 'failure' ? 'failed' : 'partial',
+    error_message: cause,
+    source_retailer: AWIN_RETAILER,
+    line_checkpoint: Number(run?.checkpoint_line || 0),
+    control_report: { event_type: eventType, cause, checkpoint_line: Number(run?.checkpoint_line || 0), previous_status: run?.status || '', stop_requested: isStopRequested(run), ...extra, no_deletion: true, no_merge: true, no_secret_or_datafeed_url_exposed: true },
+  };
+  await limitedWrite(limiter, 'ImportLog.create', () => base44.asServiceRole.entities.ImportLog.create(payload));
+}
+
+async function recoverImportState(base44, limiter, trigger = 'step') {
+  const runs = await ensureRuns(base44, limiter);
+  const now = new Date().toISOString();
+  const active = runs.find(run => ['running', 'paused', 'failed'].includes(run.status)) || null;
+  if (!active) return { recovered: false, reason: 'Aucun flux actif' };
+  if (isStopRequested(active)) return { stopped: true, feed_id: active.feed_id, feed_name: active.feed_name, checkpoint_line: Number(active.checkpoint_line || 0), reason: 'Arrêt volontaire demandé' };
+
+  if (active.status === 'running' && ageMs(active.last_batch_at || active.started_at) > RUNNING_BLOCKED_MS) {
+    const cause = `Import bloqué: status running sans lot depuis plus de 10 minutes`;
+    await logImportEvent(base44, limiter, active, 'blocked_detected', cause, { trigger, last_batch_at: active.last_batch_at || '', blocked_age_minutes: Math.round(ageMs(active.last_batch_at || active.started_at) / 60000) });
+    await base44.asServiceRole.entities.ImportRun.update(active.id, { status: 'running', paused_reason: '', last_blockage_detected_at: now, last_auto_recovery_at: now, stop_requested: false });
+    return { recovered: true, event: 'blocked_detected', feed_id: active.feed_id, checkpoint_line: Number(active.checkpoint_line || 0), cause };
+  }
+
+  if (['failed', 'paused'].includes(active.status)) {
+    const dueAt = Date.parse(active.next_retry_at || '') || 0;
+    if (dueAt > Date.now()) return { waiting_retry: true, feed_id: active.feed_id, checkpoint_line: Number(active.checkpoint_line || 0), next_retry_at: active.next_retry_at };
+    const attempt = Number(active.auto_recovery_attempts || 0) + 1;
+    const delay = retryDelayMinutes(attempt);
+    const cause = `Relance automatique ${attempt}: ancien status ${active.status}${active.paused_reason ? ` · ${active.paused_reason}` : ''}`;
+    await logImportEvent(base44, limiter, active, 'auto_recovery', cause, { trigger, attempt, next_retry_delay_minutes: delay });
+    await base44.asServiceRole.entities.ImportRun.update(active.id, { status: 'running', paused_reason: '', last_auto_recovery_at: now, auto_recovery_attempts: attempt, next_retry_at: isoInMinutes(delay), stop_requested: false, finished_at: null });
+    return { recovered: true, event: 'auto_recovery', feed_id: active.feed_id, checkpoint_line: Number(active.checkpoint_line || 0), attempt, next_retry_delay_minutes: delay, cause };
+  }
+
+  return { recovered: false, reason: 'Flux actif non bloqué' };
 }
 
 async function runControls(base44, batchStats = {}, limiter = null) {
@@ -194,8 +259,8 @@ function statusPayload(runs, checks) {
 async function handleStart(base44, limiter) {
   const runs = await ensureRuns(base44, limiter);
   const now = new Date().toISOString();
-  const firstRunnable = runs.find((run, index) => ['pending', 'paused'].includes(run.status) && (index === 0 || runs[index - 1]?.status === 'completed'));
-  if (firstRunnable) await base44.asServiceRole.entities.ImportRun.update(firstRunnable.id, { status: 'running', paused_reason: '', started_at: firstRunnable.started_at || now, last_batch_at: now });
+  const firstRunnable = runs.find((run, index) => ['pending', 'paused', 'failed'].includes(run.status) && !isStopRequested(run) && (index === 0 || runs[index - 1]?.status === 'completed'));
+  if (firstRunnable) await base44.asServiceRole.entities.ImportRun.update(firstRunnable.id, { status: 'running', paused_reason: '', stop_requested: false, stop_requested_reason: '', auto_recovery_attempts: 0, next_retry_at: null, started_at: firstRunnable.started_at || now, last_batch_at: now });
   return statusPayload(await ensureRuns(base44, limiter), null);
 }
 
@@ -204,16 +269,27 @@ async function handleResume(base44, limiter) {
   const now = new Date().toISOString();
   const resumable = runs.find(run => ['paused', 'failed'].includes(run.status));
   if (!resumable) return { ok: true, resumed: false, reason: 'Aucun flux paused ou failed à reprendre', ...(await handleStatus(base44, limiter)) };
-  await base44.asServiceRole.entities.ImportRun.update(resumable.id, { status: 'running', paused_reason: '', last_batch_at: now, finished_at: null });
+  await logImportEvent(base44, limiter, resumable, 'manual_resume', `Reprise explicite depuis ${resumable.status}`, { previous_status: resumable.status });
+  await base44.asServiceRole.entities.ImportRun.update(resumable.id, { status: 'running', paused_reason: '', stop_requested: false, stop_requested_reason: '', auto_recovery_attempts: 0, next_retry_at: null, last_auto_recovery_at: now, last_batch_at: now, finished_at: null });
   return { ok: true, resumed: true, feed_id: resumable.feed_id, feed_name: resumable.feed_name, previous_status: resumable.status, checkpoint_line: Number(resumable.checkpoint_line || 0), counters_preserved: { lines_processed: Number(resumable.lines_processed || 0), books_created: Number(resumable.books_created || 0), books_updated: Number(resumable.books_updated || 0), offers_created: Number(resumable.offers_created || 0), offers_updated: Number(resumable.offers_updated || 0), rows_rejected: Number(resumable.rows_rejected || 0), errors: Number(resumable.errors || 0) }, ...(await handleStatus(base44, limiter)) };
 }
 
 async function handlePause(base44, reason, limiter) {
   const runs = await ensureRuns(base44, limiter);
   const now = new Date().toISOString();
-  const updates = runs.filter(run => run.status === 'running').map(run => ({ id: run.id, status: 'paused', paused_reason: reason || 'Pause manuelle', last_batch_at: now }));
+  const updates = runs.filter(run => run.status === 'running').map(run => ({ id: run.id, status: 'paused', paused_reason: reason || 'Pause technique', last_batch_at: now }));
+  for (const run of runs.filter(run => run.status === 'running')) await logImportEvent(base44, limiter, run, 'technical_pause', reason || 'Pause technique sans arrêt volontaire', { checkpoint_line: Number(run.checkpoint_line || 0) });
   if (updates.length) await base44.asServiceRole.entities.ImportRun.bulkUpdate(updates);
   return statusPayload(await ensureRuns(base44, limiter), null);
+}
+
+async function handleStop(base44, reason, limiter) {
+  const runs = await ensureRuns(base44, limiter);
+  const now = new Date().toISOString();
+  const targets = runs.filter(run => ['running', 'paused', 'failed', 'pending'].includes(run.status));
+  for (const run of targets) await logImportEvent(base44, limiter, run, 'manual_stop', reason || 'Arrêt volontaire demandé par Swanny', { checkpoint_line: Number(run.checkpoint_line || 0) });
+  if (targets.length) await base44.asServiceRole.entities.ImportRun.bulkUpdate(targets.map(run => ({ id: run.id, status: run.status === 'completed' ? 'completed' : 'paused', stop_requested: true, stop_requested_at: now, stop_requested_reason: reason || 'Arrêt volontaire demandé par Swanny', paused_reason: reason || 'Arrêt volontaire demandé par Swanny', next_retry_at: null, last_batch_at: now })));
+  return { ok: true, stopped: targets.length, ...(await handleStatus(base44, limiter)) };
 }
 
 async function handleStatus(base44, limiter) {
@@ -231,11 +307,13 @@ async function handleChecks(base44, limiter) {
 
 async function currentRunForStep(base44, limiter) {
   const runs = await ensureRuns(base44, limiter);
-  const running = runs.find(run => run.status === 'running');
+  const stopped = runs.find(run => ['running', 'paused', 'failed', 'pending'].includes(run.status) && isStopRequested(run));
+  if (stopped) return null;
+  const running = runs.find(run => run.status === 'running' && !isStopRequested(run));
   if (running) return running;
   const hasStarted = runs.some(run => ['running', 'paused', 'completed', 'failed'].includes(run.status));
   if (!hasStarted) return null;
-  const nextPending = runs.find((run, index) => run.status === 'pending' && index > 0 && runs[index - 1]?.status === 'completed');
+  const nextPending = runs.find((run, index) => run.status === 'pending' && !isStopRequested(run) && index > 0 && runs[index - 1]?.status === 'completed');
   if (!nextPending) return null;
   const now = new Date().toISOString();
   await base44.asServiceRole.entities.ImportRun.update(nextPending.id, { status: 'running', started_at: nextPending.started_at || now, paused_reason: '', last_batch_at: now });
@@ -252,11 +330,11 @@ async function pauseAfterRateLimit(base44, run, log, stats, error, confirmedLine
   const now = new Date().toISOString();
   const message = `Pause rate limit: ${error.message || error}`;
   await base44.asServiceRole.entities.ImportLog.update(log.id, { finished_at: now, status: 'partial', errors: 1, error_message: message, line_checkpoint: confirmedLine, control_report: { rate_limited: true, limiter: limiter.metrics(), checkpoint_preserved: true } });
-  await base44.asServiceRole.entities.ImportRun.update(run.id, { status: 'paused', errors: Number(run.errors || 0) + 1, paused_reason: message, last_batch_at: now, checkpoint_line: confirmedLine });
+  await base44.asServiceRole.entities.ImportRun.update(run.id, { status: 'paused',     errors: Number(run.errors || 0) + 1, paused_reason: message, next_retry_at: isoInMinutes(retryDelayMinutes(Number(run.auto_recovery_attempts || 0) + 1)), last_batch_at: now, checkpoint_line: confirmedLine });
   return { ok: false, action: 'step', paused: true, rate_limited: true, checkpoint_line: confirmedLine, stats, limiter: limiter.metrics(), no_deletion: true, no_secret_or_datafeed_url_exposed: true };
 }
 
-async function handleStep(base44, batchSize, limiter) {
+async function handleStepSingle(base44, batchSize, limiter) {
   const size = Math.max(1, Math.min(Number(batchSize || 500), 2000));
   const run = await currentRunForStep(base44, limiter);
   if (!run) return { ok: true, idle: true, reason: 'Aucun flux running, ou import non démarré', ...(await handleStatus(base44, limiter)) };
@@ -345,8 +423,9 @@ async function handleStep(base44, batchSize, limiter) {
   } catch (error) {
     stats.errors += 1;
     if (isRateLimitError(error)) return await pauseAfterRateLimit(base44, run, log, stats, error, confirmedLine, limiter);
-    await base44.asServiceRole.entities.ImportLog.update(log.id, { finished_at: new Date().toISOString(), status: 'failed', errors: 1, error_message: error.message, line_checkpoint: confirmedLine });
-    await base44.asServiceRole.entities.ImportRun.update(run.id, { status: 'failed', errors: Number(run.errors || 0) + 1, paused_reason: error.message, last_batch_at: new Date().toISOString(), checkpoint_line: confirmedLine });
+    await base44.asServiceRole.entities.ImportLog.update(log.id, { finished_at: new Date().toISOString(), status: 'failed', errors: 1, error_message: error.message, line_checkpoint: confirmedLine, control_report: { event_type: 'failure', cause: error.message, checkpoint_line: confirmedLine, no_deletion: true, no_merge: true } });
+    await logImportEvent(base44, limiter, run, 'failure', error.message, { checkpoint_line: confirmedLine });
+    await base44.asServiceRole.entities.ImportRun.update(run.id, { status: 'failed', errors: Number(run.errors || 0) + 1, paused_reason: error.message, next_retry_at: isoInMinutes(retryDelayMinutes(Number(run.auto_recovery_attempts || 0) + 1)), last_batch_at: new Date().toISOString(), checkpoint_line: confirmedLine });
     throw error;
   }
 
@@ -400,9 +479,37 @@ async function handleStep(base44, batchSize, limiter) {
     paused_reason: pausedReason,
     last_batch_at: now,
     finished_at: completed ? now : run.finished_at,
+    auto_recovery_attempts: 0,
+    next_retry_at: null,
+    stop_requested: false,
   });
 
   return { ok: checks.ok, action: 'step', feed_id: run.feed_id, feed_name: run.feed_name, scanned_lines: scanned, checkpoint_line: confirmedLine, completed, paused, paused_reason: pausedReason, stats, rejection_reasons: rejectionReasons, checks, diagnostics, examples_written: examples, no_deletion: true, no_secret_or_datafeed_url_exposed: true };
+}
+
+async function handleStep(base44, batchSize, limiter, options = {}) {
+  const runs = await ensureRuns(base44, limiter);
+  const initialRunning = runs.find(run => run.status === 'running' && !isStopRequested(run));
+  const staleAtStart = initialRunning ? ageMs(initialRunning.last_batch_at || initialRunning.started_at) > AUTO_CHAIN_STALE_MS : false;
+  const autoChain = options.autoChain === true || staleAtStart;
+  const maxSteps = autoChain ? Math.max(1, Math.min(Number(options.maxSteps || 3), 10)) : 1;
+  const startedAt = Date.now();
+  const results = [];
+  const recoveries = [];
+
+  for (let i = 0; i < maxSteps; i += 1) {
+    const recovery = await recoverImportState(base44, limiter, `step_${i + 1}`);
+    if (recovery.recovered) recoveries.push(recovery);
+    if (recovery.stopped || recovery.waiting_retry) return { ok: true, action: 'step', auto_chain: autoChain, stopped: recovery.stopped || false, waiting_retry: recovery.waiting_retry || false, recovery, steps_executed: results.length, results, no_deletion: true, no_secret_or_datafeed_url_exposed: true };
+
+    const result = await handleStepSingle(base44, batchSize, limiter);
+    results.push(result);
+    if (!autoChain || result.busy || result.paused || result.completed || result.ok === false) break;
+    if (Date.now() - startedAt > AUTO_CHAIN_MAX_MS) break;
+  }
+
+  if (!autoChain && results.length === 1) return { ...results[0], recoveries };
+  return { ok: results.every(result => result.ok !== false), action: 'step_auto_chain', auto_chain: true, steps_executed: results.length, recoveries, results, no_deletion: true, no_secret_or_datafeed_url_exposed: true };
 }
 
 async function handleDedupe(base44, limit, limiter) {
@@ -506,9 +613,10 @@ export default async function(req) {
     if (action === 'start') return Response.json(await handleStart(base44, limiter));
     if (action === 'resume') return Response.json(await handleResume(base44, limiter));
     if (action === 'pause') return Response.json(await handlePause(base44, String(body.reason || '').trim(), limiter));
+    if (action === 'stop') return Response.json(await handleStop(base44, String(body.reason || '').trim(), limiter));
     if (action === 'status') return Response.json({ ...(await handleStatus(base44, limiter)), diagnostics: { limiter: limiter.metrics() } });
     if (action === 'checks') return Response.json({ ...(await handleChecks(base44, limiter)), diagnostics: { limiter: limiter.metrics() } });
-    if (action === 'step') return Response.json(await handleStep(base44, body.batch_size, limiter));
+    if (action === 'step') return Response.json(await handleStep(base44, body.batch_size, limiter, { autoChain: body.auto_chain === true, maxSteps: body.max_steps }));
     if (action === 'dedupe') return Response.json(await handleDedupe(base44, body.limit, limiter));
     if (action === 'daily_sync_skeleton') return Response.json(await handleDailySkeleton(base44, limiter));
     return Response.json({ error: 'Action inconnue' }, { status: 400 });
