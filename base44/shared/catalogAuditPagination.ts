@@ -11,11 +11,12 @@ export async function scanAllEntityPages(entity, query = {}, label = 'Entity', l
   const records = [];
 
   while (true) {
-    const run = () => entity.filter(query, { limit, cursor, skip, sort: 'created_date' });
+    const run = () => entity.filter(query, { limit, cursor, sort: 'created_date' });
     const page = limiter ? await limiter.list(run, `${label}.filter`) : await run();
     const items = rowsFrom(page);
     records.push(...items);
     pages += 1;
+    skip += items.length;
 
     if (!page?.has_more) {
       return { label, records, total_scanned: records.length, pages_scanned: pages, final_skip: skip, stopped_on_has_more_false: true };
@@ -26,7 +27,6 @@ export async function scanAllEntityPages(entity, query = {}, label = 'Entity', l
     }
 
     cursor = page.next_cursor;
-    skip += limit;
   }
 }
 

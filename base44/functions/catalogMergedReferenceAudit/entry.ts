@@ -166,27 +166,49 @@ function addReasons(target, reasons = []) {
   for (const reason of reasons) target[reason] = (target[reason] || 0) + 1;
 }
 
+function uniqueValues(values = []) {
+  return [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))];
+}
+
+function chunks(values = [], size = 500) {
+  const output = [];
+  for (let i = 0; i < values.length; i += size) output.push(values.slice(i, i + size));
+  return output;
+}
+
+async function filterInChunks(entity, field, values, label, limiter) {
+  const records = [];
+  const chunked = chunks(uniqueValues(values), 500);
+  for (const chunk of chunked) {
+    const run = () => entity.filter({ [field]: { $in: chunk } }, { limit: chunk.length, sort: 'created_date' });
+    const page = limiter ? await limiter.list(run, `${label}.filter`) : await run();
+    records.push(...(page?.items || page || []));
+  }
+  return { records, batches: chunked.length };
+}
+
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const limiter = createEntityRateLimiter({ listPerMinute: 105, writePerMinute: 1, maxAttempts: 4 });
 
-    const [booksScan, offersScan, realBooksTotal, realMergedBooksTotal, realOffersTotal, realMergedOffersTotal] = await Promise.all([
-      scanAllEntityPages(base44.asServiceRole.entities.Books, {}, 'Books', limiter),
-      scanAllEntityPages(base44.asServiceRole.entities.BookOffers, {}, 'BookOffers', limiter),
+    const [booksScan, realBooksTotal, realMergedBooksTotal, realOffersTotal, realMergedOffersTotal] = await Promise.all([
+      scanAllEntityPages(base44.asServiceRole.entities.Books, { merged: true }, 'Books.merged', limiter),
       base44.asServiceRole.entities.Books.count(),
       base44.asServiceRole.entities.Books.count({ merged: true }),
       base44.asServiceRole.entities.BookOffers.count(),
       base44.asServiceRole.entities.BookOffers.count({ merged: true }),
     ]);
 
-    const allBooks = booksScan.records;
-    const allOffers = offersScan.records;
-    const bookById = new Map(allBooks.map((book) => [book.id, book]));
-    const allBookIds = new Set(allBooks.map((book) => book.id));
-    const mergedBooks = allBooks.filter((book) => book.merged === true);
+    const mergedBooks = booksScan.records;
     const mergedBookIds = new Set(mergedBooks.map((book) => book.id));
     const targetIds = new Set(mergedBooks.map((book) => String(book.merged_into || '').trim()).filter(Boolean));
+    const targetsScan = await filterInChunks(base44.asServiceRole.entities.Books, 'id', [...targetIds], 'Books.targets', limiter);
+    const allBooks = [...mergedBooks, ...targetsScan.records];
+    const bookById = new Map(allBooks.map((book) => [book.id, book]));
+    const allBookIds = new Set(allBooks.map((book) => book.id));
+    const offersScan = await filterInChunks(base44.asServiceRole.entities.BookOffers, 'book_id', [...mergedBookIds, ...targetIds], 'BookOffers.merged_targets', limiter);
+    const allOffers = offersScan.records;
 
     const offersByBookId = new Map();
     const mergedOffers = allOffers.filter((offer) => offer.merged === true);
@@ -270,12 +292,13 @@ export default async function(req) {
       no_secret_exposed: true,
       pagination: {
         limit: AUDIT_PAGE_LIMIT,
-        books_pages_scanned: booksScan.pages_scanned,
-        offers_pages_scanned: offersScan.pages_scanned,
-        stopped_on_has_more_false: booksScan.stopped_on_has_more_false && offersScan.stopped_on_has_more_false,
+        merged_books_pages_scanned: booksScan.pages_scanned,
+        target_books_batches: targetsScan.batches,
+        targeted_offers_batches: offersScan.batches,
+        stopped_on_has_more_false: booksScan.stopped_on_has_more_false,
+        targeted_scope: 'merged_books_plus_canonical_targets',
         logical_skip_progression: true,
         books_final_skip: booksScan.final_skip,
-        offers_final_skip: offersScan.final_skip,
         limiter: limiter.metrics(),
       },
       verification: {
@@ -286,9 +309,9 @@ export default async function(req) {
         total_fusionnees_reel: realMergedBooksTotal,
         total_fusionnees_attendu_7455: mergedBooks.length === 7455,
         total_fusionnees_scannees_egale_total_reel: mergedBooks.length === realMergedBooksTotal,
-        total_offres_scannees: offersScan.total_scanned,
+        total_offres_ciblees_scannees: offersScan.records.length,
         total_offres_reel: realOffersTotal,
-        total_offres_scannees_egale_total_reel: offersScan.total_scanned === realOffersTotal,
+        scan_offres_cible_sur_fusions_uniquement: true,
       },
       archived_offers_presence: {
         total_bookoffers_merged_true: realMergedOffersTotal,

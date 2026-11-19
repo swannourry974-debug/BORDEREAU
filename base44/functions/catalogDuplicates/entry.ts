@@ -1,6 +1,51 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { createEntityRateLimiter, isRateLimitError } from '../../shared/entityRateLimiter.ts';
-import { normalizeText, scanAllEntityPages } from '../../shared/catalogAuditPagination.ts';
+import { normalizeText } from '../../shared/catalogAuditPagination.ts';
+
+function rowsFrom(page) {
+  return page?.rows || page?.items || page || [];
+}
+
+function uniqueValues(values = []) {
+  return [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))];
+}
+
+function chunks(values = [], size = 500) {
+  const output = [];
+  for (let i = 0; i < values.length; i += size) output.push(values.slice(i, i + size));
+  return output;
+}
+
+function groupValue(row = {}, fieldName = '') {
+  return String(row[fieldName] || row._id || row.key || '').trim();
+}
+
+function rowCount(row = {}) {
+  return Number(row.count || row.total || 0);
+}
+
+async function limitedFilter(entity, query, options, label, limiter) {
+  const run = () => entity.filter(query, options);
+  return limiter ? await limiter.list(run, `${label}.filter`) : await run();
+}
+
+async function filterInChunks(entity, field, values, extraQuery, label, limiter) {
+  const records = [];
+  for (const chunk of chunks(uniqueValues(values), 500)) {
+    const page = await limitedFilter(entity, { ...extraQuery, [field]: { $in: chunk } }, { limit: chunk.length, sort: 'created_date' }, label, limiter);
+    records.push(...rowsFrom(page));
+  }
+  return records;
+}
+
+async function aggregateDuplicateKeys(entity, fieldName, query, label, limiter) {
+  const run = () => entity.aggregate({ query, groupBy: fieldName });
+  const result = limiter ? await limiter.list(run, `${label}.aggregate`) : await run();
+  return rowsFrom(result)
+    .map(row => ({ identifier: groupValue(row, fieldName), count: rowCount(row) }))
+    .filter(row => row.identifier && row.count > 1)
+    .sort((a, b) => b.count - a.count || a.identifier.localeCompare(b.identifier));
+}
 
 function firstMeaningful(values) {
   return values.map(value => String(value || '').trim()).filter(Boolean)[0] || '';
@@ -72,6 +117,7 @@ function duplicateGroups(books, offersByBookId, keyField) {
         diagnostic,
         records_count: records.length,
         offers_count: records.reduce((total, record) => total + record.offers_count, 0),
+        canonical_candidate: firstMeaningful(records.map(record => record.id)),
         records,
       };
     });
@@ -97,28 +143,40 @@ function concernedOffers(groups) {
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
+    const body = await req.json().catch(() => ({}));
+    const maxGroups = Math.max(1, Math.min(Number(body.max_groups || 80), 250));
     const limiter = createEntityRateLimiter({ listPerMinute: 105, writePerMinute: 1, maxAttempts: 4 });
+    const activeQuery = { merged: { $ne: true } };
 
-    const [booksScan, offersScan, realBooksTotal, realOffersTotal] = await Promise.all([
-      scanAllEntityPages(base44.asServiceRole.entities.Books, {}, 'Books', limiter),
-      scanAllEntityPages(base44.asServiceRole.entities.BookOffers, {}, 'BookOffers', limiter),
+    const [realBooksTotal, realOffersTotal, activeBooksTotal, activeOffersTotal, productKeys, isbnKeys] = await Promise.all([
       base44.asServiceRole.entities.Books.count(),
       base44.asServiceRole.entities.BookOffers.count(),
+      base44.asServiceRole.entities.Books.count(activeQuery),
+      base44.asServiceRole.entities.BookOffers.count(activeQuery),
+      aggregateDuplicateKeys(base44.asServiceRole.entities.Books, 'product_identifier', activeQuery, 'Books.product_identifier', limiter),
+      aggregateDuplicateKeys(base44.asServiceRole.entities.Books, 'isbn13', { ...activeQuery, isbn13: { $ne: '' } }, 'Books.isbn13', limiter),
     ]);
 
-    const activeBooks = booksScan.records.filter(book => book.merged !== true);
-    const activeOffers = offersScan.records.filter(offer => offer.merged !== true);
+    const sampleProductKeys = productKeys.slice(0, maxGroups).map(row => row.identifier);
+    const sampleIsbnKeys = isbnKeys.slice(0, maxGroups).map(row => row.identifier);
+    const [booksByProductIdentifier, booksByIsbn13] = await Promise.all([
+      filterInChunks(base44.asServiceRole.entities.Books, 'product_identifier', sampleProductKeys, activeQuery, 'Books.product_identifier.sample', limiter),
+      filterInChunks(base44.asServiceRole.entities.Books, 'isbn13', sampleIsbnKeys, activeQuery, 'Books.isbn13.sample', limiter),
+    ]);
+    const sampledBooks = [...new Map([...booksByProductIdentifier, ...booksByIsbn13].map(book => [book.id, book])).values()];
+    const sampledBookIds = sampledBooks.map(book => book.id);
+    const sampledOffers = await filterInChunks(base44.asServiceRole.entities.BookOffers, 'book_id', sampledBookIds, activeQuery, 'BookOffers.sample', limiter);
 
     const offersByBookId = new Map();
-    for (const offer of activeOffers) {
+    for (const offer of sampledOffers) {
       const bookId = String(offer.book_id || '').trim();
       if (!bookId) continue;
       if (!offersByBookId.has(bookId)) offersByBookId.set(bookId, []);
       offersByBookId.get(bookId).push(offer);
     }
 
-    const groupsByProductIdentifier = duplicateGroups(activeBooks, offersByBookId, 'product_identifier');
-    const groupsByIsbn13 = duplicateGroups(activeBooks, offersByBookId, 'isbn13');
+    const groupsByProductIdentifier = duplicateGroups(booksByProductIdentifier, offersByBookId, 'product_identifier');
+    const groupsByIsbn13 = duplicateGroups(booksByIsbn13, offersByBookId, 'isbn13');
     const allGroups = [...groupsByProductIdentifier, ...groupsByIsbn13];
     const uniqueIdentifiers = new Set(allGroups.map(group => group.identifier));
 
@@ -130,32 +188,29 @@ export default async function(req) {
       no_import: true,
       no_secret_exposed: true,
       pagination: {
-        books_pages_scanned: booksScan.pages_scanned,
-        offers_pages_scanned: offersScan.pages_scanned,
-        stopped_on_has_more_false: booksScan.stopped_on_has_more_false && offersScan.stopped_on_has_more_false,
+        scan_mode: 'aggregate_counts_plus_targeted_examples',
+        max_groups_per_identifier_type: maxGroups,
+        sampled_books: sampledBooks.length,
+        sampled_offers: sampledOffers.length,
         limiter: limiter.metrics(),
       },
       verification: {
-        total_books_scanned: booksScan.total_scanned,
-        total_offers_scanned: offersScan.total_scanned,
         real_books_total: realBooksTotal,
         real_offers_total: realOffersTotal,
-        total_books_scanned_equals_real_books_total: booksScan.total_scanned === realBooksTotal,
-        total_offers_scanned_equals_real_offers_total: offersScan.total_scanned === realOffersTotal,
         duplicate_scope: 'active_records_excluding_merged_true',
-        active_books_scanned: activeBooks.length,
-        active_offers_scanned: activeOffers.length,
-        merged_books_excluded_from_duplicate_groups: booksScan.total_scanned - activeBooks.length,
-        merged_offers_excluded_from_duplicate_groups: offersScan.total_scanned - activeOffers.length,
+        active_books_scanned_by_count: activeBooksTotal,
+        active_offers_scanned_by_count: activeOffersTotal,
+        groups_returned_are_examples: true,
       },
       totals: {
-        groups_by_product_identifier: groupsByProductIdentifier.length,
-        groups_by_isbn13: groupsByIsbn13.length,
-        groups_by_diagnostic: diagnosticTotals(allGroups),
-        records_concerned: uniqueConcernedRecords(allGroups),
-        offers_concerned: concernedOffers(allGroups),
-        identifiers_concerned: uniqueIdentifiers.size,
-        total_books_scanned_equals_real_books_total: booksScan.total_scanned === realBooksTotal,
+        groups_by_product_identifier: productKeys.length,
+        groups_by_isbn13: isbnKeys.length,
+        sampled_groups_by_product_identifier: groupsByProductIdentifier.length,
+        sampled_groups_by_isbn13: groupsByIsbn13.length,
+        groups_by_diagnostic_sample: diagnosticTotals(allGroups),
+        records_concerned_in_sample: uniqueConcernedRecords(allGroups),
+        offers_concerned_in_sample: concernedOffers(allGroups),
+        identifiers_concerned_in_sample: uniqueIdentifiers.size,
       },
       groups_by_product_identifier: groupsByProductIdentifier,
       groups_by_isbn13: groupsByIsbn13,

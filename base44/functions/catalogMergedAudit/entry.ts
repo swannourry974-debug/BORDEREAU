@@ -253,6 +253,27 @@ function findMergedReferences(record, mergedIds, path = '') {
   return hits;
 }
 
+function uniqueValues(values = []) {
+  return [...new Set(values.map(value => String(value || '').trim()).filter(Boolean))];
+}
+
+function chunks(values = [], size = 500) {
+  const output = [];
+  for (let i = 0; i < values.length; i += size) output.push(values.slice(i, i + size));
+  return output;
+}
+
+async function filterInChunks(entity, field, values, label, limiter) {
+  const records = [];
+  const chunked = chunks(uniqueValues(values), 500);
+  for (const chunk of chunked) {
+    const run = () => entity.filter({ [field]: { $in: chunk } }, { limit: chunk.length, sort: 'created_date' });
+    const page = limiter ? await limiter.list(run, `${label}.filter`) : await run();
+    records.push(...(page?.items || page || []));
+  }
+  return { records, batches: chunked.length };
+}
+
 async function auditAnnexReferences(base44, mergedIds, limiter) {
   const results = [];
   for (const entityName of OPERATIONAL_REFERENCE_ENTITIES) {
@@ -279,20 +300,20 @@ async function auditAnnexReferences(base44, mergedIds, limiter) {
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
+    const body = await req.json().catch(() => ({}));
+    const includeAnnexReferences = body.include_annex_references === true;
     const limiter = createEntityRateLimiter({ listPerMinute: 105, writePerMinute: 1, maxAttempts: 4 });
 
-    const [booksScan, offersScan] = await Promise.all([
-      scanAll(base44.asServiceRole.entities.Books, {}, 'Books', limiter),
-      scanAll(base44.asServiceRole.entities.BookOffers, {}, 'BookOffers', limiter),
-    ]);
-
-    const allBooks = booksScan.records;
-    const allOffers = offersScan.records;
-    const bookById = new Map(allBooks.map(book => [book.id, book]));
-    const allBookIds = new Set(allBooks.map(book => book.id));
-    const mergedBooks = allBooks.filter(book => book.merged === true);
+    const booksScan = await scanAll(base44.asServiceRole.entities.Books, { merged: true }, 'Books.merged', limiter);
+    const mergedBooks = booksScan.records;
     const mergedIds = new Set(mergedBooks.map(book => book.id));
     const targetIds = new Set(mergedBooks.map(book => String(book.merged_into || '').trim()).filter(Boolean));
+    const targetsScan = await filterInChunks(base44.asServiceRole.entities.Books, 'id', [...targetIds], 'Books.targets', limiter);
+    const allBooks = [...mergedBooks, ...targetsScan.records];
+    const bookById = new Map(allBooks.map(book => [book.id, book]));
+    const allBookIds = new Set(allBooks.map(book => book.id));
+    const offersScan = await filterInChunks(base44.asServiceRole.entities.BookOffers, 'book_id', [...mergedIds, ...targetIds], 'BookOffers.merged_targets', limiter);
+    const allOffers = offersScan.records;
 
     const offersByBookId = new Map();
     const orphanOffers = [];
@@ -331,11 +352,19 @@ export default async function(req) {
 
       if (!targetId) {
         counters.fiches_avec_merged_into_invalide += 1;
+        counters.C_incorrecte += 1;
+        const reasons = ['cible_fusion_absente'];
+        incrementReasons(reasonBreakdown, 'C_incorrecte', reasons);
+        if (examplesC.length < 30) examplesC.push(pairDetail(mergedBook, null, mergedOffers, [], 'C_incorrecte', { merged_into_absent: true }, reasons));
         continue;
       }
       const targetBook = bookById.get(targetId);
       if (!targetBook) {
         counters.fiches_sans_cible_retrouvee += 1;
+        counters.C_incorrecte += 1;
+        const reasons = ['cible_fusion_introuvable'];
+        incrementReasons(reasonBreakdown, 'C_incorrecte', reasons);
+        if (examplesC.length < 30) examplesC.push(pairDetail(mergedBook, null, mergedOffers, [], 'C_incorrecte', { merged_into_introuvable: true, merged_into: targetId }, reasons));
         continue;
       }
 
@@ -355,7 +384,9 @@ export default async function(req) {
       if (culturaOffers.length > 1) targetsWithMultipleCulturaOffers += 1;
     }
 
-    const annexReferences = await auditAnnexReferences(base44, mergedIds, limiter);
+    const annexReferences = includeAnnexReferences ? await auditAnnexReferences(base44, mergedIds, limiter) : [];
+    const classifiedTotal = counters.A_justifiee + counters.B_douteuse + counters.C_incorrecte;
+    const conformityOk = counters.C_incorrecte === 0 && counters.fiches_sans_cible_retrouvee === 0 && counters.fiches_avec_merged_into_invalide === 0 && offersPointingToMerged === 0 && orphanOffers.length === 0;
 
     return Response.json({
       read_only: true,
@@ -365,14 +396,29 @@ export default async function(req) {
       no_import: true,
       no_secret_exposed: true,
       pagination: {
-        books_pages_scanned: booksScan.pages_scanned,
-        offers_pages_scanned: offersScan.pages_scanned,
-        stopped_on_has_more_false: booksScan.stopped_on_has_more_false && offersScan.stopped_on_has_more_false,
+        merged_books_pages_scanned: booksScan.pages_scanned,
+        target_books_batches: targetsScan.batches,
+        targeted_offers_batches: offersScan.batches,
+        stopped_on_has_more_false: booksScan.stopped_on_has_more_false,
         limit: AUDIT_PAGE_LIMIT,
+        targeted_scope: 'merged_books_plus_canonical_targets',
         logical_skip_progression: true,
         limiter: limiter.metrics(),
       },
       counters,
+      conformity_summary: {
+        status: conformityOk ? 'conforme' : 'a_corriger',
+        total_fusionnees: mergedBooks.length,
+        total_classifie_abc: classifiedTotal,
+        classification_exhaustive: classifiedTotal === mergedBooks.length,
+        points_bloquants: {
+          C_incorrecte: counters.C_incorrecte,
+          fiches_sans_cible_retrouvee: counters.fiches_sans_cible_retrouvee,
+          fiches_avec_merged_into_invalide: counters.fiches_avec_merged_into_invalide,
+          offres_pointant_sur_fiche_fusionnee: offersPointingToMerged,
+          offres_orphelines: orphanOffers.length,
+        },
+      },
       reason_breakdown_B_C: reasonBreakdown,
       offers_attachment: {
         offres_pointant_sur_fiche_fusionnee: offersPointingToMerged,
@@ -381,8 +427,10 @@ export default async function(req) {
         cibles_ayant_plusieurs_offres_cultura: targetsWithMultipleCulturaOffers,
       },
       annex_reference_check: {
-        merged_ids_checked: mergedIds.size,
-        entities_checked: OPERATIONAL_REFERENCE_ENTITIES,
+        skipped_by_default: !includeAnnexReferences,
+        reason: includeAnnexReferences ? 'scan_annexe_execute' : 'scan_annexe_optionnel_pour_eviter_un_audit_bloquant',
+        merged_ids_checked: includeAnnexReferences ? mergedIds.size : 0,
+        entities_checked: includeAnnexReferences ? OPERATIONAL_REFERENCE_ENTITIES : [],
         entities_with_references: annexReferences.length,
         references: annexReferences,
       },

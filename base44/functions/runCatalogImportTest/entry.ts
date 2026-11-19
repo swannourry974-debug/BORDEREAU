@@ -174,6 +174,68 @@ async function eanCounterTest(base44, feedUrl, token, selectedFeed, feedRows) {
   };
 }
 
+async function conformitySample(feedUrl, token, selectedFeed, limit) {
+  const feedId = String(selectedFeed.feed_id || selectedFeed.data_feed_id || selectedFeed.fid || '').trim();
+  const feedName = String(selectedFeed.feed_name || '').trim();
+  const resolved = await resolveAwinFeedRow(feedUrl, selectedFeed, token, { timeoutMs: 240000 });
+  const sampledAt = new Date().toISOString();
+  const counters = {
+    rows_scanned: 0,
+    accepted_total: 0,
+    rejected_total: 0,
+    duplicates_in_sample: 0,
+    missing_title: 0,
+    invalid_price: 0,
+    ean_not_isbn: 0,
+    non_book: 0,
+  };
+  const byClassification = { livre: 0, revue: 0, produit_editorial: 0, non_eligible: 0 };
+  const byIdentifierType = { isbn13: 0, ean: 0, merchant_id: 0 };
+  const acceptedExamples = [];
+  const rejectedExamples = [];
+  const seen = new Set();
+
+  for await (const { row, lineNumber } of csvRowsFromAwinStream(resolved.stream, resolved.gzip.is_gzip)) {
+    if (counters.rows_scanned >= limit) break;
+    counters.rows_scanned += 1;
+    const record = productToCatalogRecord(row, sampledAt, selectedFeed, { allowNonIsbnEditorial: true });
+    if (record.error) {
+      counters.rejected_total += 1;
+      counters[record.error] = (counters[record.error] || 0) + 1;
+      if (rejectedExamples.length < 20) rejectedExamples.push({ line: lineNumber, reason: record.error, title: String(row.product_name || '').trim(), ean: String(row.ean || '').trim(), category: String(row.category_name || row.merchant_product_category_path || '').trim() });
+      continue;
+    }
+    const duplicateKey = record.product_identifier || record.isbn13;
+    if (seen.has(duplicateKey)) counters.duplicates_in_sample += 1;
+    seen.add(duplicateKey);
+    counters.accepted_total += 1;
+    byClassification[record.book.classification || 'livre'] = (byClassification[record.book.classification || 'livre'] || 0) + 1;
+    byIdentifierType[record.book.identifier_type || 'merchant_id'] = (byIdentifierType[record.book.identifier_type || 'merchant_id'] || 0) + 1;
+    if (acceptedExamples.length < 20) acceptedExamples.push({ line: lineNumber, product_identifier: record.book.product_identifier, identifier_type: record.book.identifier_type, isbn_valid: record.book.isbn_valid, classification: record.book.classification, title: record.book.title, author: record.book.author, publisher: record.book.publisher, price: record.offer.price, availability: record.offer.availability });
+  }
+
+  return {
+    ok: true,
+    action: 'conformity_sample',
+    read_only: true,
+    no_write: true,
+    no_import: true,
+    no_log_created: true,
+    no_deletion: true,
+    no_secret_or_datafeed_url_exposed: true,
+    feed_id: feedId,
+    feed_name: feedName,
+    limit,
+    counters,
+    accepted_rate_percent: counters.rows_scanned ? Math.round((counters.accepted_total / counters.rows_scanned) * 10000) / 100 : 0,
+    rejected_rate_percent: counters.rows_scanned ? Math.round((counters.rejected_total / counters.rows_scanned) * 10000) / 100 : 0,
+    by_classification: byClassification,
+    by_identifier_type: byIdentifierType,
+    examples_accepted: acceptedExamples,
+    examples_rejected: rejectedExamples,
+  };
+}
+
 export default async function(req) {
   const startedAt = new Date().toISOString();
   let log = null;
@@ -211,6 +273,7 @@ export default async function(req) {
     if (!selectedFeed) throw new Error(`Flux ${feedId} introuvable`);
     const feedName = String(selectedFeed.feed_name || '').trim();
     if (action === 'ean_counter_test') return Response.json(await eanCounterTest(base44, feedUrl, token, selectedFeed, rows));
+    if (action === 'conformity_sample') return Response.json(await conformitySample(feedUrl, token, selectedFeed, limit));
 
     log = await base44.asServiceRole.entities.ImportLog.create({ started_at: startedAt, import_mode: 'test', feed_id: feedId, feed_name: feedName, products_processed: 0, rows_rejected: 0, books_created: 0, books_updated: 0, offers_created: 0, offers_updated: 0, duplicates: 0, duplicates_in_feed: 0, duplicates_cross_feed: 0, errors: 0, status: 'running', source_retailer: AWIN_RETAILER, test_limit: limit, control_report: { temporary_function: true, purpose: 'Validation écriture catalogue Cultura, à retirer après validation', feed_id: feedId, action: action || 'test_import' } });
 
