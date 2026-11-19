@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { base44 } from '@/api/base44Client';
 import NotationVoyageur from './NotationVoyageur';
 import { useLang } from '@/lib/LangContext';
@@ -14,68 +15,48 @@ const STATUT_META = {
 
 const TIMELINE = ['en_attente_paiement', 'payee', 'en_transit', 'au_relais', 'livree'];
 
-function StatutPill({ statut }) {
-  const { t } = useLang();
-  const cfg = STATUT_META[statut] || STATUT_META.en_attente_paiement;
-  return (
-    <div style={{
-      display: 'inline-flex', alignItems: 'center', gap: 7,
-      background: cfg.bg, color: cfg.color,
-      border: `1.5px solid ${cfg.color}`,
-      padding: '5px 12px',
-      fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase',
-    }}>
-      <span style={{ fontSize: 13 }}>{cfg.emoji}</span>
-      {t(cfg.key)}
-    </div>
-  );
-}
-
 function TimelineDots({ statut }) {
   const { t } = useLang();
   const idx = TIMELINE.indexOf(statut);
   if (idx === -1) return null;
-  const TIMELINE_LABELS = [
-    t('timeline_commande'), t('timeline_paye'), t('timeline_transit'), t('timeline_relais'), t('timeline_recu'),
-  ];
+  const labels = [t('timeline_commande'), t('timeline_paye'), t('timeline_transit'), t('timeline_relais'), t('timeline_recu')];
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginTop: 12 }}>
+    <div className="mt-4 flex items-center gap-0">
       {TIMELINE.map((s, i) => {
         const done = i < idx;
         const active = i === idx;
         const cfg = STATUT_META[s];
         return (
           <React.Fragment key={s}>
-            <div style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 0,
-            }}>
-              <div style={{
-                width: active ? 12 : 8, height: active ? 12 : 8,
-                borderRadius: '50%',
-                background: done ? 'var(--bordeaux)' : active ? cfg.dot : 'rgba(26,16,8,0.12)',
-                border: active ? `2px solid ${cfg.dot}` : 'none',
-                boxShadow: active ? `0 0 0 3px ${cfg.dot}22` : 'none',
-                flexShrink: 0, transition: 'all 0.2s',
-              }} />
-              <div style={{
-                fontFamily: 'Special Elite, monospace', fontSize: 7,
-                color: done || active ? (active ? cfg.dot : 'var(--bordeaux)') : 'rgba(26,16,8,0.25)',
-                marginTop: 4, whiteSpace: 'nowrap',
-                fontWeight: active ? 'bold' : 'normal',
-              }}>
-                {TIMELINE_LABELS[i]}
+            <div className="flex flex-col items-center">
+              <div style={{ width: active ? 12 : 8, height: active ? 12 : 8, borderRadius: '50%', background: done ? 'var(--bordeaux)' : active ? cfg.dot : 'rgba(26,16,8,0.12)', border: active ? `2px solid ${cfg.dot}` : 'none', boxShadow: active ? `0 0 0 3px ${cfg.dot}22` : 'none', flexShrink: 0 }} />
+              <div className="mt-1 whitespace-nowrap font-ui text-[7px]" style={{ color: done || active ? (active ? cfg.dot : 'var(--bordeaux)') : 'rgba(26,16,8,0.25)', fontWeight: active ? 800 : 500 }}>
+                {labels[i]}
               </div>
             </div>
-            {i < TIMELINE.length - 1 && (
-              <div style={{
-                flex: 1, height: 2, minWidth: 10,
-                background: i < idx ? 'var(--bordeaux)' : 'rgba(26,16,8,0.1)',
-                marginBottom: 18,
-              }} />
-            )}
+            {i < TIMELINE.length - 1 && <div className="mb-[18px] h-px min-w-2 flex-1" style={{ background: i < idx ? 'var(--bordeaux)' : 'rgba(26,16,8,0.1)' }} />}
           </React.Fragment>
         );
       })}
+    </div>
+  );
+}
+
+function SecureDisplay({ commande }) {
+  if (commande.statut !== 'au_relais' || (!commande.qr_code_token && !commande.visuel_bordero_url)) return null;
+  return (
+    <div className="mt-3 border p-3" style={{ background: 'rgba(110,30,46,0.05)', borderColor: 'rgba(110,30,46,0.24)' }}>
+      <div className="mb-2 font-ui text-[9px] font-extrabold uppercase tracking-[0.22em] text-[#6E1E2E]">QR Bordero existant</div>
+      {commande.visuel_bordero_url && <img src={commande.visuel_bordero_url} alt={`Visuel Bordero ${commande.visuel_bordero_serie || ''}`} className="mb-3 w-full border object-cover" style={{ borderColor: 'rgba(59,42,35,0.22)' }} />}
+      {commande.qr_code_token && (
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="bg-white p-2"><QRCodeSVG value={commande.qr_code_token} size={112} bgColor="#ffffff" fgColor="#1E1A18" level="M" /></div>
+          <div className="min-w-0 flex-1">
+            <div className="font-heading text-[16px] font-bold text-[#6E1E2E]">Présentez ce QR au point relais</div>
+            <div className="mt-1 break-all font-ui text-[9px] text-[#3B2A23]/48">{commande.visuel_bordero_serie || 'Visuel'} · {commande.id}</div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -84,141 +65,77 @@ function CommandeCard({ commande }) {
   const { t } = useLang();
   const [expanded, setExpanded] = useState(false);
   const cfg = STATUT_META[commande.statut] || STATUT_META.en_attente_paiement;
+  const coverTone = commande.statut === 'livree' ? '#2d6a2d' : commande.statut === 'au_relais' ? '#8B6914' : commande.statut === 'litige' ? '#b41414' : '#6E1E2E';
 
   return (
-    <div style={{
-      border: `2px solid ${cfg.color}`,
-      marginBottom: 12, overflow: 'hidden',
-      background: 'var(--papier)',
-      boxShadow: `3px 3px 0 ${cfg.color}22`,
-    }}>
-      {/* Bande de couleur statut */}
-      <div style={{ background: cfg.color, padding: '5px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 14 }}>{cfg.emoji}</span>
-        <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--creme)' }}>
-          {cfg.label}
-        </span>
-        {commande.statut === 'en_transit' && (
-          <span style={{ marginLeft: 'auto', fontFamily: 'Special Elite, monospace', fontSize: 8, color: 'rgba(253,252,240,0.7)', letterSpacing: 1 }}>
-            {t('livre_en_route')}
-          </span>
-        )}
-        {commande.statut === 'au_relais' && (
-          <span style={{ marginLeft: 'auto', fontFamily: 'Special Elite, monospace', fontSize: 8, color: 'rgba(253,252,240,0.85)', letterSpacing: 1, fontWeight: 'bold' }}>
-            {t('livre_retirer')}
-          </span>
-        )}
-      </div>
-
-      <div
-        onClick={() => setExpanded(v => !v)}
-        style={{ padding: '14px 16px', cursor: 'pointer' }}
-      >
-        {/* Titre + prix */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, marginBottom: 6 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: 16, color: 'var(--encre)',
-              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: 2,
-            }}>
-              {commande.livre_titre || '—'}
+    <article className="mb-3 overflow-hidden border" style={{ background: '#FFF8EA', borderColor: 'rgba(110,30,46,0.16)', boxShadow: '0 12px 26px rgba(59,42,35,0.10)' }}>
+      <button type="button" onClick={() => setExpanded(v => !v)} className="flex w-full gap-3 p-3 text-left sm:p-4">
+        <div className="flex h-24 w-16 shrink-0 flex-col justify-between p-2 text-[#F3E8D2]" style={{ background: coverTone, boxShadow: '0 10px 20px rgba(59,42,35,0.16)' }}>
+          <span className="font-ui text-[7px] uppercase tracking-[0.18em] opacity-70">B</span>
+          <span className="font-heading text-[12px] font-bold leading-tight line-clamp-3">{commande.livre_titre || 'Livre'}</span>
+          <span className="h-px w-7 bg-[#C7A15A]" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="font-heading text-[18px] font-bold leading-tight text-[#6E1E2E] line-clamp-2">{commande.livre_titre || '—'}</div>
+              {commande.livre_auteur && <div className="mt-1 font-body text-[14px] italic text-[#3B2A23]/58 line-clamp-1">{commande.livre_auteur}</div>}
             </div>
-            {commande.livre_auteur && (
-              <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.5)' }}>
-                {commande.livre_auteur}
-              </div>
-            )}
-          </div>
-          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-            {commande.montant_paye > 0 && (
-              <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 15, fontWeight: 700, color: 'var(--bordeaux)' }}>
-                {commande.montant_paye.toFixed(2)} €
-              </div>
-            )}
-            <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 8, color: 'rgba(26,16,8,0.3)', marginTop: 2 }}>
-              {expanded ? t('livre_fermer') : t('livre_details')}
+            <div className="shrink-0 text-right">
+              {commande.montant_paye > 0 && <div className="font-heading text-[16px] font-bold text-[#6E1E2E]">{commande.montant_paye.toFixed(2)} €</div>}
+              <div className="mt-1 font-ui text-[8px] uppercase tracking-[0.12em] text-[#3B2A23]/38">{expanded ? t('livre_fermer') : t('livre_details')}</div>
             </div>
           </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full border px-2 py-1 font-ui text-[9px] font-bold uppercase tracking-[0.12em]" style={{ background: cfg.bg, color: cfg.color, borderColor: cfg.color }}>{cfg.emoji} {t(cfg.key)}</span>
+            {commande.zone_nom && <span className="rounded-full border border-[#6E1E2E]/18 px-2 py-1 font-ui text-[9px] uppercase tracking-[0.12em] text-[#3B2A23]/55">📍 {commande.zone_nom}</span>}
+            {commande.mode_livraison && <span className="rounded-full border border-[#6E1E2E]/18 px-2 py-1 font-ui text-[9px] uppercase tracking-[0.12em] text-[#3B2A23]/55">{commande.mode_livraison === 'express' ? '✈ Express' : '📦 Collectif'}</span>}
+          </div>
+          <TimelineDots statut={commande.statut} />
         </div>
+      </button>
 
-        {/* Infos rapides */}
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          {commande.zone_nom && (
-            <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, color: 'rgba(26,16,8,0.45)', letterSpacing: 1 }}>
-              📍 {commande.zone_nom}
-            </span>
-          )}
-          {commande.livre_type && (
-            <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, color: 'rgba(26,16,8,0.45)', letterSpacing: 1 }}>
-              {commande.livre_type}
-            </span>
-          )}
-          {commande.mode_livraison && (
-            <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, color: 'rgba(26,16,8,0.45)', letterSpacing: 1 }}>
-              {commande.mode_livraison === 'express' ? '✈ Express' : '📦 Collectif'}
-            </span>
-          )}
-        </div>
-
-        {/* Timeline */}
-        <TimelineDots statut={commande.statut} />
-      </div>
-
-      {/* Détails expandables */}
       {expanded && (
-        <div style={{
-          borderTop: '1px dashed rgba(26,16,8,0.15)',
-          padding: '12px 16px', background: 'rgba(26,16,8,0.02)',
-        }}>
+        <div className="border-t border-dashed p-4" style={{ borderColor: 'rgba(110,30,46,0.16)', background: 'rgba(243,232,210,0.46)' }}>
           {[
             [t('livre_date_commande'), commande.created_date ? new Date(commande.created_date).toLocaleDateString('fr-FR') : null],
             [t('livre_arrivee_relais'), commande.date_arrivee_relais ? new Date(commande.date_arrivee_relais).toLocaleDateString('fr-FR') : null],
             [t('livre_retirer_avant'), commande.date_limite_collecte ? new Date(commande.date_limite_collecte).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }) : null],
           ].filter(([, v]) => v).map(([label, val]) => (
-            <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 1, color: 'rgba(26,16,8,0.4)', textTransform: 'uppercase' }}>{label}</span>
-              <span style={{ fontFamily: 'IM Fell English, serif', fontSize: 12, color: 'var(--encre)' }}>{val}</span>
+            <div key={label} className="mb-2 flex justify-between gap-4">
+              <span className="font-ui text-[9px] uppercase tracking-[0.12em] text-[#3B2A23]/46">{label}</span>
+              <span className="text-right font-body text-[13px] text-[#1E1A18]">{val}</span>
             </div>
           ))}
 
-          {/* Code de retrait si au relais */}
           {commande.statut === 'au_relais' && commande.code_secret && (
-            <div style={{
-              marginTop: 10, padding: '12px 14px', background: `${cfg.color}0d`,
-              border: `2px dashed ${cfg.color}`, textAlign: 'center',
-            }}>
-              <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 8, letterSpacing: 2, color: cfg.color, marginBottom: 6, textTransform: 'uppercase' }}>
-                {t('livre_code_retrait')}
-              </div>
-              <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 32, fontWeight: 700, color: cfg.color, letterSpacing: 8 }}>
-                {commande.code_secret}
-              </div>
-              <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.45)', marginTop: 4 }}>
-                {t('livre_code_desc')}
-              </div>
+            <div className="mt-3 border-2 border-dashed p-3 text-center" style={{ background: `${cfg.color}0d`, borderColor: cfg.color }}>
+              <div className="mb-1 font-ui text-[8px] uppercase tracking-[0.22em]" style={{ color: cfg.color }}>{t('livre_code_retrait')}</div>
+              <div className="font-heading text-4xl font-bold tracking-[0.22em]" style={{ color: cfg.color }}>{commande.code_secret}</div>
+              <div className="mt-1 font-body text-[12px] italic text-[#3B2A23]/50">{t('livre_code_desc')}</div>
             </div>
           )}
 
-          {/* Pénalité */}
+          <SecureDisplay commande={commande} />
+
           {commande.penalite_retard > 0 && (
-            <div style={{
-              marginTop: 10, padding: '8px 12px', background: 'rgba(180,20,20,0.05)',
-              border: '1px solid rgba(180,20,20,0.3)',
-              fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 1,
-              color: '#b41414', textTransform: 'uppercase',
-            }}>
+            <div className="mt-3 border p-2 font-ui text-[9px] uppercase tracking-[0.12em] text-[#b41414]" style={{ background: 'rgba(180,20,20,0.05)', borderColor: 'rgba(180,20,20,0.3)' }}>
               {t('livre_penalite', { n: commande.penalite_retard.toFixed(2) })}
             </div>
           )}
 
-          {/* Notation voyageur */}
-          {commande.statut === 'livree' && commande.voyageur_email && (
-            <div style={{ marginTop: 14 }}>
-              <NotationVoyageur commande={commande} />
-            </div>
-          )}
+          {commande.statut === 'livree' && commande.voyageur_email && <div className="mt-4"><NotationVoyageur commande={commande} /></div>}
         </div>
       )}
+    </article>
+  );
+}
+
+function SectionHeader({ children, color = '#6E1E2E' }) {
+  return (
+    <div className="mb-3 mt-5 flex items-center gap-3 first:mt-0">
+      <div className="font-ui text-[10px] font-extrabold uppercase tracking-[0.24em]" style={{ color }}>{children}</div>
+      <span className="h-px flex-1" style={{ background: `${color}33` }} />
     </div>
   );
 }
@@ -229,103 +146,53 @@ export default function MesLivres({ userEmail }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!userEmail) return;
+    if (!userEmail) {
+      setCommandes([]);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
     base44.entities.Commande.filter({ lecteur_email: userEmail }, '-created_date', 100)
       .then(data => { setCommandes(data || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, [userEmail]);
 
   if (loading) {
-    return (
-      <div style={{ textAlign: 'center', padding: 24, fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.4)' }}>
-        {t('livre_chargement')}
-      </div>
-    );
+    return <div className="bordero-empty-state font-body italic">{t('livre_chargement')}</div>;
   }
 
   const enCours = commandes.filter(c => c.statut !== 'livree' && c.statut !== 'litige');
-  const recus   = commandes.filter(c => c.statut === 'livree');
+  const recus = commandes.filter(c => c.statut === 'livree');
   const litiges = commandes.filter(c => c.statut === 'litige');
 
   if (commandes.length === 0) {
     return (
-      <div style={{
-        textAlign: 'center', padding: '28px 20px',
-        background: 'var(--papier)', border: '1.5px dashed rgba(26,16,8,0.18)',
-      }}>
-        <div style={{ fontSize: 34, marginBottom: 10 }}>📚</div>
-        <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>{t('livre_aucune')}</div>
-        <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.45)' }}>
-          {t('livre_aucune_desc')}
-        </div>
+      <div className="border p-8 text-center" style={{ background: 'linear-gradient(145deg, #FFF8EA, #F7EEDC)', borderColor: 'rgba(110,30,46,0.16)' }}>
+        <div className="mx-auto mb-3 flex h-16 w-12 items-center justify-center" style={{ background: '#6E1E2E', color: '#F3E8D2' }}>B</div>
+        <div className="font-heading text-xl font-bold text-[#6E1E2E]">{t('livre_aucune')}</div>
+        <div className="mx-auto mt-2 max-w-xs font-body text-[14px] italic text-[#3B2A23]/56">{t('livre_aucune_desc')}</div>
       </div>
     );
   }
 
   return (
     <div>
-      {/* Stats */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+      <div className="mb-4 grid grid-cols-3 gap-2">
         {[
           { val: enCours.length, label: t('livre_en_cours_stat'), color: '#2a5ca8' },
-          { val: recus.length,   label: t('livre_recus_stat'),   color: '#2d6a2d' },
-          { val: commandes.length, label: t('livre_total'),      color: 'var(--bordeaux)' },
+          { val: recus.length, label: t('livre_recus_stat'), color: '#2d6a2d' },
+          { val: commandes.length, label: t('livre_total'), color: '#6E1E2E' },
         ].map(({ val, label, color }) => (
-          <div key={label} style={{
-            flex: 1, textAlign: 'center', padding: '12px 6px',
-            background: 'var(--papier)', border: '1px dashed rgba(26,16,8,0.2)',
-          }}>
-            <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 24, fontWeight: 700, color }}>{val}</div>
-            <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(26,16,8,0.4)', marginTop: 3 }}>{label}</div>
+          <div key={label} className="border p-3 text-center" style={{ background: '#FFF8EA', borderColor: 'rgba(110,30,46,0.14)' }}>
+            <div className="font-heading text-2xl font-bold" style={{ color }}>{val}</div>
+            <div className="mt-1 font-ui text-[8px] uppercase tracking-[0.14em] text-[#3B2A23]/46">{label}</div>
           </div>
         ))}
       </div>
 
-      {/* En cours d'acheminement */}
-      {enCours.length > 0 && (
-        <>
-          <div style={{
-            fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 3,
-            textTransform: 'uppercase', color: '#2a5ca8',
-            display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12,
-          }}>
-            {t('livre_en_cours')}
-            <span style={{ flex: 1, height: 1, background: 'rgba(42,92,168,0.2)' }} />
-          </div>
-          {enCours.map(c => <CommandeCard key={c.id} commande={c} />)}
-        </>
-      )}
-
-      {/* Litiges */}
-      {litiges.length > 0 && (
-        <>
-          <div style={{
-            fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 3,
-            textTransform: 'uppercase', color: '#b41414',
-            display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, marginTop: enCours.length > 0 ? 20 : 0,
-          }}>
-            {t('livre_litiges')}
-            <span style={{ flex: 1, height: 1, background: 'rgba(180,20,20,0.2)' }} />
-          </div>
-          {litiges.map(c => <CommandeCard key={c.id} commande={c} />)}
-        </>
-      )}
-
-      {/* Reçus */}
-      {recus.length > 0 && (
-        <>
-          <div style={{
-            fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 3,
-            textTransform: 'uppercase', color: '#2d6a2d',
-            display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12,
-            marginTop: (enCours.length > 0 || litiges.length > 0) ? 20 : 0,
-          }}>
-            {t('livre_recus')}
-            <span style={{ flex: 1, height: 1, background: 'rgba(45,106,45,0.2)' }} />
-          </div>
-          {recus.map(c => <CommandeCard key={c.id} commande={c} />)}
-        </>
-      )}
+      {enCours.length > 0 && <><SectionHeader color="#2a5ca8">{t('livre_en_cours')}</SectionHeader>{enCours.map(c => <CommandeCard key={c.id} commande={c} />)}</>}
+      {litiges.length > 0 && <><SectionHeader color="#b41414">{t('livre_litiges')}</SectionHeader>{litiges.map(c => <CommandeCard key={c.id} commande={c} />)}</>}
+      {recus.length > 0 && <><SectionHeader color="#2d6a2d">{t('livre_recus')}</SectionHeader>{recus.map(c => <CommandeCard key={c.id} commande={c} />)}</>}
     </div>
   );
 }

@@ -1,11 +1,14 @@
 export const LIBRARY_COLORS = {
-  wine: '#800020',
-  darkWine: '#800020',
-  cream: '#F5E6CC',
-  gold: '#C8A165',
-  lightGold: '#D8B87A',
-  leather: '#800020',
-  wood: '#800020',
+  wine: '#6E1E2E',
+  darkWine: '#4B1220',
+  cream: '#F3E8D2',
+  paper: '#FFF8EA',
+  paperWarm: '#F7EEDC',
+  gold: '#C7A15A',
+  lightGold: '#D7BB78',
+  leather: '#3B2A23',
+  ink: '#1E1A18',
+  orange: '#C2410C',
 };
 
 export const BADGE_LEVELS = [
@@ -15,7 +18,7 @@ export const BADGE_LEVELS = [
   { name: 'Maître de la Bibliothèque', threshold: 100, icon: '⚜' },
 ];
 
-const BOOK_COLORS = ['#800020', '#800020', '#800020', '#800020', '#800020', '#800020'];
+const BOOK_COLORS = ['#6E1E2E', '#3B2A23', '#7B4F2A', '#1F4E46', '#2F4568', '#8B5A2B'];
 
 export function getReaderLevel(count) {
   const unlocked = BADGE_LEVELS.filter(level => count >= level.threshold).pop();
@@ -26,7 +29,7 @@ export function getReaderLevel(count) {
   return { current: unlocked?.name || 'Lecteur Curieux', next, progress };
 }
 
-export function bookFromCommande(commande, index) {
+export function bookFromCommande(commande, index = 0) {
   return {
     id: commande.id,
     title: commande.livre_titre || 'Livre Bordero',
@@ -36,6 +39,9 @@ export function bookFromCommande(commande, index) {
     orderNumber: commande.facture_reference || `BORD-${commande.id?.slice?.(0, 6) || index + 1}`,
     paymentMethod: commande.stripe_session_id ? 'Carte bancaire' : 'Bordero',
     status: commande.statut,
+    coverUrl: commande.cover_url || commande.image_url || commande.livre_image_url || commande.book?.image_url || '',
+    destination: commande.zone_nom || '',
+    format: commande.livre_type || '',
     color: BOOK_COLORS[index % BOOK_COLORS.length],
     raw: commande,
   };

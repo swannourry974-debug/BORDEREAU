@@ -1,30 +1,32 @@
 import React from 'react';
 import BookSpine from './BookSpine';
-import { chunkBooks, LIBRARY_COLORS } from './libraryUtils';
+import { LIBRARY_COLORS } from './libraryUtils';
 
 export default function WoodenShelf({ books, selectedId, addedBookId, onSelect }) {
-  const rows = chunkBooks(books, 5);
   return (
-    <div className="p-4 shadow-2xl" style={{ background: '#800020', border: '1px solid rgba(200,161,101,0.34)' }}>
-      {rows.map((row, rowIndex) => (
-        <div key={rowIndex} className="relative mb-5 last:mb-0">
-          <div className="min-h-[160px] flex items-end gap-3 px-3 pt-4" style={{ background: 'rgba(128,0,32,0.78)' }}>
-            {row.length === 0 ? (
-              <div className="w-full text-center pb-12 text-sm italic" style={{ color: 'rgba(245,230,204,0.55)' }}>Votre prochaine lecture prendra place ici.</div>
-            ) : row.map((book, index) => (
-              <BookSpine
-                key={book.id}
-                book={book}
-                index={rowIndex * 5 + index}
-                selected={selectedId === book.id}
-                added={addedBookId === book.id}
-                onClick={() => onSelect(book)}
-              />
-            ))}
-          </div>
-          <div className="h-5 shadow-lg" style={{ background: LIBRARY_COLORS.wine, borderTop: '2px solid rgba(200,161,101,0.35)' }} />
+    <section className="relative overflow-hidden border p-4 sm:p-5" style={{ background: 'linear-gradient(145deg, #FFF8EA, #F7EEDC)', borderColor: 'rgba(110,30,46,0.18)' }}>
+      <div className="pointer-events-none absolute inset-x-5 top-4 h-px bg-gradient-to-r from-transparent via-[#C7A15A]/60 to-transparent" />
+      <div className="mb-4 flex items-end justify-between gap-4">
+        <div>
+          <div className="font-ui text-[10px] font-extrabold uppercase tracking-[0.24em]" style={{ color: LIBRARY_COLORS.wine }}>Rayonnage personnel</div>
+          <p className="mt-1 font-body text-[15px] italic text-[#3B2A23]/62">Chaque couverture ouvre son reçu, ses détails et ses actions.</p>
         </div>
-      ))}
-    </div>
+        <div className="hidden rounded-full border px-3 py-1 font-ui text-[10px] font-bold uppercase tracking-[0.16em] sm:block" style={{ borderColor: 'rgba(199,161,90,0.55)', color: LIBRARY_COLORS.leather }}>
+          {books.length} livre{books.length > 1 ? 's' : ''}
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {books.map((book, index) => (
+          <BookSpine
+            key={book.id}
+            book={book}
+            index={index}
+            selected={selectedId === book.id}
+            added={addedBookId === book.id}
+            onClick={() => onSelect(book)}
+          />
+        ))}
+      </div>
+    </section>
   );
 }
