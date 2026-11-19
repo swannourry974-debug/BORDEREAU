@@ -18,7 +18,7 @@ export default function LoadingScreen({ onComplete, mode = 'loading', onWake }) 
   }, [progress, onComplete, mode]);
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-white px-4" onClick={mode === 'idle' ? onWake : undefined}>
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-papier px-4" onClick={mode === 'idle' ? onWake : undefined}>
       <style>{`
         .bordero-loading-premium, .bordero-loading-premium * { box-sizing: border-box; border-radius: 0 !important; }
         .bordero-loading-premium { width: 680px; max-width: calc(100vw - 32px); padding: 24px 28px 28px; display: flex; flex-direction: column; align-items: center; gap: 22px; overflow: hidden; position: relative; color: #3B2A23; background: radial-gradient(ellipse at 50% 38%, #fffaf0 0%, #F3E8D2 68%, #e8d9bc 100%); border: 1px solid #C7A15A; box-shadow: 0 14px 36px rgba(59,42,35,.2), inset 0 0 0 6px rgba(110,30,46,.06); font-family: Georgia, 'Times New Roman', serif; }
