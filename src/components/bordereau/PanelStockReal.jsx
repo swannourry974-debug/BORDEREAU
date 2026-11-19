@@ -3,19 +3,34 @@ import { base44 } from '@/api/base44Client';
 import ProfilsTableau from '../relais/ProfilsTableau';
 import NotationRelais from '../relais/NotationRelais';
 
-const STATUT_LABELS = {
-  payee: { label: 'Payé', color: 'var(--bordeaux)' },
-  en_transit: { label: '🚚 En transit', color: '#1a3a5c' },
-  au_relais: { label: '📦 Au relais', color: '#8B6914' },
-  livree: { label: '✓ Livré', color: '#2d6a2d' },
-  litige: { label: '⚠️ Litige', color: '#b41414' },
-};
-
 const joursEnStock = (commande) => {
   const dateReference = commande.date_arrivee_relais || commande.updated_date || commande.created_date;
   if (!dateReference) return 0;
   return Math.floor((Date.now() - new Date(dateReference).getTime()) / (1000 * 60 * 60 * 24));
 };
+
+function RelayStat({ value, label, color }) {
+  return (
+    <div className="border bg-[#FFF8EA]/76 p-3 text-center" style={{ borderColor: `${color}33` }}>
+      <div className="font-heading text-3xl font-bold" style={{ color }}>{value}</div>
+      <div className="mt-1 font-ui text-[8px] font-extrabold uppercase tracking-[0.16em] text-[#3B2A23]/45">{label}</div>
+    </div>
+  );
+}
+
+function RelayOrderRow({ commande, tone, statusLabel, extra }) {
+  return (
+    <article className="mb-3 flex items-center gap-3 border bg-[#FFF8EA]/88 p-3 shadow-[0_10px_22px_rgba(59,42,35,0.08)]" style={{ borderColor: `${tone}33`, borderLeft: `5px solid ${tone}` }}>
+      <div className="h-3 w-3 shrink-0 rounded-full" style={{ background: tone }} />
+      <div className="min-w-0 flex-1">
+        <h3 className="font-heading text-[17px] font-bold leading-tight text-[#6E1E2E]">{commande.livre_titre || 'Livre'}</h3>
+        <p className="mt-1 font-ui text-[10px] uppercase tracking-[0.11em] text-[#3B2A23]/48">{commande.livre_auteur || 'Auteur non renseigné'} · Lecteur : {commande.lecteur_email?.split('@')[0] || '—'}</p>
+        {extra && <div className="mt-2 font-ui text-[9px] font-bold uppercase tracking-[0.12em]" style={{ color: tone }}>{extra}</div>}
+      </div>
+      <span className="shrink-0 rounded-full border px-2 py-1 font-ui text-[8px] font-extrabold uppercase tracking-[0.12em]" style={{ color: tone, borderColor: `${tone}66`, background: `${tone}10` }}>{statusLabel}</span>
+    </article>
+  );
+}
 
 export default function PanelStock() {
   const [view, setView] = useState('stock');
@@ -38,12 +53,10 @@ export default function PanelStock() {
       setRelais(r[0] || null);
       setRelayActive(r[0]?.actif !== false);
 
-      // Charger toutes les commandes liées à ce relais
       let cmds = [];
       if (r[0]) {
         cmds = await base44.entities.Commande.filter({ point_relais_id: r[0].id }, '-created_date', 100);
       } else {
-        // Admin sans relais assigné : voir toutes
         cmds = await base44.entities.Commande.list('-created_date', 100);
       }
       setCommandes(cmds || []);
@@ -63,9 +76,7 @@ export default function PanelStock() {
     setStockCount(next);
     try {
       const res = await base44.functions.invoke('updateRelayInventory', { stock_actuel: next, actif: relayActive });
-      if (res?.data?.relais) {
-        setRelais(res.data.relais);
-      }
+      if (res?.data?.relais) setRelais(res.data.relais);
     } catch (error) {
       setStockCount(previous);
       setRelais(previousRelais);
@@ -80,9 +91,7 @@ export default function PanelStock() {
     setRelayActive(next);
     try {
       const res = await base44.functions.invoke('updateRelayInventory', { stock_actuel: stockCount, actif: next });
-      if (res?.data?.relais) {
-        setRelais(res.data.relais);
-      }
+      if (res?.data?.relais) setRelais(res.data.relais);
     } catch (error) {
       setRelayActive(previous);
       setRelais(previousRelais);
@@ -95,9 +104,7 @@ export default function PanelStock() {
     setNotificationStatus('sending');
     try {
       const res = await base44.functions.invoke('updateRelayInventory', { stock_actuel: stockCount, actif: relayActive, notify: true });
-      if (res?.data?.relais) {
-        setRelais(res.data.relais);
-      }
+      if (res?.data?.relais) setRelais(res.data.relais);
       setNotificationStatus('sent');
     } catch (e) {
       setNotificationStatus('error');
@@ -111,207 +118,74 @@ export default function PanelStock() {
   const livrees = commandes.filter(c => c.statut === 'livree');
 
   return (
-    <div>
-      {/* Header */}
-      <div style={{
-        background: 'var(--bordeaux)', color: 'var(--creme)',
-        padding: '18px 20px', marginBottom: 20, position: 'relative', overflow: 'hidden'
-      }}>
-        <span style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', fontSize: 60, opacity: 0.1 }}>⬡</span>
-        <div style={{ fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.7, marginBottom: 6, fontFamily: 'Special Elite, monospace' }}>
-          Tableau de bord · Relais
+    <div className="space-y-5">
+      <section className="relative overflow-hidden bordero-card-premium p-5 sm:p-6">
+        <div className="pointer-events-none absolute right-5 top-5 font-heading text-7xl text-[#6E1E2E]/5">⬡</div>
+        <div className="bordero-heading-section">Comptoir Point Relais</div>
+        <h1 className="mt-2 font-heading text-3xl font-bold text-[#6E1E2E] sm:text-4xl">Gestion du stock</h1>
+        <p className="mt-2 font-body text-[16px] italic text-[#3B2A23]/64">{auRelais.length} colis en attente · Stock : {stockCount} · Relais {relayActive ? 'actif' : 'inactif'}</p>
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          <RelayStat value={auRelais.length} label="Au relais" color="#8B6914" />
+          <RelayStat value={enTransit.length} label="En transit" color="#1a3a5c" />
+          <RelayStat value={livrees.length} label="Livrés" color="#2d6a2d" />
         </div>
-        <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 20, fontWeight: 700, lineHeight: 1.2 }}>
-          Gestion du stock
-        </div>
-        <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, opacity: 0.75, marginTop: 6 }}>
-          {auRelais.length} colis en attente · Stock : {stockCount} · Relais {relayActive ? 'actif' : 'inactif'}
-        </div>
-      </div>
+      </section>
 
-      {/* Contrôles relais */}
-      <div style={{
-        background: 'var(--papier)', border: '1.5px solid rgba(26,16,8,0.2)',
-        padding: 16, marginBottom: 18, boxShadow: '3px 3px 0 rgba(26,16,8,0.10)',
-      }}>
-        <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.5)', marginBottom: 12 }}>
-          Statut & inventaire relais
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
-          <button type="button" onClick={toggleRelayActive} aria-label={relayActive ? 'Désactiver le relais' : 'Activer le relais'} style={{
-            background: relayActive ? '#2d6a2d' : '#6E1E2E', color: 'var(--creme)',
-            border: 'none', padding: '12px 10px', fontFamily: 'Special Elite, monospace',
-            fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            cursor: 'pointer',
-          }}>
+      <section className="bordero-surface p-4">
+        <div className="bordero-heading-section mb-3">Statut & inventaire relais</div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <button type="button" onClick={toggleRelayActive} aria-label={relayActive ? 'Désactiver le relais' : 'Activer le relais'} className="min-h-[44px] bg-[#6E1E2E] px-4 font-ui text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#F3E8D2]">
             {relayActive ? '✓ Relais actif — désactiver' : '⏸ Relais inactif — activer'}
           </button>
-          <button type="button" aria-label="Notifier les changements d'inventaire" onClick={notifyInventoryChange} disabled={notificationStatus === 'sending'} style={{
-            background: 'var(--encre)', color: 'var(--creme)', border: 'none', padding: '12px 10px',
-            cursor: notificationStatus === 'sending' ? 'wait' : 'pointer', fontFamily: 'Special Elite, monospace',
-            fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', opacity: notificationStatus === 'sending' ? 0.6 : 1,
-          }}>
+          <button type="button" aria-label="Notifier les changements d'inventaire" onClick={notifyInventoryChange} disabled={notificationStatus === 'sending'} className="min-h-[44px] border border-[#6E1E2E]/25 bg-[#FFF8EA] px-4 font-ui text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#6E1E2E] disabled:cursor-wait disabled:opacity-60">
             {notificationStatus === 'sending' ? 'Envoi...' : notificationStatus === 'sent' ? '✓ Inventaire notifié' : 'Notifier inventaire'}
           </button>
         </div>
-        <label htmlFor="stock-quantity" style={{ display: 'block', fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.5)', marginBottom: 6 }}>
-          Mettre à jour la quantité de stock
-        </label>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <div>
-            <input
-              id="stock-quantity"
-              aria-label="Quantité de stock"
-              type="number"
-              min="0"
-              value={stockCount}
-              onChange={(e) => updateStockCount(Number(e.target.value) || 0)}
-              style={{ width: 96, background: 'var(--creme)', border: '1.5px solid rgba(128,0,32,0.35)', padding: '8px 10px', fontFamily: 'Special Elite, monospace', fontSize: 18, fontWeight: 700, color: 'var(--bordeaux)' }}
-            />
-            <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.55)', marginTop: 4 }}>colis enregistrés</div>
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button type="button" aria-label="Réduire le stock" onClick={() => updateStockCount(stockCount - 1)} style={{ width: 42, height: 38, border: '1.5px solid var(--bordeaux)', background: 'var(--creme)', color: 'var(--bordeaux)', cursor: 'pointer', fontSize: 20 }}>−</button>
-            <button type="button" aria-label="Augmenter le stock" onClick={() => updateStockCount(stockCount + 1)} style={{ width: 42, height: 38, border: '1.5px solid var(--bordeaux)', background: 'var(--bordeaux)', color: 'var(--creme)', cursor: 'pointer', fontSize: 20 }}>+</button>
+        <div className="mt-4 flex items-end justify-between gap-3">
+          <label htmlFor="stock-quantity" className="flex-1">
+            <span className="block font-ui text-[9px] font-extrabold uppercase tracking-[0.16em] text-[#3B2A23]/46">Quantité de stock</span>
+            <input id="stock-quantity" aria-label="Quantité de stock" type="number" min="0" value={stockCount} onChange={(e) => updateStockCount(Number(e.target.value) || 0)} className="mt-2 w-28 border border-[#6E1E2E]/35 bg-[#FFF8EA] px-3 py-2 font-heading text-2xl font-bold text-[#6E1E2E]" />
+          </label>
+          <div className="flex gap-2">
+            <button type="button" aria-label="Réduire le stock" onClick={() => updateStockCount(stockCount - 1)} className="h-11 w-11 border border-[#6E1E2E] bg-[#FFF8EA] text-2xl text-[#6E1E2E]">−</button>
+            <button type="button" aria-label="Augmenter le stock" onClick={() => updateStockCount(stockCount + 1)} className="h-11 w-11 bg-[#6E1E2E] text-2xl text-[#F3E8D2]">+</button>
           </div>
         </div>
-        {notificationStatus === 'error' && (
-          <div style={{ marginTop: 10, fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: '#b41414' }}>
-            Notification impossible pour le moment.
-          </div>
-        )}
-      </div>
+        {notificationStatus === 'error' && <div className="mt-3 font-body text-sm italic text-[#b41414]">Notification impossible pour le moment.</div>}
+      </section>
 
-      {/* Toggle */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
+      <nav className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {[
           { id: 'stock', icon: '📦', label: 'Colis au relais' },
           { id: 'transit', icon: '🚚', label: 'En transit' },
           { id: 'notation', icon: '★', label: 'Notation' },
           { id: 'profils', icon: '📊', label: 'Profils' },
         ].map(v => (
-          <button key={v.id} onClick={() => setView(v.id)} style={{
-            flex: 1, background: view === v.id ? 'var(--bordeaux)' : 'var(--papier)',
-            color: view === v.id ? 'var(--creme)' : 'var(--bordeaux)',
-            border: '1.5px solid var(--bordeaux)', padding: '12px 8px',
-            fontFamily: 'Special Elite, monospace', fontSize: 10,
-            letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-            transition: 'all 0.15s',
-          }}>
-            <span>{v.icon}</span>{v.label}
+          <button key={v.id} onClick={() => setView(v.id)} className={`min-h-[44px] border px-3 font-ui text-[10px] font-extrabold uppercase tracking-[0.14em] ${view === v.id ? 'border-[#6E1E2E] bg-[#6E1E2E] text-[#F3E8D2]' : 'border-[#6E1E2E]/20 bg-[#FFF8EA] text-[#6E1E2E]'}`}>
+            {v.icon} {v.label}
           </button>
         ))}
-      </div>
+      </nav>
 
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: 32, fontFamily: 'IM Fell English, serif', fontStyle: 'italic', color: 'rgba(26,16,8,0.4)' }}>
-          Chargement…
-        </div>
-      ) : (
+      {loading ? <div className="bordero-empty-state font-body italic">Chargement du comptoir…</div> : (
         <>
           {view === 'stock' && (
-            <>
-              <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                Colis au relais ({auRelais.length})
-                <span style={{ flex: 1, height: 1, background: 'repeating-linear-gradient(90deg, var(--bordeaux) 0, var(--bordeaux) 4px, transparent 4px, transparent 8px)' }} />
+            <section className="bordero-surface p-4">
+              <div className="mb-3 flex items-center gap-3"><div className="bordero-heading-section">Colis au relais ({auRelais.length})</div><span className="h-px flex-1 bg-[#6E1E2E]/18" /></div>
+              <div className="mb-4 grid grid-cols-2 gap-2">
+                <button type="button" onClick={() => setStockFilter('all')} className={`min-h-[40px] border font-ui text-[9px] font-extrabold uppercase tracking-[0.14em] ${stockFilter === 'all' ? 'border-[#6E1E2E] bg-[#6E1E2E] text-[#F3E8D2]' : 'border-[#6E1E2E]/20 bg-[#FFF8EA] text-[#6E1E2E]'}`}>Tous ({auRelais.length})</button>
+                <button type="button" onClick={() => setStockFilter('stagnants')} className={`min-h-[40px] border font-ui text-[9px] font-extrabold uppercase tracking-[0.14em] ${stockFilter === 'stagnants' ? 'border-[#b41414] bg-[#b41414] text-white' : 'border-[#b41414]/30 bg-[#FFF8EA] text-[#b41414]'}`}>+3 jours ({colisStagnants.length})</button>
               </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
-                <button type="button" onClick={() => setStockFilter('all')} style={{ background: stockFilter === 'all' ? 'var(--bordeaux)' : 'var(--papier)', color: stockFilter === 'all' ? 'var(--creme)' : 'var(--bordeaux)', border: '1.5px solid var(--bordeaux)', padding: '10px 8px', fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', cursor: 'pointer' }}>
-                  Tous ({auRelais.length})
-                </button>
-                <button type="button" onClick={() => setStockFilter('stagnants')} style={{ background: stockFilter === 'stagnants' ? '#b41414' : 'var(--papier)', color: stockFilter === 'stagnants' ? 'var(--creme)' : '#b41414', border: '1.5px solid #b41414', padding: '10px 8px', fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', cursor: 'pointer' }}>
-                  +3 jours ({colisStagnants.length})
-                </button>
-              </div>
-
-              {stockAffiche.length === 0 ? (
-                <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.4)', textAlign: 'center', padding: '24px 0' }}>
-                  {stockFilter === 'stagnants' ? 'Aucun colis ne stagne depuis plus de trois jours.' : 'Aucun colis au relais pour le moment.'}
-                </div>
-              ) : stockAffiche.map(c => {
-                const jours = joursEnStock(c);
-                const stagnant = jours > 3;
-                return (
-                <div key={c.id} style={{
-                  background: stagnant ? 'rgba(180,20,20,0.06)' : 'var(--papier)', border: '1px solid hsl(var(--border))',
-                  borderLeft: `4px solid ${stagnant ? '#b41414' : '#8B6914'}`, padding: '12px 14px', marginBottom: 10,
-                  display: 'flex', alignItems: 'center', gap: 12,
-                }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', flexShrink: 0, background: stagnant ? '#b41414' : '#8B6914' }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 13, fontWeight: 700 }}>{c.livre_titre}</div>
-                    <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 10, color: 'hsl(var(--muted-foreground))', marginTop: 2 }}>
-                      {c.livre_auteur} · Lecteur : {c.lecteur_email?.split('@')[0]}
-                    </div>
-                    {stagnant && (
-                      <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, color: '#b41414', marginTop: 5, letterSpacing: 1 }}>
-                        ⚠️ {jours} jours au relais · Voyageur : {c.voyageur_email?.split('@')[0] || '—'}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{
-                    fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase',
-                    padding: '2px 7px', border: `1px solid ${stagnant ? '#b41414' : '#8B6914'}`, color: stagnant ? '#b41414' : '#8B6914',
-                    fontFamily: 'Special Elite, monospace',
-                  }}>{stagnant ? 'À relancer' : 'À remettre'}</div>
-                </div>
-              );})}
-
-              {/* Livres récemment remis */}
-              {livrees.length > 0 && (
-                <>
-                  <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: '#2d6a2d', margin: '20px 0 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    Livrés récemment ({livrees.length})
-                    <span style={{ flex: 1, height: 1, background: 'repeating-linear-gradient(90deg, #2d6a2d 0, #2d6a2d 4px, transparent 4px, transparent 8px)' }} />
-                  </div>
-                  {livrees.slice(0, 5).map(c => (
-                    <div key={c.id} style={{
-                      background: 'var(--papier)', border: '1px solid hsl(var(--border))',
-                      borderLeft: '4px solid #2d6a2d', padding: '10px 14px', marginBottom: 8,
-                      display: 'flex', alignItems: 'center', gap: 12, opacity: 0.7,
-                    }}>
-                      <div style={{ width: 10, height: 10, borderRadius: '50%', flexShrink: 0, background: '#2d6a2d' }} />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 12, fontWeight: 700 }}>{c.livre_titre}</div>
-                        <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 10, color: 'hsl(var(--muted-foreground))' }}>{c.lecteur_email?.split('@')[0]}</div>
-                      </div>
-                      <div style={{ fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', padding: '2px 7px', border: '1px solid #2d6a2d', color: '#2d6a2d', fontFamily: 'Special Elite, monospace' }}>✓ Livré</div>
-                    </div>
-                  ))}
-                </>
-              )}
-            </>
+              {stockAffiche.length === 0 ? <div className="bordero-empty-state py-7 font-body italic">{stockFilter === 'stagnants' ? 'Aucun colis ne stagne depuis plus de trois jours.' : 'Aucun colis au relais pour le moment.'}</div> : stockAffiche.map(c => <RelayOrderRow key={c.id} commande={c} tone={joursEnStock(c) > 3 ? '#b41414' : '#8B6914'} statusLabel={joursEnStock(c) > 3 ? 'À relancer' : 'À remettre'} extra={joursEnStock(c) > 3 ? `${joursEnStock(c)} jours au relais · Voyageur : ${c.voyageur_email?.split('@')[0] || '—'}` : null} />)}
+              {livrees.length > 0 && <div className="mt-5"><div className="mb-3 bordero-heading-section text-[#2d6a2d]">Livrés récemment ({livrees.length})</div>{livrees.slice(0, 5).map(c => <RelayOrderRow key={c.id} commande={c} tone="#2d6a2d" statusLabel="Livré" />)}</div>}
+            </section>
           )}
 
           {view === 'transit' && (
-            <>
-              <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: '#1a3a5c', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
-                En transit vers votre relais ({enTransit.length})
-                <span style={{ flex: 1, height: 1, background: 'repeating-linear-gradient(90deg, #1a3a5c 0, #1a3a5c 4px, transparent 4px, transparent 8px)' }} />
-              </div>
-              {enTransit.length === 0 ? (
-                <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.4)', textAlign: 'center', padding: '24px 0' }}>
-                  Aucun livre en transit pour le moment.
-                </div>
-              ) : enTransit.map(c => (
-                <div key={c.id} style={{
-                  background: 'var(--papier)', border: '1px solid hsl(var(--border))',
-                  borderLeft: '4px solid #1a3a5c', padding: '12px 14px', marginBottom: 10,
-                  display: 'flex', alignItems: 'center', gap: 12,
-                }}>
-                  <div style={{ width: 10, height: 10, borderRadius: '50%', flexShrink: 0, background: '#1a3a5c', animation: 'pulse 2s infinite' }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 13, fontWeight: 700 }}>{c.livre_titre}</div>
-                    <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 10, color: 'hsl(var(--muted-foreground))', marginTop: 2 }}>
-                      Voyageur : {c.voyageur_email?.split('@')[0] || '—'} · Mode : {c.mode_livraison}
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', padding: '2px 7px', border: '1px solid #1a3a5c', color: '#1a3a5c', fontFamily: 'Special Elite, monospace' }}>En vol</div>
-                </div>
-              ))}
-            </>
+            <section className="bordero-surface p-4">
+              <div className="mb-3 bordero-heading-section text-[#1a3a5c]">En transit vers votre relais ({enTransit.length})</div>
+              {enTransit.length === 0 ? <div className="bordero-empty-state py-7 font-body italic">Aucun livre en transit pour le moment.</div> : enTransit.map(c => <RelayOrderRow key={c.id} commande={c} tone="#1a3a5c" statusLabel="En vol" extra={`Voyageur : ${c.voyageur_email?.split('@')[0] || '—'} · Mode : ${c.mode_livraison}`} />)}
+            </section>
           )}
 
           {view === 'notation' && <NotationRelais commandes={commandes} relaisEmail={user?.email} />}

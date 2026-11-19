@@ -27,47 +27,57 @@ export default function PanelAccueilVoyageur() {
 
   const livresEnCours = missions.filter(m => ['acceptee', 'engagee'].includes(m.statut));
   const livresLivres = missions.filter(m => ['livree', 'retiree'].includes(m.statut));
+  const prochaineMission = livresEnCours[0];
 
   if (loading) {
-    return <div className="text-center py-10 font-fell italic text-encre/45">Chargement…</div>;
+    return <div className="bordero-empty-state font-body italic">Chargement de votre carnet voyageur…</div>;
   }
 
   return (
-    <div>
-      <div style={{ marginBottom: 20 }}>
-        <div className="font-playfair" style={{ fontSize: 22, fontWeight: 700, color: 'var(--encre)' }}>
-          Bonjour {user?.full_name?.split(' ')[0] || 'Voyageur'} ✦
+    <div className="space-y-5">
+      <section className="relative overflow-hidden bordero-card-premium p-5 sm:p-6">
+        <div className="pointer-events-none absolute -right-10 -top-12 h-36 w-36 rounded-full border border-[#C7A15A]/45 opacity-40" />
+        <div className="pointer-events-none absolute right-7 top-8 font-heading text-7xl text-[#6E1E2E]/5">✈</div>
+        <div className="relative">
+          <div className="bordero-heading-section">Carnet de route Voyageur</div>
+          <h1 className="mt-2 font-heading text-3xl font-bold leading-tight text-[#6E1E2E] sm:text-4xl">
+            Bonjour {user?.full_name?.split(' ')[0] || 'Voyageur'} ✦
+          </h1>
+          <p className="mt-2 max-w-xl font-body text-[17px] italic leading-relaxed text-[#3B2A23]/64">
+            Suivez vos trajets, vos missions express et les livres confiés entre deux pays.
+          </p>
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {[
+              { label: 'En route', value: livresEnCours.length, tone: '#1a3a5c' },
+              { label: 'Livrés', value: livresLivres.length, tone: '#2d6a2d' },
+              { label: 'Annonces', value: annonces.length, tone: '#6E1E2E' },
+            ].map(item => (
+              <div key={item.label} className="border bg-[#FFF8EA]/78 p-3" style={{ borderColor: `${item.tone}33` }}>
+                <div className="font-heading text-3xl font-bold" style={{ color: item.tone }}>{item.value}</div>
+                <div className="mt-1 font-ui text-[9px] font-extrabold uppercase tracking-[0.18em] text-[#3B2A23]/46">{item.label}</div>
+              </div>
+            ))}
+          </div>
+          {prochaineMission && (
+            <div className="mt-4 rounded-2xl border border-[#C7A15A]/45 bg-[#F3E8D2]/55 p-3 font-body text-sm italic text-[#3B2A23]/70">
+              Prochaine attention : <strong className="text-[#6E1E2E]">{prochaineMission.livre}</strong>{prochaineMission.ville_destination ? ` vers ${prochaineMission.ville_destination}` : ''}.
+            </div>
+          )}
         </div>
-        <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.5)', marginTop: 2 }}>
-          Annonces anonymes, niveau et livres en route
-        </div>
-      </div>
+      </section>
 
       <MissionAnnouncementList title="Annonces ouvertes récentes" missions={annonces} emptyText="Aucune annonce pour l’instant." />
-      <MissionAnnouncementList title="Livres en route" missions={livresEnCours} grouped emptyText="Aucune annonce pour l’instant." />
+      <MissionAnnouncementList title="Livres en route" missions={livresEnCours} grouped emptyText="Aucun livre en route pour l’instant." />
 
-      <SectionTitle>Choix de la langue</SectionTitle>
-      <div style={{ background: 'var(--papier)', border: '1.5px solid rgba(26,16,8,0.2)', padding: 16, marginBottom: 18, boxShadow: '3px 3px 0 rgba(26,16,8,0.10)' }}>
+      <section className="bordero-surface p-4">
+        <SectionTitle>Choix de la langue</SectionTitle>
         <LangSwitcher />
-      </div>
+      </section>
 
-      <SectionTitle>Récapitulatif livres & niveau</SectionTitle>
-      <VoyageurStatsCard missions={missions} />
-      <div style={{ background: 'var(--papier)', border: '1.5px solid rgba(26,16,8,0.2)', padding: 16, marginBottom: 18, boxShadow: '3px 3px 0 rgba(26,16,8,0.10)' }}>
-        <div className="font-special" style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 10 }}>
-          Livres transportés
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <div style={{ background: 'rgba(128,0,32,0.06)', padding: 12, textAlign: 'center' }}>
-            <div className="font-playfair" style={{ fontSize: 26, color: 'var(--bordeaux)', fontWeight: 700 }}>{livresEnCours.length}</div>
-            <div className="font-special" style={{ fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(26,16,8,0.45)' }}>En cours</div>
-          </div>
-          <div style={{ background: 'rgba(45,106,45,0.08)', padding: 12, textAlign: 'center' }}>
-            <div className="font-playfair" style={{ fontSize: 26, color: '#2d6a2d', fontWeight: 700 }}>{livresLivres.length}</div>
-            <div className="font-special" style={{ fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(26,16,8,0.45)' }}>Livrés</div>
-          </div>
-        </div>
-      </div>
+      <section className="bordero-surface p-4">
+        <SectionTitle>Récapitulatif livres & niveau</SectionTitle>
+        <VoyageurStatsCard missions={missions} />
+      </section>
 
       <PerfoStrip />
     </div>

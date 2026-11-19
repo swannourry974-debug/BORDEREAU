@@ -115,215 +115,95 @@ export default function PanelScanner() {
   const actionType = getActionType(commande);
 
   return (
-    <div>
+    <div className="space-y-5">
       {scanning && <QrScannerModal onScan={handleScan} onClose={() => setScanning(false)} />}
 
-      {/* Header */}
-      <div style={{
-        background: 'var(--bordeaux)', color: 'var(--creme)',
-        padding: '18px 20px', marginBottom: 24, position: 'relative', overflow: 'hidden'
-      }}>
-        <span style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', fontSize: 60, opacity: 0.1 }}>⬡</span>
-        <div style={{ fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.7, marginBottom: 6, fontFamily: 'Special Elite, monospace' }}>
-          Point Relais · Action
-        </div>
-        <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 20, fontWeight: 700, lineHeight: 1.2 }}>
-          Scanner un bordero
-        </div>
-        <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, opacity: 0.75, marginTop: 6 }}>
-          Dépôt ou retrait d'un colis
-        </div>
-      </div>
+      <section className="relative overflow-hidden bordero-card-premium p-5 sm:p-6">
+        <div className="pointer-events-none absolute right-5 top-4 font-heading text-8xl text-[#6E1E2E]/5">⬡</div>
+        <div className="bordero-heading-section">Point Relais · Action sécurisée</div>
+        <h1 className="mt-2 font-heading text-3xl font-bold text-[#6E1E2E] sm:text-4xl">Scanner un bordero</h1>
+        <p className="mt-2 max-w-lg font-body text-[16px] italic leading-relaxed text-[#3B2A23]/64">Lecture QR, contrôle du visuel Bordero et résultat de dépôt ou retrait sans modifier le protocole existant.</p>
+      </section>
 
-      {/* Scan Button */}
-      <button
-        onClick={() => { reset(); setScanning(true); }}
-        style={{
-          width: '100%', background: 'var(--bordeaux)', color: 'var(--creme)',
-          border: 'none', padding: '20px 24px', marginBottom: 12,
-          fontFamily: 'Special Elite, monospace', fontSize: 13,
-          letterSpacing: 4, textTransform: 'uppercase', cursor: 'pointer',
-          outline: '2px dashed var(--bordeaux)', outlineOffset: 4,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
-        }}
-      >
-        <span style={{ fontSize: 24 }}>⬡</span>
+      <button onClick={() => { reset(); setScanning(true); }} className="flex min-h-[76px] w-full items-center justify-center gap-3 bg-cta px-5 font-ui text-[12px] font-extrabold uppercase tracking-[0.24em] text-cta-foreground shadow-[0_14px_28px_rgba(194,65,12,0.20)]">
+        <span className="text-2xl">⬡</span>
         Lancer le scanner
       </button>
 
-      {/* Mode de secours — saisie manuelle */}
-      <div style={{ marginBottom: 28 }}>
-        <button
-          onClick={() => setShowManual(v => !v)}
-          style={{
-            width: '100%', background: 'none', border: '1px dashed rgba(26,16,8,0.25)',
-            padding: '10px 16px', cursor: 'pointer', color: 'rgba(26,16,8,0.5)',
-            fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          }}
-        >
+      <section className="bordero-surface p-4">
+        <button onClick={() => setShowManual(v => !v)} className="min-h-[44px] w-full border border-dashed border-[#6E1E2E]/24 bg-[#FFF8EA]/72 px-4 font-ui text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#6E1E2E]/70">
           ✎ Saisie manuelle de l'ID commande
         </button>
         {showManual && (
-          <div style={{ marginTop: 8, display: 'flex', gap: 8 }}>
-            <input
-              type="text"
-              value={manualId}
-              onChange={e => setManualId(e.target.value)}
-              placeholder="ID ou QR code de la commande…"
-              style={{
-                flex: 1, padding: '10px 12px', fontFamily: 'monospace', fontSize: 12,
-                background: 'var(--creme)', border: '1.5px solid hsl(var(--border))',
-                color: 'var(--encre)', outline: 'none', letterSpacing: 1,
-              }}
-              onKeyDown={e => { if (e.key === 'Enter' && manualId.trim()) { reset(); handleScan(manualId.trim()); setManualId(''); setShowManual(false); } }}
-            />
-            <button
-              onClick={() => { if (manualId.trim()) { reset(); handleScan(manualId.trim()); setManualId(''); setShowManual(false); } }}
-              disabled={!manualId.trim()}
-              style={{
-                background: 'var(--bordeaux)', color: 'var(--creme)', border: 'none',
-                padding: '10px 16px', cursor: manualId.trim() ? 'pointer' : 'not-allowed',
-                fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 2,
-                textTransform: 'uppercase', opacity: manualId.trim() ? 1 : 0.5,
-              }}
-            >
-              OK
-            </button>
+          <div className="mt-3 flex gap-2">
+            <input type="text" value={manualId} onChange={e => setManualId(e.target.value)} placeholder="ID ou QR code de la commande…" className="min-w-0 flex-1 border border-[#6E1E2E]/24 bg-[#FFF8EA] px-3 py-2 font-mono text-sm text-[#1E1A18]" onKeyDown={e => { if (e.key === 'Enter' && manualId.trim()) { reset(); handleScan(manualId.trim()); setManualId(''); setShowManual(false); } }} />
+            <button onClick={() => { if (manualId.trim()) { reset(); handleScan(manualId.trim()); setManualId(''); setShowManual(false); } }} disabled={!manualId.trim()} className="min-h-[44px] bg-[#6E1E2E] px-4 font-ui text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#F3E8D2] disabled:cursor-not-allowed disabled:opacity-50">OK</button>
           </div>
         )}
-      </div>
+      </section>
 
-      {/* Loading */}
-      {loading && (
-        <div style={{ textAlign: 'center', padding: 24, fontFamily: 'IM Fell English, serif', fontStyle: 'italic', color: 'rgba(26,16,8,0.5)' }}>
-          Chargement…
-        </div>
-      )}
+      {loading && <div className="bordero-empty-state font-body italic">Chargement…</div>}
 
-      {/* Error */}
       {error && (
-        <div style={{
-          background: 'rgba(128,0,32,0.06)', border: '1.5px solid var(--bordeaux)',
-          padding: 16, marginBottom: 20, color: 'var(--bordeaux)',
-          fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13,
-        }}>
-          ❌ {error}
-          <button onClick={reset} style={{ display: 'block', marginTop: 10, fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', background: 'none', border: '1px dashed var(--bordeaux)', padding: '6px 14px', cursor: 'pointer', color: 'var(--bordeaux)' }}>Réessayer</button>
-        </div>
+        <section className="border border-[#b41414]/35 bg-[#b41414]/6 p-4 text-[#b41414]">
+          <div className="font-body text-sm italic leading-relaxed">❌ {error}</div>
+          <button onClick={reset} className="mt-3 min-h-[40px] border border-dashed border-[#b41414]/45 px-4 font-ui text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#b41414]">Réessayer</button>
+        </section>
       )}
 
-      {/* Résultat scan */}
       {commande && !actionDone && (
-        <div style={{ background: 'var(--papier)', border: '2px solid var(--bordeaux)', padding: 20, marginBottom: 20 }}>
-          <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', color: 'rgba(26,16,8,0.45)', marginBottom: 12 }}>
-            Bordero identifié
-          </div>
-          <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
-            {commande.livre_titre}
-          </div>
-          <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.65)', marginBottom: 4 }}>
-            ✍️ {commande.livre_auteur || '—'}
-          </div>
-          <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 11, color: 'rgba(26,16,8,0.5)', marginBottom: 4 }}>
-            👤 Lecteur : {commande.lecteur_email}
-          </div>
-          <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 11, color: 'rgba(26,16,8,0.5)', marginBottom: 4 }}>
-            🌍 Destination : {commande.zone_nom}
-          </div>
-          <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 11, color: 'rgba(26,16,8,0.5)', marginBottom: 16 }}>
-            📦 Mode : {commande.mode_livraison === 'express' ? 'Express' : 'Collectif'}
+        <section className="bordero-card-premium p-5">
+          <div className="bordero-heading-section">Bordero identifié</div>
+          <h2 className="mt-2 font-heading text-2xl font-bold text-[#6E1E2E]">{commande.livre_titre}</h2>
+          <div className="mt-3 grid gap-2 font-ui text-[10px] uppercase tracking-[0.12em] text-[#3B2A23]/52">
+            <div>✍️ {commande.livre_auteur || '—'}</div>
+            <div>👤 Lecteur : {commande.lecteur_email}</div>
+            <div>🌍 Destination : {commande.zone_nom}</div>
+            <div>📦 Mode : {commande.mode_livraison === 'express' ? 'Express' : 'Collectif'}</div>
           </div>
 
           {commande.visuel_bordero_url && (
-            <div style={{ marginBottom: 16 }}>
-              <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 8 }}>
-                Visuel sécurisé à comparer · {commande.visuel_bordero_serie || 'Série Bordero'} · Taille {commande.format_livre_bordero || '—'}
-              </div>
-              <img src={commande.visuel_bordero_url} alt="Visuel sécurisé Bordero" style={{ width: '100%', border: '1.5px solid var(--encre)' }} />
+            <div className="mt-4">
+              <div className="mb-2 font-ui text-[9px] font-extrabold uppercase tracking-[0.16em] text-[#6E1E2E]">Visuel sécurisé à comparer · {commande.visuel_bordero_serie || 'Série Bordero'} · Taille {commande.format_livre_bordero || '—'}</div>
+              <img src={commande.visuel_bordero_url} alt="Visuel sécurisé Bordero" className="w-full border border-[#3B2A23]/24" />
             </div>
           )}
 
-          {/* Statut actuel */}
-          <div style={{
-            display: 'inline-block', padding: '4px 12px', marginBottom: 20,
-            border: '1.5px solid var(--sepia)', color: 'var(--sepia)',
-            fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
-          }}>
-            Statut : {commande.statut?.replace(/_/g, ' ')}
-          </div>
+          <div className="mt-4 inline-flex rounded-full border border-[#C7A15A]/55 bg-[#C7A15A]/10 px-3 py-1 font-ui text-[9px] font-extrabold uppercase tracking-[0.14em] text-[#8B6914]">Statut : {commande.statut?.replace(/_/g, ' ')}</div>
 
-          {/* Actions */}
-          {actionType === 'depot' && (
-            <div style={{ background: 'rgba(139,105,20,0.08)', border: '1px dashed #8B6914', padding: 14 }}>
-              <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.65)', lineHeight: 1.6 }}>
-                Réception relais verrouillée : scannez le QR sécurisé Bordero présenté par le voyageur pour valider automatiquement le visuel, la taille S/M/L et le hash de sécurité.
-              </div>
-            </div>
-          )}
+          {actionType === 'depot' && <div className="mt-4 border border-dashed border-[#8B6914]/45 bg-[#8B6914]/8 p-3 font-body text-sm italic leading-relaxed text-[#3B2A23]/70">Réception relais verrouillée : scannez le QR sécurisé Bordero présenté par le voyageur pour valider automatiquement le visuel, la taille S/M/L et le hash de sécurité.</div>}
+          {actionType === 'retrait' && <div className="mt-4 border border-dashed border-[#2d6a2d]/45 bg-[#2d6a2d]/8 p-3 font-body text-sm italic leading-relaxed text-[#3B2A23]/70">Remise lecteur verrouillée : scannez le QR sécurisé affiché dans l’étagère du lecteur pour valider automatiquement le visuel officiel, la taille physique S/M/L et le hash de sécurité.</div>}
+          {!actionType && <div className="mt-4 font-body text-sm italic text-[#3B2A23]/54">Aucune action possible pour ce statut.</div>}
 
-          {actionType === 'retrait' && (
-            <div style={{ background: 'rgba(45,106,45,0.08)', border: '1px dashed #2d6a2d', padding: 14 }}>
-              <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.65)', lineHeight: 1.6 }}>
-                Remise lecteur verrouillée : scannez le QR sécurisé affiché dans l’étagère du lecteur pour valider automatiquement le visuel officiel, la taille physique S/M/L et le hash de sécurité.
-              </div>
-            </div>
-          )}
-
-          {!actionType && (
-            <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.5)' }}>
-              Aucune action possible pour ce statut.
-            </div>
-          )}
-
-          <button onClick={reset} style={{ marginTop: 12, width: '100%', background: 'none', border: '1px dashed rgba(26,16,8,0.2)', padding: '10px', fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer', color: 'rgba(26,16,8,0.45)' }}>
-            Annuler
-          </button>
-        </div>
+          <button onClick={reset} className="mt-4 min-h-[44px] w-full border border-dashed border-[#6E1E2E]/22 bg-[#FFF8EA]/60 px-4 font-ui text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#6E1E2E]/60">Annuler</button>
+        </section>
       )}
 
-      {/* Action confirmée */}
       {actionDone && (
-        <div style={{
-          background: actionDone === 'depot' ? 'rgba(139,105,20,0.08)' : 'rgba(45,106,45,0.08)',
-          border: `2px solid ${actionDone === 'depot' ? '#8B6914' : '#2d6a2d'}`,
-          padding: 24, textAlign: 'center', marginBottom: 20,
-        }}>
-          <div style={{ fontSize: 36, marginBottom: 10 }}>{actionDone === 'depot' ? '📦' : '✅'}</div>
-          <div className="font-playfair" style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>
-            {actionDone === 'depot' ? 'Dépôt confirmé !' : 'Remise confirmée !'}
-          </div>
-          <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.55)' }}>
-            {commande?.recu_horodate || (actionDone === 'depot' ? 'Le livre est bien enregistré dans votre stock.' : 'Le lecteur a bien récupéré son livre.')}
-          </div>
-          {commande?.visuel_bordero_url && (
-            <img src={commande.visuel_bordero_url} alt="Visuel validé Bordero" style={{ width: '100%', marginTop: 14, border: '1.5px solid var(--encre)' }} />
-          )}
-          <button onClick={reset} style={{ marginTop: 16, fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', background: 'var(--bordeaux)', color: 'var(--creme)', border: 'none', padding: '10px 20px', cursor: 'pointer' }}>
-            Nouveau scan
-          </button>
-        </div>
+        <section className="bordero-card-premium p-6 text-center" style={{ borderColor: actionDone === 'depot' ? '#8B6914' : '#2d6a2d' }}>
+          <div className="mb-2 text-4xl">{actionDone === 'depot' ? '📦' : '✅'}</div>
+          <h2 className="font-heading text-2xl font-bold text-[#6E1E2E]">{actionDone === 'depot' ? 'Dépôt confirmé !' : 'Remise confirmée !'}</h2>
+          <p className="mt-2 font-body text-sm italic text-[#3B2A23]/60">{commande?.recu_horodate || (actionDone === 'depot' ? 'Le livre est bien enregistré dans votre stock.' : 'Le lecteur a bien récupéré son livre.')}</p>
+          {commande?.visuel_bordero_url && <img src={commande.visuel_bordero_url} alt="Visuel validé Bordero" className="mt-4 w-full border border-[#3B2A23]/24" />}
+          <button onClick={reset} className="mt-5 min-h-[44px] bg-[#6E1E2E] px-5 font-ui text-[10px] font-extrabold uppercase tracking-[0.16em] text-[#F3E8D2]">Nouveau scan</button>
+        </section>
       )}
 
-      {/* Mode d'emploi */}
       {!commande && !error && !loading && (
-        <>
-          <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-            Mode d'emploi
-            <span style={{ flex: 1, height: 1, background: 'repeating-linear-gradient(90deg, var(--bordeaux) 0, var(--bordeaux) 4px, transparent 4px, transparent 8px)' }} />
-          </div>
+        <section className="bordero-surface p-4">
+          <div className="mb-3 bordero-heading-section">Mode d'emploi</div>
           {[
             { step: '01', text: 'Demandez le bordero imprimé au lecteur ou voyageur' },
             { step: '02', text: 'Appuyez sur "Lancer le scanner" et pointez la caméra vers le QR code' },
             { step: '03', text: 'Le système identifie automatiquement le colis et l\'action à effectuer' },
             { step: '04', text: 'Confirmez le dépôt ou la remise du livre' },
           ].map(({ step, text }) => (
-            <div key={step} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', padding: '12px 0', borderBottom: '1px dashed hsl(var(--border))' }}>
-              <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 11, color: 'var(--bordeaux)', fontWeight: 'bold', minWidth: 24 }}>{step}</span>
-              <span style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--foreground))', lineHeight: 1.5 }}>{text}</span>
+            <div key={step} className="flex gap-3 border-b border-dashed border-[#6E1E2E]/14 py-3 last:border-b-0">
+              <span className="font-ui text-[10px] font-extrabold text-[#6E1E2E]">{step}</span>
+              <span className="font-body text-sm italic leading-relaxed text-[#3B2A23]/64">{text}</span>
             </div>
           ))}
-        </>
+        </section>
       )}
     </div>
   );

@@ -69,74 +69,35 @@ function MissionCard({ mission, rang, onAccept, disabled, onScan, onRemove }) {
   };
 
   const isEngaged = !!mission.engaged;
+  const stateColor = mission.status === 'livree' ? '#2d6a2d' : mission.status === 'en_transit' ? '#1a3a5c' : mission.statut === 'expiree' ? '#9A3412' : '#6E1E2E';
 
   return (
-    <div style={{
-      background: 'var(--papier)',
-      border: '1.5px solid hsl(var(--border))',
-      padding: 16,
-      marginBottom: 12,
-      position: 'relative',
-      boxShadow: '3px 3px 0 rgba(26,16,8,0.12)',
-      animation: 'fadeSlideIn 0.4s ease both',
-      opacity: isEngaged ? 0.75 : 1,
-    }}>
-      {/* Corner */}
-      <div style={{
-        position: 'absolute', top: 0, right: 0,
-        borderStyle: 'solid', borderWidth: '0 32px 32px 0',
-        borderColor: `transparent var(--bordeaux) transparent transparent`,
-      }} />
-
+    <article className="relative mb-3 overflow-hidden border bg-[#FFF8EA]/88 p-4 shadow-[0_12px_26px_rgba(59,42,35,0.10)]" style={{ borderColor: `${stateColor}38`, opacity: isEngaged ? 0.92 : 1 }}>
+      <div className="absolute right-0 top-0 h-14 w-14 bg-[#6E1E2E]/8" />
       {isEngaged && onRemove && (
-        <button
-          type="button"
-          aria-label="Retirer cette mission"
-          title="Retirer cette mission"
-          onClick={() => onRemove(mission)}
-          style={{
-            position: 'absolute', top: 6, right: 6, zIndex: 3,
-            width: 44, height: 44, border: 'none', borderRadius: '50%',
-            background: 'var(--creme)', color: 'var(--bordeaux)',
-            fontFamily: 'Special Elite, monospace', fontSize: 18, lineHeight: '44px',
-            cursor: 'pointer', boxShadow: '0 1px 4px rgba(26,16,8,0.25)',
-          }}
-        >×</button>
+        <button type="button" aria-label="Retirer cette mission" title="Retirer cette mission" onClick={() => onRemove(mission)} className="absolute right-2 top-2 z-10 flex h-9 w-9 items-center justify-center border border-[#6E1E2E]/20 bg-[#F3E8D2] font-ui text-lg font-bold text-[#6E1E2E]">×</button>
       )}
 
-      <div className="font-special" style={{ fontSize: 18, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 4 }}>
-        {mission.ville}
-      </div>
-      <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))', marginBottom: 10 }}>
-        {isEngaged ? (mission.status === 'livree' ? 'Livraison confirmée · Mission terminée' : mission.status === 'en_transit' ? 'Achat confirmé · En transit' : 'En attente du scan d’achat') : mission.date}
-      </div>
-      <div style={{ fontSize: 13, color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
-        📚 <em>{mission.livre}</em> · {mission.type} · {mission.poids}
-      </div>
-
-      {/* Badge rang si engagé */}
-      {isEngaged && mission.rang && (
-        <div style={{
-          display: 'inline-block',
-          background: mission.status === 'livree' ? 'rgba(45,106,45,0.1)' : mission.status === 'en_transit' ? 'rgba(26,58,92,0.1)' : 'rgba(128,0,32,0.08)',
-          border: `1px solid ${mission.status === 'livree' ? '#2d6a2d' : mission.status === 'en_transit' ? '#1a3a5c' : 'var(--bordeaux)'}`,
-          color: mission.status === 'livree' ? '#2d6a2d' : mission.status === 'en_transit' ? '#1a3a5c' : 'var(--bordeaux)',
-          fontFamily: 'Special Elite, monospace',
-          fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
-          padding: '2px 8px', marginBottom: 8,
-        }}>
-          {mission.status === 'livree' ? 'Livraison confirmée' : mission.status === 'en_transit' ? 'En transit vers relais' : 'Achat à scanner'} · +{mission.commission?.toFixed(2)} €
+      <div className="flex items-start gap-3">
+        <div className="flex h-16 w-12 shrink-0 flex-col justify-between bg-[#6E1E2E] p-2 text-[#F3E8D2] shadow-[0_10px_20px_rgba(59,42,35,0.16)]">
+          <span className="font-ui text-[7px] uppercase tracking-[0.16em] opacity-70">B</span>
+          <span className="font-heading text-sm leading-none">✈</span>
         </div>
-      )}
+        <div className="min-w-0 flex-1">
+          <div className="font-ui text-[9px] font-extrabold uppercase tracking-[0.18em]" style={{ color: stateColor }}>{mission.ville}</div>
+          <h3 className="mt-1 font-heading text-xl font-bold leading-tight text-[#6E1E2E]">{mission.livre}</h3>
+          <p className="mt-1 font-body text-sm italic text-[#3B2A23]/60">{isEngaged ? (mission.status === 'livree' ? 'Livraison confirmée · Mission terminée' : mission.status === 'en_transit' ? 'Achat confirmé · En transit' : 'En attente du scan d’achat') : mission.date}</p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <span className="rounded-full border px-2 py-1 font-ui text-[9px] font-bold uppercase tracking-[0.12em]" style={{ borderColor: `${stateColor}55`, color: stateColor, background: `${stateColor}12` }}>{mission.type} · {mission.poids}</span>
+            {isEngaged && mission.rang && <span className="rounded-full border border-[#C7A15A]/50 bg-[#C7A15A]/10 px-2 py-1 font-ui text-[9px] font-bold uppercase tracking-[0.12em] text-[#8B6914]">Rang {mission.rang}</span>}
+          </div>
+        </div>
+      </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px dashed rgba(26,16,8,0.2)', paddingTop: 10, marginTop: 4 }}>
+      <div className="mt-4 flex items-center justify-between gap-3 border-t border-dashed border-[#6E1E2E]/16 pt-3">
         <div>
-          <span className="font-playfair" style={{ fontSize: 22, fontWeight: 700, color: isEngaged ? 'hsl(var(--muted-foreground))' : 'var(--bordeaux)' }}>
-            {commission ? `${commission.toFixed(2)} €` : (mission.commission ? `${mission.commission.toFixed(2)} €` : '—')}
-          </span>
-          <span style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))', letterSpacing: 1, display: 'block', marginTop: -2 }}>
-            {isEngaged ? 'En séquestre' : 'Commission'}
-          </span>
+          <div className="font-heading text-2xl font-bold" style={{ color: stateColor }}>{commission ? `${commission.toFixed(2)} €` : (mission.commission ? `${mission.commission.toFixed(2)} €` : '—')}</div>
+          <div className="font-ui text-[9px] uppercase tracking-[0.14em] text-[#3B2A23]/42">{isEngaged ? 'En séquestre' : 'Commission'}</div>
         </div>
 
         {isEngaged ? (
@@ -153,17 +114,7 @@ function MissionCard({ mission, rang, onAccept, disabled, onScan, onRemove }) {
           </BtnCoupon>
         )}
       </div>
-
-      {isEngaged && (
-        <div className="font-special animate-stamp" style={{
-          position: 'absolute', right: 14, top: '50%',
-          transform: 'translateY(-50%) rotate(-12deg)',
-          border: '3px solid #1a3a5c', color: '#1a3a5c',
-          fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
-          padding: '4px 8px', opacity: 0.7, pointerEvents: 'none',
-        }}>ENGAGÉE</div>
-      )}
-    </div>
+    </article>
   );
 }
 
@@ -183,8 +134,7 @@ export default function PanelMissions() {
   const [searchParams, setSearchParams] = useSearchParams();
   const modalParam = searchParams.get('modal');
 
-  // Wallet (simulé)
-  const [wallet] = useState({ soldeDisponible: 12.50, gainsPrevisionnels: 5.00, virementSuspendu: false });
+  const [wallet, setWallet] = useState({ soldeDisponible: 0, gainsPrevisionnels: 0, virementSuspendu: false });
 
   const loadAvailableMissions = async () => {
     const missions = await base44.entities.MissionVoyageur.filter({ statut: { $in: ['disponible', 'expiree'] }, mode_livraison: 'express' }, { sort: '-created_date', limit: 80 });
@@ -196,10 +146,17 @@ export default function PanelMissions() {
     base44.auth.me().then(async (u) => {
       setUser(u);
       if (!u) return;
-      const [voyages, missionsVoyageur] = await Promise.all([
+      const [voyages, missionsVoyageur, wallets] = await Promise.all([
         base44.entities.Voyage.filter({ voyageur_email: u.email }),
         base44.entities.MissionVoyageur.filter({ voyageur_email: u.email }, { sort: '-updated_date', limit: 80 }),
+        base44.entities.VoyageurWallet.filter({ user_email: u.email }, '-updated_date', 1),
       ]);
+      const walletRecord = wallets?.[0];
+      setWallet({
+        soldeDisponible: walletRecord?.solde_disponible ?? 0,
+        gainsPrevisionnels: walletRecord?.gains_previsionnels ?? 0,
+        virementSuspendu: walletRecord?.virement_suspendu ?? false,
+      });
       setVoyages(voyages || []);
       setEngagees((missionsVoyageur?.items || missionsVoyageur || []).filter(m => ['acceptee', 'engagee', 'en_transit', 'deposee_relais', 'livree', 'retiree'].includes(m.statut)).map((m, index) => ({ ...formatMissionRecord(m), engaged: true, status: ['livree', 'retiree'].includes(m.statut) ? 'livree' : ['en_transit', 'deposee_relais'].includes(m.statut) ? 'en_transit' : 'engagee', rang: m.numero_ordre || index + 1 })));
       const dernierVoyage = voyages[0];
@@ -251,14 +208,13 @@ export default function PanelMissions() {
   const totalCommission = getTotalCommission(missionsActives, zoneVoyage);
   const limitAtteinte = livresActifs >= quotaLivres || poidsEngageG / 1000 >= quotaKg;
 
-  // Stats pour les badges (simulées — missionsAcceptees = nb total engagées)
   const statsActuelles = {
-    livresLivres: 12,
-    livraisonsRapides: 4,
-    livraisonsUltraRapides: 1,
+    livresLivres: missionsArchivees.length,
+    livraisonsRapides: missionsArchivees.length,
+    livraisonsUltraRapides: 0,
     maxLivresParVoyage: livresActifs,
-    missionsAcceptees: 7 + engagees.filter(e => e.engaged).length,
-    paysVisites: 2,
+    missionsAcceptees: engagees.length,
+    paysVisites: voyages.filter(v => v.validation_admin === 'valide' || v.actif).length,
   };
 
   const searchNeedle = missionSearch.trim().toLowerCase();
@@ -409,6 +365,24 @@ export default function PanelMissions() {
             }}
           />
         )}
+
+        <section className="mb-5 overflow-hidden bordero-card-premium p-5 sm:p-6">
+          <div className="bordero-heading-section">Atlas des missions</div>
+          <h1 className="mt-2 font-heading text-3xl font-bold text-[#6E1E2E] sm:text-4xl">Carnet Voyageur</h1>
+          <p className="mt-2 max-w-xl font-body text-[16px] italic leading-relaxed text-[#3B2A23]/64">Retrouvez les missions express, vos livres en route et votre capacité de valise sans modifier les règles de transport.</p>
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {[
+              { label: 'Actives', value: missionsActives.length, color: '#1a3a5c' },
+              { label: 'Disponibles', value: missionsFiltered.length, color: '#6E1E2E' },
+              { label: 'Archivées', value: missionsArchivees.length, color: '#2d6a2d' },
+            ].map(item => (
+              <div key={item.label} className="border bg-[#FFF8EA]/75 p-3 text-center" style={{ borderColor: `${item.color}33` }}>
+                <div className="font-heading text-2xl font-bold" style={{ color: item.color }}>{item.value}</div>
+                <div className="font-ui text-[8px] font-extrabold uppercase tracking-[0.16em] text-[#3B2A23]/45">{item.label}</div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         <VoyageurSecondarySearch query={missionSearch} onQueryChange={setMissionSearch} />
 

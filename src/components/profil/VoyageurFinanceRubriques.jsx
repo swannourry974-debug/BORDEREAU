@@ -15,17 +15,17 @@ export default function VoyageurFinanceRubriques({ user, sectionStyle }) {
   }, [user?.email]);
 
   if (loading) {
-    return <div style={sectionStyle} className="font-fell text-center italic text-encre/45">Chargement du portefeuille…</div>;
+    return <div style={sectionStyle} className="bordero-empty-state font-body italic">Chargement du portefeuille…</div>;
   }
 
   return (
     <>
-      <div style={sectionStyle}>
-        <div className="font-special" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 14 }}>Réclamer mes gains</div>
+      <div className="bordero-surface p-4" style={{ ...sectionStyle, boxShadow: 'var(--bordero-shadow-paper)' }}>
+        <div className="bordero-heading-section mb-3">Réclamer mes gains</div>
         <PayoutRequestButtons user={user} wallet={wallet} onUpdated={setWallet} />
       </div>
-      <div style={sectionStyle}>
-        <div className="font-special" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 14 }}>Portefeuille voyageur</div>
+      <div className="bordero-surface p-4" style={{ ...sectionStyle, boxShadow: 'var(--bordero-shadow-paper)' }}>
+        <div className="bordero-heading-section mb-3">Portefeuille voyageur</div>
         <WalletCard soldeDisponible={wallet?.solde_disponible ?? 0} gainsPrevisionnels={wallet?.gains_previsionnels ?? 0} virementSuspendu={wallet?.virement_suspendu ?? false} hideTransfer />
       </div>
     </>
