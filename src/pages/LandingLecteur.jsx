@@ -1,7 +1,13 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
+
+const steps = [
+  ['01', 'Explorez le catalogue', 'Recherchez un titre, un auteur ou un ISBN, puis ajoutez le livre à votre parcours.'],
+  ['02', 'Choisissez la route', 'Sélectionnez la destination, le mode Express ou Collecte et le relais de retrait.'],
+  ['03', 'Suivez le passage', 'Votre étagère indique les étapes de paiement, transport, arrivée au relais et remise.'],
+];
 
 export default function LandingLecteur() {
   const navigate = useNavigate();
@@ -16,97 +22,63 @@ export default function LandingLecteur() {
   };
 
   return (
-    <div style={{ background: 'var(--creme)', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 20px', position: 'relative', overflow: 'hidden' }}>
-      {/* Grain overlay */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E\")", opacity: 0.3 }} />
-
-      {/* Decorative book icon */}
-      <div style={{ fontSize: 64, marginBottom: 8, opacity: 0.15, position: 'absolute', top: 40, right: 30, transform: 'rotate(12deg)' }}>📚</div>
-      <div style={{ fontSize: 48, marginBottom: 8, opacity: 0.08, position: 'absolute', bottom: 60, left: 20, transform: 'rotate(-8deg)' }}>✦</div>
-
-      <div style={{ maxWidth: 400, width: '100%', position: 'relative', zIndex: 1 }}>
-
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div className="font-special" style={{ fontSize: 11, letterSpacing: 5, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 12, opacity: 0.8 }}>
-            BORDERO
+    <main className="min-h-screen bordero-shell px-5 py-6 text-encre sm:px-8 lg:px-10">
+      <section className="mx-auto max-w-6xl">
+        <nav className="flex flex-wrap items-center justify-between gap-4 py-4">
+          <Link to="/" className="font-ui text-xs font-extrabold uppercase tracking-[0.32em] text-bordeaux">Bordero</Link>
+          <div className="flex gap-3 font-ui text-[11px] font-bold uppercase tracking-[0.18em] text-bordeaux/70">
+            <Link to="/landing-voyageur">Voyageur</Link>
+            <Link to="/landing-relais">Relais</Link>
           </div>
-          <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.45)', letterSpacing: 2, marginBottom: 28 }}>
-            Manifeste des livres voyageurs
-          </div>
+        </nav>
 
-          {/* Role badge */}
-          <div style={{
-            display: 'inline-block',
-            background: 'var(--bordeaux)',
-            color: 'var(--creme)',
-            fontFamily: 'Special Elite, monospace',
-            fontSize: 10,
-            letterSpacing: 4,
-            textTransform: 'uppercase',
-            padding: '6px 18px',
-            marginBottom: 24,
-          }}>
-            ✦ ESPACE LECTEUR
+        <div className="grid gap-8 py-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+          <div className="bordero-card-premium p-7 sm:p-10">
+            <span className="bordero-badge">📖 Espace lecteur</span>
+            <h1 className="bordero-heading-display mt-6 text-5xl sm:text-6xl">Commandez vos livres comme on trace une route.</h1>
+            <p className="mt-6 font-body text-2xl leading-9 text-encre/72">
+              Bordero vous aide à trouver des livres, choisir un mode d’acheminement et suivre leur arrivée jusqu’au point relais.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <button onClick={handleConnect} className="bordero-action-primary px-6 py-3 text-xs">Accéder au catalogue</button>
+              <a href="#fonctionnement" className="bordero-action-secondary px-6 py-3 text-xs">Voir les étapes</a>
+            </div>
           </div>
 
-          <div className="font-playfair" style={{ fontSize: 30, fontWeight: 700, color: 'var(--encre)', lineHeight: 1.2, marginBottom: 16 }}>
-            Vos livres, livrés<br />
-            <span style={{ fontStyle: 'italic', color: 'var(--bordeaux)' }}>par des voyageurs</span>
-          </div>
-
-          <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 14, color: 'rgba(26,16,8,0.6)', lineHeight: 1.7 }}>
-            Commandez des livres rares ou introuvables localement. Des voyageurs les ramènent dans leurs valises, directement à votre relais.
+          <div className="rounded-[28px] border border-bordeaux/25 bg-secondary p-6 text-creme shadow-2xl">
+            <p className="font-ui text-[11px] font-bold uppercase tracking-[0.28em] text-or">Modes disponibles</p>
+            <div className="mt-5 grid gap-4">
+              <div className="rounded-2xl border border-creme/15 bg-creme/10 p-5">
+                <h2 className="font-heading text-3xl text-creme">Express</h2>
+                <p className="mt-2 font-body text-lg leading-7 text-creme/75">Un voyageur transporte le livre sur un trajet compatible, avec suivi dans l’application.</p>
+              </div>
+              <div className="rounded-2xl border border-creme/15 bg-creme/10 p-5">
+                <h2 className="font-heading text-3xl text-creme">Collecte</h2>
+                <p className="mt-2 font-body text-lg leading-7 text-creme/75">Les commandes sont regroupées vers un relais pour une solution adaptée aux lots de livres.</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Features */}
-        <div style={{ marginBottom: 36 }}>
-          {[
-            { icon: '🌍', label: 'Livres du monde entier' },
-            { icon: '✈️', label: 'Transport par des voyageurs certifiés' },
-            { icon: '🏪', label: 'Retrait dans votre relais local' },
-          ].map(({ icon, label }) => (
-            <div key={label} style={{
-              display: 'flex', alignItems: 'center', gap: 14,
-              padding: '12px 0',
-              borderBottom: '1px dashed rgba(26,16,8,0.15)',
-            }}>
-              <span style={{ fontSize: 20 }}>{icon}</span>
-              <span className="font-special" style={{ fontSize: 11, letterSpacing: 1, color: 'rgba(26,16,8,0.7)' }}>{label}</span>
+        <section id="fonctionnement" className="grid gap-4 pb-10 md:grid-cols-3">
+          {steps.map(([step, title, text]) => (
+            <article key={step} className="bordero-surface p-6">
+              <div className="font-ui text-3xl font-extrabold text-bordeaux/35">{step}</div>
+              <h2 className="mt-4 font-ui text-sm font-extrabold uppercase tracking-[0.2em] text-bordeaux">{title}</h2>
+              <p className="mt-3 font-body text-xl leading-8 text-encre/70">{text}</p>
+            </article>
+          ))}
+        </section>
+
+        <section className="bordero-card-premium mb-10 grid gap-6 p-7 sm:p-8 lg:grid-cols-3">
+          {['Catalogue centralisé', 'Suivi des livres', 'Retrait en relais'].map((benefit) => (
+            <div key={benefit} className="border-l border-sepia/50 pl-5">
+              <h3 className="font-heading text-2xl text-bordeaux">{benefit}</h3>
+              <p className="mt-2 font-body text-lg leading-7 text-encre/70">Un repère simple pour comprendre où se trouve votre livre et quelle est la prochaine action.</p>
             </div>
           ))}
-        </div>
-
-        {/* CTA */}
-        <button
-          onClick={handleConnect}
-          style={{
-            width: '100%',
-            background: 'var(--bordeaux)',
-            color: 'var(--creme)',
-            border: 'none',
-            padding: '18px 24px',
-            fontFamily: 'Special Elite, monospace',
-            fontSize: 12,
-            letterSpacing: 4,
-            textTransform: 'uppercase',
-            cursor: 'pointer',
-            position: 'relative',
-            outline: '2px dashed var(--bordeaux)',
-            outlineOffset: 3,
-            transition: 'all 0.15s',
-          }}
-        >
-          Accéder au Catalogue →
-        </button>
-
-        <div className="font-fell" style={{ textAlign: 'center', marginTop: 16, fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.4)' }}>
-          Vous êtes un voyageur ou un relais ?{' '}
-          <a href="/landing-voyageur" style={{ color: 'var(--bordeaux)', textDecoration: 'underline' }}>Voyageur</a>{' '}·{' '}
-          <a href="/landing-relais" style={{ color: 'var(--bordeaux)', textDecoration: 'underline' }}>Relais</a>
-        </div>
-      </div>
-    </div>
+        </section>
+      </section>
+    </main>
   );
 }

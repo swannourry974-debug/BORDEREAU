@@ -1,7 +1,13 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
+
+const missionSteps = [
+  ['Déclarer un trajet', 'Vous indiquez votre ville de départ, votre destination et la date de voyage.'],
+  ['Accepter une mission', 'Vous choisissez les livres compatibles avec votre trajet, dans la limite prévue par l’application.'],
+  ['Valider le transport', 'Vous scannez, conservez les justificatifs et déposez les livres au relais partenaire.'],
+];
 
 export default function LandingVoyageur() {
   const navigate = useNavigate();
@@ -16,102 +22,69 @@ export default function LandingVoyageur() {
   };
 
   return (
-    <div style={{ background: 'var(--creme)', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '32px 20px', position: 'relative', overflow: 'hidden' }}>
-      {/* Grain overlay */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E\")", opacity: 0.3 }} />
-
-      <div style={{ fontSize: 64, opacity: 0.1, position: 'absolute', top: 40, right: 30, transform: 'rotate(8deg)' }}>✈️</div>
-      <div style={{ fontSize: 48, opacity: 0.07, position: 'absolute', bottom: 60, left: 20, transform: 'rotate(-12deg)' }}>◈</div>
-
-      <div style={{ maxWidth: 400, width: '100%', position: 'relative', zIndex: 1 }}>
-
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div className="font-special" style={{ fontSize: 11, letterSpacing: 5, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 12, opacity: 0.8 }}>
-            BORDERO
+    <main className="min-h-screen bordero-shell px-5 py-6 text-encre sm:px-8 lg:px-10">
+      <section className="mx-auto max-w-6xl">
+        <nav className="flex flex-wrap items-center justify-between gap-4 py-4">
+          <Link to="/" className="font-ui text-xs font-extrabold uppercase tracking-[0.32em] text-bordeaux">Bordero</Link>
+          <div className="flex gap-3 font-ui text-[11px] font-bold uppercase tracking-[0.18em] text-bordeaux/70">
+            <Link to="/landing-lecteur">Lecteur</Link>
+            <Link to="/landing-relais">Relais</Link>
           </div>
-          <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.45)', letterSpacing: 2, marginBottom: 28 }}>
-            Manifeste des livres voyageurs
-          </div>
+        </nav>
 
-          {/* Role badge */}
-          <div style={{
-            display: 'inline-block',
-            background: 'var(--encre)',
-            color: 'var(--creme)',
-            fontFamily: 'Special Elite, monospace',
-            fontSize: 10,
-            letterSpacing: 4,
-            textTransform: 'uppercase',
-            padding: '6px 18px',
-            marginBottom: 24,
-          }}>
-            ✈ ESPACE VOYAGEUR
-          </div>
-
-          <div className="font-playfair" style={{ fontSize: 30, fontWeight: 700, color: 'var(--encre)', lineHeight: 1.2, marginBottom: 16 }}>
-            Voyagez.<br />
-            <span style={{ fontStyle: 'italic', color: 'var(--bordeaux)' }}>Soyez rémunéré.</span>
-          </div>
-
-          <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 14, color: 'rgba(26,16,8,0.6)', lineHeight: 1.7 }}>
-            Transportez des livres dans votre valise lors de vos voyages et gagnez des commissions. Jusqu'à <strong>8 € par livre</strong>, 10 livres max par trajet.
-          </div>
-        </div>
-
-        {/* Commission tiers */}
-        <div style={{ background: 'var(--papier)', border: '1.5px solid var(--encre)', padding: 20, marginBottom: 36, boxShadow: '3px 3px 0 rgba(26,16,8,0.10)' }}>
-          <div className="font-special" style={{ fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', color: 'rgba(26,16,8,0.5)', marginBottom: 14 }}>
-            Barème de gratification
-          </div>
-          {[
-            { rang: '1er livre', montant: '5,00 €' },
-            { rang: '2e livre', montant: '6,50 €' },
-            { rang: 'À partir du 3e', montant: '8,00 €' },
-          ].map(({ rang, montant }) => (
-            <div key={rang} style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: '10px 0',
-              borderBottom: '1px dashed rgba(26,16,8,0.15)',
-            }}>
-              <span className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.7)' }}>{rang}</span>
-              <span className="font-playfair" style={{ fontSize: 18, fontWeight: 700, color: 'var(--bordeaux)' }}>{montant}</span>
+        <div className="grid gap-8 py-8 lg:grid-cols-[0.98fr_1.02fr] lg:items-center">
+          <div className="rounded-[28px] border border-bordeaux/25 bg-secondary p-6 text-creme shadow-2xl">
+            <p className="font-ui text-[11px] font-bold uppercase tracking-[0.28em] text-or">Carnet de mission</p>
+            <div className="mt-6 grid gap-4">
+              {[
+                ['1er livre', '5,00 €'],
+                ['2e livre', '6,50 €'],
+                ['À partir du 3e', '8,00 €'],
+              ].map(([rang, montant]) => (
+                <div key={rang} className="flex items-center justify-between rounded-2xl border border-creme/15 bg-creme/10 p-5">
+                  <span className="font-body text-xl italic text-creme/80">{rang}</span>
+                  <span className="font-heading text-3xl text-or">{montant}</span>
+                </div>
+              ))}
             </div>
-          ))}
-          <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.4)', marginTop: 10, textAlign: 'center' }}>
-            Jusqu'à 75,50 € par trajet · Virement dès 20 €
+            <p className="mt-5 text-center font-body text-lg italic text-creme/65">Jusqu’à 10 livres par trajet · Virement dès 20 €</p>
+          </div>
+
+          <div className="bordero-card-premium p-7 sm:p-10">
+            <span className="bordero-badge">✈ Espace voyageur</span>
+            <h1 className="bordero-heading-display mt-6 text-5xl sm:text-6xl">Rentabilisez vos trajets avec des livres en mission.</h1>
+            <p className="mt-6 font-body text-2xl leading-9 text-encre/72">
+              Bordero vous propose des missions sur vos routes réelles. Vous transportez des livres, respectez les conditions de validation et recevez une rémunération selon le barème existant.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <button onClick={handleConnect} className="bordero-action-primary px-6 py-3 text-xs">Devenir voyageur</button>
+              <a href="#missions" className="bordero-action-secondary px-6 py-3 text-xs">Voir le parcours</a>
+            </div>
           </div>
         </div>
 
-        {/* CTA */}
-        <button
-          onClick={handleConnect}
-          style={{
-            width: '100%',
-            background: 'var(--encre)',
-            color: 'var(--creme)',
-            border: 'none',
-            padding: '18px 24px',
-            fontFamily: 'Special Elite, monospace',
-            fontSize: 12,
-            letterSpacing: 4,
-            textTransform: 'uppercase',
-            cursor: 'pointer',
-            position: 'relative',
-            outline: '2px dashed rgba(26,16,8,0.4)',
-            outlineOffset: 3,
-            transition: 'all 0.15s',
-          }}
-        >
-          Devenir Voyageur →
-        </button>
+        <section id="missions" className="grid gap-4 pb-10 md:grid-cols-3">
+          {missionSteps.map(([title, text], index) => (
+            <article key={title} className="bordero-surface p-6">
+              <div className="font-ui text-3xl font-extrabold text-bordeaux/35">0{index + 1}</div>
+              <h2 className="mt-4 font-ui text-sm font-extrabold uppercase tracking-[0.2em] text-bordeaux">{title}</h2>
+              <p className="mt-3 font-body text-xl leading-8 text-encre/70">{text}</p>
+            </article>
+          ))}
+        </section>
 
-        <div className="font-fell" style={{ textAlign: 'center', marginTop: 16, fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.4)' }}>
-          Vous êtes un lecteur ou un relais ?{' '}
-          <a href="/landing-lecteur" style={{ color: 'var(--bordeaux)', textDecoration: 'underline' }}>Lecteur</a>{' '}·{' '}
-          <a href="/landing-relais" style={{ color: 'var(--bordeaux)', textDecoration: 'underline' }}>Relais</a>
-        </div>
-      </div>
-    </div>
+        <section className="bordero-card-premium mb-10 p-7 sm:p-8">
+          <p className="bordero-heading-section">Conditions de transport</p>
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            {['Trajet déclaré', 'Livre scanné', 'Dépôt relais validé'].map((condition) => (
+              <div key={condition} className="rounded-2xl border border-bordeaux/15 bg-creme/40 p-5">
+                <h3 className="font-heading text-2xl text-bordeaux">{condition}</h3>
+                <p className="mt-2 font-body text-lg leading-7 text-encre/70">Chaque mission reste attachée à une preuve ou une validation pour protéger le lecteur, le voyageur et le relais.</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      </section>
+    </main>
   );
 }

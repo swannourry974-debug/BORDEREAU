@@ -25,7 +25,7 @@ export default function PageNotFound() {
             </svg>
           </div>
           <p className="font-ui text-4xl sm:text-5xl font-extrabold tracking-[0.12em] leading-none">BORDERO</p>
-          <p className="font-ui mt-3 text-xs sm:text-sm tracking-[0.45em] uppercase text-[#F8F1E7]/90">Explorer · Découvrir · Partager</p>
+          <p className="font-ui mt-3 text-xs sm:text-sm tracking-[0.45em] uppercase text-[color:#F8F1E7]/90">Explorer · Découvrir · Partager</p>
         </div>
 
         <div className="flex-1 w-full max-w-6xl mx-auto grid lg:grid-cols-[1fr_0.95fr] items-center">
@@ -38,7 +38,7 @@ export default function PageNotFound() {
               Page introuvable
             </h2>
             <div className="my-7 h-[3px] w-20 bg-[#D7BB78] mx-auto lg:mx-32 rounded-full" />
-            <p className="font-body text-2xl sm:text-3xl leading-snug max-w-xl mx-auto lg:mx-0 text-[#F8F1E7]/95 drop-shadow-[0_3px_10px_rgba(0,0,0,0.4)]">
+            <p className="font-body text-2xl sm:text-3xl leading-snug max-w-xl mx-auto lg:mx-0 text-[color:#F8F1E7]/95 drop-shadow-[0_3px_10px_rgba(0,0,0,0.4)]">
               Il semble que cette page se soit égarée quelque part entre deux aventures...
             </p>
             <Link

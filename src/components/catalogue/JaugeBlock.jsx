@@ -19,8 +19,8 @@ export default function JaugeBlock() {
       </div>
       <div className="h-6 bg-creme border border-foreground/30 relative overflow-hidden">
         <div
-          className="h-full jauge-fill-pattern transition-all duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
-          style={{ width: `${width}%` }}
+          className="h-full jauge-fill-pattern transition-all"
+          style={{ width: `${width}%`, transitionDuration: '1200ms', transitionTimingFunction: 'cubic-bezier(0.22,1,0.36,1)' }}
         />
       </div>
       <div className="flex justify-between mt-[6px] text-[9px] text-foreground/40 tracking-[1px] font-typewriter">

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 
 const TYPES_COMMERCE = ['Boulangerie', 'Café', 'Restaurant'];
@@ -133,70 +133,88 @@ export default function LandingRelais() {
   };
 
   return (
-    <div style={{ background: 'var(--creme)', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '32px 20px', position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0, backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E\")", opacity: 0.3 }} />
-      <div style={{ fontSize: 64, opacity: 0.1, position: 'absolute', top: 40, right: 30, transform: 'rotate(-6deg)' }}>🏪</div>
-
-      <div style={{ maxWidth: 460, width: '100%', position: 'relative', zIndex: 1 }}>
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div className="font-special" style={{ fontSize: 11, letterSpacing: 5, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 12, opacity: 0.8 }}>BORDERO</div>
-          <div style={{ display: 'inline-block', background: 'var(--sepia)', color: 'var(--creme)', fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 4, textTransform: 'uppercase', padding: '6px 18px', marginBottom: 20 }}>🏪 INSCRIPTION RELAIS</div>
-          <div className="font-playfair" style={{ fontSize: 30, fontWeight: 700, color: 'var(--encre)', lineHeight: 1.2, marginBottom: 12 }}>Devenir<br /><span style={{ fontStyle: 'italic', color: 'var(--bordeaux)' }}>Point Relais.</span></div>
-          <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 14, color: 'rgba(26,16,8,0.6)', lineHeight: 1.7 }}>Remplissez votre fiche commerce. L’accès au scanner et au stock sera ouvert seulement après validation administrateur.</div>
-        </div>
-
-        {!checking && !user && (
-          <div style={{ background: 'var(--papier)', border: '1.5px solid rgba(26,16,8,0.2)', padding: 18, marginBottom: 18, textAlign: 'center' }}>
-            <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.62)', marginBottom: 14 }}>Vous avez déjà un compte relais ou vous souhaitez inscrire votre commerce ?</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <button onClick={handleConnect} style={{ width: '100%', background: 'var(--cta-orange)', color: 'var(--cta-foreground)', border: 'none', padding: '14px 10px', fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer' }}>Se connecter</button>
-              <button onClick={() => setEntryMode('signup')} style={{ width: '100%', background: 'transparent', color: 'var(--bordeaux)', border: '1.5px dashed var(--bordeaux)', padding: '14px 10px', fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer' }}>Inscription</button>
-            </div>
+    <main className="min-h-screen bordero-shell px-5 py-6 text-encre sm:px-8 lg:px-10">
+      <section className="mx-auto max-w-6xl">
+        <nav className="flex flex-wrap items-center justify-between gap-4 py-4">
+          <Link to="/" className="font-ui text-xs font-extrabold uppercase tracking-[0.32em] text-bordeaux">Bordero</Link>
+          <div className="flex gap-3 font-ui text-[11px] font-bold uppercase tracking-[0.18em] text-bordeaux/70">
+            <Link to="/landing-lecteur">Lecteur</Link>
+            <Link to="/landing-voyageur">Voyageur</Link>
           </div>
-        )}
+        </nav>
 
-        {checking && <div className="font-fell" style={{ textAlign: 'center', fontStyle: 'italic', color: 'rgba(26,16,8,0.45)' }}>Chargement…</div>}
-
-        {!checking && (user || entryMode === 'signup') && (
-          <form className="bordero-readable-auth-form" onSubmit={handleSubmit} style={{ background: 'var(--papier)', border: '2px solid rgba(26,16,8,0.18)', padding: 18, boxShadow: '5px 5px 0 rgba(26,16,8,0.10)', color: '#111111' }}>
-            {[
-              ['nom_enseigne', "Nom de l'enseigne", 'Librairie du quartier'],
-              ['identifiant_connexion', 'Identifiant relais souhaité', 'librairie-quartier'],
-              ['horaires', "Horaires d'ouverture", 'Lun-Sam 8h-19h'],
-              ['adresse', 'Adresse postale', '12 rue des livres'],
-              ['email', 'Adresse mail', 'contact@commerce.fr'],
-              ['ville', 'Ville', 'Paris'],
-              ['pays', 'Pays', 'France'],
-              ['telephone', 'Téléphone optionnel', '+33 6 00 00 00 00'],
-            ].map(([field, label, placeholder]) => (
-              <label key={field} style={{ display: 'block', marginBottom: 12 }}>
-                <span className="font-special" style={{ display: 'block', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: '#111111', marginBottom: 5 }}>{label}</span>
-                <input required={field !== 'telephone'} type={field === 'email' ? 'email' : 'text'} disabled={field === 'email' && !!user?.email} value={field === 'email' && user?.email ? user.email : form[field]} onChange={(e) => updateField(field, e.target.value)} placeholder={placeholder} style={{ width: '100%', background: field === 'email' && !!user?.email ? 'rgba(26,16,8,0.05)' : 'var(--creme)', border: '1.5px solid rgba(26,16,8,0.28)', padding: '11px 12px', fontSize: 13, color: '#111111' }} />
-              </label>
-            ))}
-
-            <label style={{ display: 'block', marginBottom: 16 }}>
-              <span className="font-special" style={{ display: 'block', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: '#111111', marginBottom: 5 }}>Type de commerce</span>
-              <select required value={form.type_commerce} onChange={(e) => updateField('type_commerce', e.target.value)} style={{ width: '100%', background: 'var(--creme)', border: '1.5px solid rgba(26,16,8,0.28)', padding: '11px 12px', fontSize: 13, color: '#111111' }}>
-                {TYPES_COMMERCE.map(type => <option key={type} value={type}>{type}</option>)}
-              </select>
-            </label>
-
-            <div className="font-fell" style={{ background: 'rgba(128,0,32,0.06)', border: '1px dashed var(--bordeaux)', padding: 12, marginBottom: 14, fontSize: 12, lineHeight: 1.6, color: '#111111' }}>
-              Le mot de passe se crée et se réinitialise uniquement sur l’écran sécurisé de connexion Bordero. Utilisez le lien « mot de passe oublié » sur cet écran pour recevoir l’e-mail de réinitialisation.
-              <button type="button" onClick={handleConnect} style={{ display: 'block', width: '100%', marginTop: 10, background: 'var(--cta-orange)', color: 'var(--cta-foreground)', border: 'none', padding: '12px 14px', fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer' }}>Créer / réinitialiser mon mot de passe</button>
+        <div className="grid gap-8 py-8 lg:grid-cols-[0.96fr_1.04fr] lg:items-start">
+          <aside className="bordero-card-premium p-7 sm:p-10 lg:sticky lg:top-8">
+            <span className="bordero-badge">🏪 Point relais</span>
+            <h1 className="bordero-heading-display mt-6 text-5xl sm:text-6xl">Devenez l’escale locale des livres voyageurs.</h1>
+            <p className="mt-6 font-body text-2xl leading-9 text-encre/72">
+              Bordero confie aux commerces partenaires la réception, le stockage et la remise des livres dans un parcours simple à contrôler.
+            </p>
+            <div className="mt-8 grid gap-3">
+              {['Réception guidée', 'Stock visible', 'Remise sécurisée'].map(item => (
+                <div key={item} className="rounded-2xl border border-bordeaux/15 bg-creme/40 p-4 font-ui text-xs font-extrabold uppercase tracking-[0.18em] text-bordeaux">{item}</div>
+              ))}
             </div>
+          </aside>
 
-            {message && <div style={{ background: status === 'error' ? 'rgba(180,20,20,0.08)' : 'rgba(45,106,45,0.08)', border: `1px solid ${status === 'error' ? '#b41414' : '#2d6a2d'}`, padding: 12, marginBottom: 14, fontSize: 12, lineHeight: 1.6, color: status === 'error' ? '#b41414' : '#2d6a2d' }}>{message}</div>}
+          <div>
+            {!checking && !user && entryMode === 'choice' && (
+              <div className="bordero-surface mb-5 p-6 text-center">
+                <h2 className="font-heading text-3xl text-bordeaux">Connectez votre commerce à Bordero.</h2>
+                <p className="mx-auto mt-3 max-w-xl font-body text-xl leading-8 text-encre/70">Connectez-vous si votre relais existe déjà, ou démarrez une fiche partenaire à valider.</p>
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  <button onClick={handleConnect} className="bordero-action-primary px-5 py-3 text-xs">Se connecter</button>
+                  <button onClick={() => setEntryMode('signup')} className="bordero-action-secondary px-5 py-3 text-xs">Inscription relais</button>
+                </div>
+              </div>
+            )}
 
-            <button type="submit" disabled={status === 'sending'} style={{ width: '100%', background: 'var(--cta-orange)', color: 'var(--cta-foreground)', border: 'none', padding: '16px 18px', fontFamily: 'Special Elite, monospace', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', cursor: status === 'sending' ? 'wait' : 'pointer', opacity: status === 'sending' ? 0.7 : 1 }}>{status === 'sending' ? 'Envoi…' : user ? 'Envoyer la demande' : 'Continuer vers la création du compte'}</button>
-          </form>
-        )}
+            {checking && <div className="bordero-surface p-6 text-center font-body text-xl italic text-encre/60">Chargement…</div>}
 
-        <div className="font-fell" style={{ textAlign: 'center', marginTop: 16, fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.4)' }}>
-          Vous êtes un lecteur ou un voyageur ? <a href="/landing-lecteur" style={{ color: 'var(--bordeaux)', textDecoration: 'underline' }}>Lecteur</a> · <a href="/landing-voyageur" style={{ color: 'var(--bordeaux)', textDecoration: 'underline' }}>Voyageur</a>
+            {!checking && (user || entryMode === 'signup') && (
+              <form className="bordero-readable-auth-form bordero-card-premium p-5 sm:p-6" onSubmit={handleSubmit}>
+                <p className="bordero-heading-section">Fiche commerce</p>
+                <h2 className="mt-3 font-heading text-3xl text-bordeaux">Demande d’accès Point Relais</h2>
+                <p className="mt-2 font-body text-lg leading-7 text-encre/70">L’accès au scanner et au stock sera ouvert après validation administrateur.</p>
+
+                <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                  {[
+                    ['nom_enseigne', "Nom de l'enseigne", 'Librairie du quartier'],
+                    ['identifiant_connexion', 'Identifiant relais souhaité', 'librairie-quartier'],
+                    ['horaires', "Horaires d'ouverture", 'Lun-Sam 8h-19h'],
+                    ['adresse', 'Adresse postale', '12 rue des livres'],
+                    ['email', 'Adresse mail', 'contact@commerce.fr'],
+                    ['ville', 'Ville', 'Paris'],
+                    ['pays', 'Pays', 'France'],
+                    ['telephone', 'Téléphone optionnel', '+33 6 00 00 00 00'],
+                  ].map(([field, label, placeholder]) => (
+                    <label key={field} className="block">
+                      <span className="mb-2 block font-ui text-[10px] font-extrabold uppercase tracking-[0.18em] text-gray-700">{label}</span>
+                      <input required={field !== 'telephone'} type={field === 'email' ? 'email' : 'text'} disabled={field === 'email' && !!user?.email} value={field === 'email' && user?.email ? user.email : form[field]} onChange={(e) => updateField(field, e.target.value)} placeholder={placeholder} className="bordero-input px-3 py-2 text-sm" />
+                    </label>
+                  ))}
+                </div>
+
+                <label className="mt-4 block">
+                  <span className="mb-2 block font-ui text-[10px] font-extrabold uppercase tracking-[0.18em] text-gray-700">Type de commerce</span>
+                  <select required value={form.type_commerce} onChange={(e) => updateField('type_commerce', e.target.value)} className="bordero-input px-3 py-2 text-sm">
+                    {TYPES_COMMERCE.map(type => <option key={type} value={type}>{type}</option>)}
+                  </select>
+                </label>
+
+                <div className="mt-5 rounded-2xl border border-dashed border-bordeaux/35 bg-bordeaux/5 p-4 font-body text-base leading-7 text-gray-800">
+                  Le mot de passe se crée et se réinitialise uniquement sur l’écran sécurisé de connexion Bordero. Utilisez le lien « mot de passe oublié » sur cet écran pour recevoir l’e-mail de réinitialisation.
+                  <button type="button" onClick={handleConnect} className="bordero-action-primary mt-3 w-full px-4 py-3 text-[10px]">Créer / réinitialiser mon mot de passe</button>
+                </div>
+
+                {message && <div className={`mt-5 rounded-2xl border p-4 text-sm leading-6 ${status === 'error' ? 'border-red-700 bg-red-50 text-red-700' : 'border-green-700 bg-green-50 text-green-700'}`}>{message}</div>}
+
+                <button type="submit" disabled={status === 'sending'} className="bordero-action-primary mt-5 w-full px-5 py-4 text-xs disabled:cursor-wait disabled:opacity-70">{status === 'sending' ? 'Envoi…' : user ? 'Envoyer la demande' : 'Continuer vers la création du compte'}</button>
+              </form>
+            )}
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
