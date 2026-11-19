@@ -118,7 +118,7 @@ function MissionCard({ mission, rang, onAccept, disabled, onScan, onRemove }) {
   );
 }
 
-export default function PanelMissions() {
+export default function PanelMissions({ initialTab = 'missions' }) {
   const [engagees, setEngagees] = useState([]);
   const [available, setAvailable] = useState(AVAILABLE_MISSIONS);
   const [scanMission, setScanMission] = useState(null);
@@ -130,11 +130,12 @@ export default function PanelMissions() {
   const [showFormVol, setShowFormVol] = useState(false);
   const [filtreVille, setFiltreVille] = useState(null);
   const [missionSearch, setMissionSearch] = useState('');
-  const [activeVoyageurTab, setActiveVoyageurTab] = useState('missions');
+  const [activeVoyageurTab, setActiveVoyageurTab] = useState(initialTab);
   const [searchParams, setSearchParams] = useSearchParams();
   const modalParam = searchParams.get('modal');
 
-  const [wallet, setWallet] = useState({ soldeDisponible: 0, gainsPrevisionnels: 0, virementSuspendu: false });
+  const [wallet, setWallet] = useState(null);
+  const [walletStatus, setWalletStatus] = useState('loading');
 
   const loadAvailableMissions = async () => {
     const missions = await base44.entities.MissionVoyageur.filter({ statut: { $in: ['disponible', 'expiree'] }, mode_livraison: 'express' }, { sort: '-created_date', limit: 80 });
@@ -145,18 +146,19 @@ export default function PanelMissions() {
   useEffect(() => {
     base44.auth.me().then(async (u) => {
       setUser(u);
-      if (!u) return;
+      if (!u) {
+        setWallet(null);
+        setWalletStatus('empty');
+        return;
+      }
       const [voyages, missionsVoyageur, wallets] = await Promise.all([
         base44.entities.Voyage.filter({ voyageur_email: u.email }),
         base44.entities.MissionVoyageur.filter({ voyageur_email: u.email }, { sort: '-updated_date', limit: 80 }),
         base44.entities.VoyageurWallet.filter({ user_email: u.email }, '-updated_date', 1),
       ]);
       const walletRecord = wallets?.[0];
-      setWallet({
-        soldeDisponible: walletRecord?.solde_disponible ?? 0,
-        gainsPrevisionnels: walletRecord?.gains_previsionnels ?? 0,
-        virementSuspendu: walletRecord?.virement_suspendu ?? false,
-      });
+      setWallet(walletRecord || null);
+      setWalletStatus(walletRecord ? 'ready' : 'empty');
       setVoyages(voyages || []);
       setEngagees((missionsVoyageur?.items || missionsVoyageur || []).filter(m => ['acceptee', 'engagee', 'en_transit', 'deposee_relais', 'livree', 'retiree'].includes(m.statut)).map((m, index) => ({ ...formatMissionRecord(m), engaged: true, status: ['livree', 'retiree'].includes(m.statut) ? 'livree' : ['en_transit', 'deposee_relais'].includes(m.statut) ? 'en_transit' : 'engagee', rang: m.numero_ordre || index + 1 })));
       const dernierVoyage = voyages[0];
@@ -164,7 +166,10 @@ export default function PanelMissions() {
       const voyageValide = voyages.find(v => v.actif && v.validation_admin === 'valide');
       if (voyageValide) setVoyageActif(voyageValide);
       await loadAvailableMissions();
-    }).catch(() => {});
+    }).catch(() => {
+      setWallet(null);
+      setWalletStatus('error');
+    });
   }, []);
 
   useEffect(() => {
@@ -456,7 +461,7 @@ export default function PanelMissions() {
           <>
             <QuotaJauge zone={zoneVoyage} poidsActuelG={poidsEngageG} nbLivres={livresActifs} />
             <JaugeValise livresActifs={livresActifs} totalCommission={totalCommission} />
-            <WalletCard soldeDisponible={wallet.soldeDisponible} gainsPrevisionnels={wallet.gainsPrevisionnels} virementSuspendu={wallet.virementSuspendu} />
+            <WalletCard soldeDisponible={wallet?.solde_disponible} gainsPrevisionnels={wallet?.gains_previsionnels} virementSuspendu={wallet?.virement_suspendu} status={walletStatus} />
             <SectionTitle>Calculateur de revenus</SectionTitle>
             <CalculatriceRevenus />
           </>

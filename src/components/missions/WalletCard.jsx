@@ -1,9 +1,28 @@
 import React from 'react';
 
-export default function WalletCard({ soldeDisponible, gainsPrevisionnels, virementSuspendu, hideTransfer }) {
+export default function WalletCard({ soldeDisponible, gainsPrevisionnels, virementSuspendu, hideTransfer, status = 'ready' }) {
   const MIN_VIREMENT = 20;
-  const peutVirer = soldeDisponible >= MIN_VIREMENT && !virementSuspendu;
-  const manque = Math.max(0, MIN_VIREMENT - soldeDisponible).toFixed(2);
+  const solde = Number(soldeDisponible || 0);
+  const gains = Number(gainsPrevisionnels || 0);
+  const peutVirer = solde >= MIN_VIREMENT && !virementSuspendu;
+  const manque = Math.max(0, MIN_VIREMENT - solde).toFixed(2);
+  const isRealZero = status === 'ready' && solde === 0 && gains === 0;
+
+  if (status !== 'ready') {
+    const messages = {
+      loading: 'Chargement du portefeuille voyageur…',
+      empty: 'Portefeuille voyageur non initialisé. Aucun solde ne sera affiché avant la première donnée enregistrée.',
+      error: 'Impossible de récupérer le portefeuille voyageur pour le moment.',
+    };
+    return (
+      <section className="relative mb-5 overflow-hidden bordero-card-premium bg-[#3B2A23] p-5 text-[#F3E8D2]">
+        <div className="font-ui text-[9px] font-extrabold uppercase tracking-[0.24em] text-[#C7A15A]/80">Portefeuille Voyageur</div>
+        <div className="mt-4 border border-[#F3E8D2]/12 bg-[#F3E8D2]/6 p-4 font-body text-sm italic leading-relaxed text-[#F3E8D2]/70">
+          {messages[status] || messages.error}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="relative mb-5 overflow-hidden bordero-card-premium bg-[#3B2A23] p-5 text-[#F3E8D2]">
@@ -13,13 +32,18 @@ export default function WalletCard({ soldeDisponible, gainsPrevisionnels, vireme
         <div className="mt-4 grid grid-cols-2 gap-3">
           <div className="border border-[#F3E8D2]/12 bg-[#F3E8D2]/6 p-3">
             <div className="font-ui text-[8px] uppercase tracking-[0.18em] text-[#F3E8D2]/55">Solde disponible</div>
-            <div className="mt-1 font-heading text-3xl font-bold text-[#A8D5A2]">{soldeDisponible.toFixed(2)} €</div>
+            <div className="mt-1 font-heading text-3xl font-bold text-[#A8D5A2]">{solde.toFixed(2)} €</div>
           </div>
           <div className="border border-[#F3E8D2]/12 bg-[#F3E8D2]/6 p-3">
             <div className="font-ui text-[8px] uppercase tracking-[0.18em] text-[#F3E8D2]/55">Gains prévisionnels</div>
-            <div className="mt-1 font-heading text-3xl font-bold text-[#D7BB78]">{gainsPrevisionnels.toFixed(2)} €</div>
+            <div className="mt-1 font-heading text-3xl font-bold text-[#D7BB78]">{gains.toFixed(2)} €</div>
           </div>
         </div>
+        {isRealZero && (
+          <div className="mt-3 border border-[#F3E8D2]/12 bg-[#F3E8D2]/6 p-3 font-body text-xs italic text-[#F3E8D2]/62">
+            Solde réel à zéro, portefeuille chargé.
+          </div>
+        )}
         {!hideTransfer && (
           <button
             disabled={!peutVirer}

@@ -4,14 +4,20 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 const NAV_ITEMS = {
   lecteur: [
-    { icon: '🔍', label: 'Catalogue', path: '/' },
-    { icon: '📚', label: 'Étagère', path: '/etagere', notif: 2 },
+    { icon: '🔍', label: 'Catalogue', path: '/catalogue' },
+    { icon: '📚', label: 'Étagère', path: '/etagere' },
+    { icon: '♡', label: 'Wishlist', path: '/wishlist' },
   ],
   voyageur: [
+    { icon: '✈️', label: 'Accueil', path: '/accueil-voyageur' },
     { icon: '🗺️', label: 'Missions', path: '/missions' },
+    { icon: '📷', label: 'Scanner', path: '/scanner' },
+    { icon: '👛', label: 'Wallet', path: '/wallet' },
   ],
   relais: [
     { icon: '📦', label: 'Stock', path: '/stock' },
+    { icon: '⬡', label: 'Scanner', path: '/scanner' },
+    { icon: '📊', label: 'Profils', path: '/profils' },
   ],
 };
 

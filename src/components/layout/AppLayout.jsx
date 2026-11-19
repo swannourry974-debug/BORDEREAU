@@ -6,10 +6,12 @@ import BottomNav from './BottomNav';
 import { useRole } from '@/lib/RoleContext';
 
 const ROLE_DEFAULT_ROUTES = {
-  lecteur: '/',
+  lecteur: '/catalogue',
   voyageur: '/missions',
   relais: '/stock',
 };
+
+const formatDisplayDate = () => new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
 
 export default function AppLayout() {
   const { role } = useRole();
@@ -27,10 +29,10 @@ export default function AppLayout() {
 
       {/* Date stamp */}
       <div className="text-center py-2 pt-3 font-fell italic text-[11px] text-foreground/40 tracking-[2px]">
-        22 Avril 2026 · Paris → le Monde
+        {formatDisplayDate()} · Paris → le Monde
       </div>
 
-      <main className="max-w-[480px] mx-auto px-4 pb-[100px] relative z-[1]">
+      <main className="max-w-[480px] mx-auto px-4 pb-[calc(128px_+_env(safe-area-inset-bottom,0px))] relative z-[1]">
         <Outlet />
       </main>
 

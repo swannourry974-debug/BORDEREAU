@@ -71,6 +71,36 @@ function SidebarItem({ icon, label, active, onClick, badge }) {
   );
 }
 
+const NAV_BY_ROLE = {
+  lecteur: [
+    { icon: '🏠', label: 'Accueil lecteur', panelId: 'catalogue' },
+    { icon: '▥', label: 'Bibliothèque', panelId: 'etagere' },
+    { icon: '♡', label: 'Wishlist', panelId: 'wishlist' },
+    { icon: '☆', label: 'Favoris', panelId: 'favoris' },
+    { icon: '⚖️', label: 'Collecte', panelId: 'progression-collecte' },
+    { icon: '👤', label: 'Profil', panelId: 'profil' },
+    { icon: '?', label: 'Aide', panelId: 'aide' },
+  ],
+  voyageur: [
+    { icon: '✈️', label: 'Accueil voyageur', panelId: 'accueil-voyageur' },
+    { icon: '🗺️', label: 'Missions', panelId: 'missions' },
+    { icon: '📷', label: 'Scanner voyageur', panelId: 'scanner' },
+    { icon: '👛', label: 'Wallet', panelId: 'wallet' },
+    { icon: '👤', label: 'Profil', panelId: 'profil' },
+    { icon: '?', label: 'Aide', panelId: 'aide' },
+  ],
+  relais: [
+    { icon: '📦', label: 'Stock relais', panelId: 'stock' },
+    { icon: '⬡', label: 'Scanner relais', panelId: 'scanner', requiresRelayValidation: true },
+    { icon: '📊', label: 'Profils relais', panelId: 'profils', requiresRelayValidation: true },
+    { icon: '⚖️', label: 'Collecte', panelId: 'progression-collecte' },
+    { icon: '👤', label: 'Profil', panelId: 'profil' },
+    { icon: '?', label: 'Aide', panelId: 'aide' },
+  ],
+};
+
+const formatDisplayDate = () => new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+
 export default function Bordero({ initialPanel }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -123,7 +153,7 @@ export default function Bordero({ initialPanel }) {
           setRole('voyageur');
           localStorage.setItem(`bordero_role_prompt_seen_${activeUser.email}`, 'true');
           base44.auth.updateMe(updates).then(updated => setCurrentUser(updated || activeUser)).catch(() => setCurrentUser(activeUser));
-          navigate('/accueil-voyageur', { replace: true });
+          if (location.pathname !== '/wallet') navigate('/accueil-voyageur', { replace: true });
         } else if (['lecteur', 'voyageur', 'relais'].includes(manualProfile)) {
           setRole(manualProfile);
           activeUser = { ...activeUser, role: manualProfile };
@@ -145,6 +175,10 @@ export default function Bordero({ initialPanel }) {
   const activePanel = knownPanels.includes(requestedPanel) ? requestedPanel : 'catalogue';
   const isRelaisValidated = TEST_MODE_OPEN_ALL_PROFILES || currentUser?.role === 'admin' || (currentUser?.role === 'relais' && currentUser?.relais_valide === true);
   const isRelaisPanel = (role === 'relais' || TEST_MODE_OPEN_ALL_PROFILES) && ['stock', 'scanner', 'profils'].includes(activePanel);
+  const displayRole = ['stock', 'profils'].includes(activePanel) || (activePanel === 'scanner' && role !== 'voyageur') ? 'relais' : ['accueil-voyageur', 'missions', 'wallet'].includes(activePanel) ? 'voyageur' : role;
+  const sidebarItems = (NAV_BY_ROLE[displayRole] || NAV_BY_ROLE.lecteur).filter(item => !item.requiresRelayValidation || isRelaisValidated);
+  if (currentUser?.role === 'admin') sidebarItems.push({ icon: '⌘', label: 'Admin', panelId: 'admin' });
+  const displayDate = formatDisplayDate();
 
   const markRolePromptSeen = () => {
     if (currentUser) {
@@ -300,7 +334,7 @@ export default function Bordero({ initialPanel }) {
         </div>
       )}
       <AppHeader
-        role={role}
+        role={displayRole}
         roleSwitcherOpen={roleSwitcherOpen}
         onToggleRoleSwitcher={() => setRoleSwitcherOpen(o => !o)}
       />
@@ -335,23 +369,14 @@ export default function Bordero({ initialPanel }) {
         }}>
           {/* Date */}
           <div className="font-fell" style={{ textAlign: 'center', padding: '0 16px 20px', fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.4)', letterSpacing: 2, borderBottom: '1px dashed rgba(26,16,8,0.15)' }}>
-            3 Mai 2026<br />Paris → le Monde
+            {displayDate}<br />Paris → le Monde
           </div>
 
           {/* Nav items */}
-          <nav style={{ padding: '16px 0' }}>
-            <SidebarItem icon="🏠" label="Accueil lecteur" panelId="catalogue" active={activePanel === 'catalogue'} onClick={() => switchPanel('catalogue')} />
-            <SidebarItem icon="▥" label="Bibliothèque" panelId="etagere" active={activePanel === 'etagere'} onClick={() => switchPanel('etagere')} />
-            <SidebarItem icon="♡" label="Wishlist" panelId="wishlist" active={activePanel === 'wishlist'} onClick={() => switchPanel('wishlist')} />
-            <SidebarItem icon="✈️" label="Voyageur" panelId="accueil-voyageur" active={activePanel === 'accueil-voyageur'} onClick={() => switchPanel('accueil-voyageur')} />
-            <SidebarItem icon="🗺️" label="Missions" panelId="missions" active={activePanel === 'missions'} onClick={() => switchPanel('missions')} />
-            <SidebarItem icon="📷" label="Scanner" panelId="scanner" active={activePanel === 'scanner'} onClick={() => switchPanel('scanner')} />
-            <SidebarItem icon="📦" label="Stock relais" panelId="stock" active={activePanel === 'stock'} onClick={() => switchPanel('stock')} />
-            <SidebarItem icon="📊" label="Profils relais" panelId="profils" active={activePanel === 'profils'} onClick={() => switchPanel('profils')} />
-            <SidebarItem icon="⚖️" label="Collecte" panelId="progression-collecte" active={activePanel === 'progression-collecte'} onClick={() => switchPanel('progression-collecte')} />
-            <SidebarItem icon="👛" label="Wallet" panelId="wallet" active={activePanel === 'wallet'} onClick={() => switchPanel('wallet')} />
-            <SidebarItem icon="👤" label="Profil" panelId="profil" active={activePanel === 'profil'} onClick={() => switchPanel('profil')} />
-            <SidebarItem icon="⌘" label="Admin" panelId="admin" active={false} onClick={() => switchPanel('admin')} />
+          <nav style={{ padding: '16px 0' }} aria-label={`Navigation ${displayRole}`}>
+            {sidebarItems.map(item => (
+              <SidebarItem key={item.panelId} icon={item.icon} label={item.label} panelId={item.panelId} active={activePanel === item.panelId} onClick={() => switchPanel(item.panelId)} />
+            ))}
           </nav>
 
           {/* Footer sidebar */}
@@ -364,11 +389,11 @@ export default function Bordero({ initialPanel }) {
 
         {/* Contenu principal */}
         <main
-          className="w-full min-w-0 px-3 pt-4 pb-[calc(92px_+_env(safe-area-inset-bottom,0px))] sm:px-5 md:flex-1 md:min-w-0 md:px-6 md:pt-5 md:pb-10"
+          className="w-full min-w-0 px-3 pt-4 pb-[calc(128px_+_env(safe-area-inset-bottom,0px))] sm:px-5 md:flex-1 md:min-w-0 md:px-6 md:pt-5 md:pb-10"
         >
           {/* Date mobile uniquement */}
           <div className="md:hidden font-fell" style={{ textAlign: 'center', padding: '8px 0 4px', fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.4)', letterSpacing: 2 }}>
-            3 Mai 2026 · Paris → le Monde
+            {displayDate} · Paris → le Monde
           </div>
 
           {/* Wrapper qui centre le contenu sur grands écrans */}
@@ -391,7 +416,7 @@ export default function Bordero({ initialPanel }) {
             {activePanel === 'profils' && isRelaisValidated && <PanelProfils />}
             {activePanel === 'profil' && <PanelProfil />}
             {activePanel === 'progression-collecte' && <PanelProgressionCollecte role={role} currentUser={currentUser} />}
-            {activePanel === 'wallet' && (role === 'lecteur' ? <PanelWalletLecteur /> : role === 'voyageur' ? <PanelAccueilVoyageur /> : <PanelWalletAdmin />)}
+            {activePanel === 'wallet' && (displayRole === 'voyageur' ? <PanelMissions initialTab="wallet" /> : role === 'lecteur' ? <PanelWalletLecteur /> : <PanelWalletAdmin />)}
             {activePanel === 'aide' && <PanelAide role={role} />}
           </div>
         </main>
@@ -405,8 +430,9 @@ export default function Bordero({ initialPanel }) {
       {/* Bottom nav — mobile uniquement */}
       <div className="md:hidden">
         <BottomNav
-          role={role}
+          role={displayRole}
           relaisValidated={isRelaisValidated}
+          isAdmin={currentUser?.role === 'admin'}
           activePanel={activePanel}
           onSwitch={switchPanel}
         />

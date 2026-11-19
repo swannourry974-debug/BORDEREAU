@@ -1,8 +1,37 @@
 import React from 'react';
-import { useLang } from '@/lib/LangContext';
 
-export default function BottomNav({ role, relaisValidated = true, activePanel, onSwitch }) {
-  const { t } = useLang();
+const BASE_ITEMS = {
+  lecteur: [
+    { panelId: 'catalogue', icon: '🏠', label: 'Lecteur' },
+    { panelId: 'etagere', icon: '▥', label: 'Biblio', featured: true },
+    { panelId: 'wishlist', icon: '♡', label: 'Wishlist' },
+    { panelId: 'favoris', icon: '☆', label: 'Favoris' },
+    { panelId: 'progression-collecte', icon: '⚖️', label: 'Collecte' },
+    { panelId: 'profil', icon: '👤', label: 'Profil' },
+    { panelId: 'aide', icon: '?', label: 'Aide' },
+  ],
+  voyageur: [
+    { panelId: 'accueil-voyageur', icon: '✈️', label: 'Accueil' },
+    { panelId: 'missions', icon: '🗺️', label: 'Mission' },
+    { panelId: 'scanner', icon: '📷', label: 'Scanner' },
+    { panelId: 'wallet', icon: '👛', label: 'Wallet' },
+    { panelId: 'profil', icon: '👤', label: 'Profil' },
+    { panelId: 'aide', icon: '?', label: 'Aide' },
+  ],
+  relais: [
+    { panelId: 'stock', icon: '📦', label: 'Stock' },
+    { panelId: 'scanner', icon: '⬡', label: 'Scanner', requiresRelayValidation: true },
+    { panelId: 'profils', icon: '📊', label: 'Profils', requiresRelayValidation: true },
+    { panelId: 'progression-collecte', icon: '⚖️', label: 'Collecte' },
+    { panelId: 'profil', icon: '👤', label: 'Profil' },
+    { panelId: 'aide', icon: '?', label: 'Aide' },
+  ],
+};
+
+export default function BottomNav({ role, relaisValidated = true, isAdmin = false, activePanel, onSwitch }) {
+  const navItems = (BASE_ITEMS[role] || BASE_ITEMS.lecteur)
+    .filter(item => !item.requiresRelayValidation || relaisValidated);
+  if (isAdmin) navItems.push({ panelId: 'admin', icon: '⌘', label: 'Admin' });
   const navStyle = {
     position: 'fixed',
     bottom: 0,
@@ -44,9 +73,8 @@ export default function BottomNav({ role, relaisValidated = true, activePanel, o
     WebkitUserSelect: 'none',
   });
 
-  const NavItem = ({ panelId, icon, label, badge }) => {
+  const NavItem = ({ panelId, icon, label, badge, featured = false }) => {
     const active = activePanel === panelId;
-    const featured = role === 'lecteur' && panelId === 'etagere';
     const labelStyles = labelStyle(active);
     return (
       <div style={{ ...itemStyle(active), borderRight: '1px dashed rgba(26,16,8,0.2)', ...(featured ? { marginTop: -10, background: active ? 'var(--bordeaux)' : '#4B1E1E', border: '1px solid #C8A165', boxShadow: '0 -5px 18px rgba(75,30,30,0.25)' } : {}) }} onClick={() => onSwitch(panelId)}>
@@ -69,19 +97,8 @@ export default function BottomNav({ role, relaisValidated = true, activePanel, o
   };
 
   return (
-    <nav style={navStyle}>
-      <NavItem panelId="catalogue" icon="🏠" label="Lecteur" />
-      <NavItem panelId="etagere" icon="▥" label="Biblio" />
-      <NavItem panelId="wishlist" icon="♡" label="Wishlist" />
-      <NavItem panelId="accueil-voyageur" icon="✈️" label="Voyageur" />
-      <NavItem panelId="missions" icon="🗺️" label="Mission" />
-      <NavItem panelId="scanner" icon="📷" label="Scanner" />
-      <NavItem panelId="stock" icon="📦" label="Relais" />
-      <NavItem panelId="profils" icon="📊" label="Profils" />
-      <NavItem panelId="progression-collecte" icon="⚖️" label="Collecte" />
-      <NavItem panelId="wallet" icon="👛" label="Wallet" />
-      <NavItem panelId="profil" icon="👤" label="Profil" />
-      <NavItem panelId="admin" icon="⌘" label="Admin" />
+    <nav style={navStyle} aria-label={`Navigation ${role}`}>
+      {navItems.map(item => <NavItem key={item.panelId} {...item} />)}
     </nav>
   );
 }

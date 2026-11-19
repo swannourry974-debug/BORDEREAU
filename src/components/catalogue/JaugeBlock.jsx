@@ -13,7 +13,7 @@ export default function JaugeBlock() {
       <div className="flex justify-between items-center mb-3">
         <div>
           <div className="text-[10px] tracking-[2px] uppercase font-typewriter">Jauge carton Miami</div>
-          <div className="text-[10px] text-foreground/40 mt-[2px] italic font-fell">Départ estimé : 3 mai 2026</div>
+          <div className="text-[10px] text-foreground/40 mt-[2px] italic font-fell">Départ estimé : selon regroupement</div>
         </div>
         <div className="font-serif text-[18px] font-bold text-bordeaux">12,6 kg</div>
       </div>

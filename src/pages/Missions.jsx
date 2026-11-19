@@ -17,7 +17,7 @@ export default function Missions() {
     <div>
       <WelcomeCard
         eyebrow="Votre prochain vol"
-        title="Paris → Miami<br>28 Avril 2026"
+        title="Paris → Miami<br>Vol validé"
         subtitle="💰 Portefeuille : 40,00 € · 4 missions complètes"
       />
 

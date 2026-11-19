@@ -145,7 +145,7 @@ export default function CommandeForm({ book, onClose }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
           <div>
             <div style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' }}>Jauge carton Miami</div>
-            <div style={{ fontSize: 10, color: 'rgba(26,16,8,0.4)', marginTop: 2, fontStyle: 'italic' }}>Départ estimé : 3 mai 2026</div>
+            <div style={{ fontSize: 10, color: 'rgba(26,16,8,0.4)', marginTop: 2, fontStyle: 'italic' }}>Départ estimé : selon regroupement</div>
           </div>
           <div className="font-playfair" style={{ fontSize: 18, fontWeight: 700, color: 'var(--bordeaux)' }}>12,6 kg</div>
         </div>
