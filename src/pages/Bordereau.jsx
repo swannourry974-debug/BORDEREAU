@@ -406,7 +406,6 @@ export default function Bordero({ initialPanel }) {
       <div className="md:hidden">
         <BottomNav
           role={role}
-          relaisValidated={isRelaisValidated}
           activePanel={activePanel}
           onSwitch={switchPanel}
         />

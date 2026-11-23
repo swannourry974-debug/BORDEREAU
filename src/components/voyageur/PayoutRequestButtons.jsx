@@ -12,18 +12,17 @@ export default function PayoutRequestButtons({ user, wallet, onUpdated }) {
   const requestPayPal = async () => {
     if (!user || !canRequest || hasPending || loading) return;
     setLoading(true);
-    const payload = {
-      user_email: user.email,
-      demande_virement_methode: 'paypal',
-      demande_virement_statut: 'en_attente',
-      demande_virement_montant: solde,
-      demande_virement_le: new Date().toISOString(),
-    };
-    const updated = wallet?.id
-      ? await base44.entities.VoyageurWallet.update(wallet.id, payload)
-      : await base44.entities.VoyageurWallet.create({ ...payload, solde_disponible: solde, gains_previsionnels: wallet?.gains_previsionnels ?? 0 });
-    onUpdated?.(updated);
-    setLoading(false);
+    try {
+      // Le montant et l'éligibilité sont vérifiés côté serveur, jamais ici.
+      const res = await base44.functions.invoke('demanderVirement', { methode: 'paypal' });
+      const updated = res?.data?.wallet;
+      if (updated) onUpdated?.(updated);
+    } catch (error) {
+      const message = error?.response?.data?.error || 'Demande impossible pour le moment.';
+      if (typeof window !== 'undefined') window.alert(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
