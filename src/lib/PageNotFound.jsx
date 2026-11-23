@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 
-const errorVisual = 'https://media.base44.com/images/public/69e8b7d9fb460a4f0f638f97/b74f298b0_ChatGPTImage16sept202611_39_57.png';
+const errorVisual = '/assets/404.png';
 
 export default function PageNotFound() {
   return (

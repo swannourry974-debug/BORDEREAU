@@ -9,7 +9,11 @@
     "lint": "eslint . --quiet",
     "lint:fix": "eslint . --fix",
     "typecheck": "tsc -p ./jsconfig.json",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "server:gen": "node scripts/gen-server.mjs",
+    "server:build": "node scripts/gen-server.mjs && node scripts/build-server.mjs",
+    "server:dev": "node scripts/gen-server.mjs && node scripts/build-server.mjs && node scripts/dev-server.mjs",
+    "build:all": "vite build && npm run server:build"
   },
   "dependencies": {
     "@base44/sdk": "^0.8.63",

@@ -49,6 +49,9 @@ const getAppParams = () => {
 		appBaseUrl: getAppParamValue("app_base_url", {
 			defaultValue: import.meta.env.VITE_BASE44_APP_BASE_URL || (isNode ? undefined : window.location.origin),
 		}),
+		// Backend par défaut : le nôtre. Mettre VITE_BACKEND=base44 pour revenir
+		// temporairement à l'ancienne plateforme.
+		backend: import.meta.env.VITE_BACKEND || 'local',
 	}
 }
 

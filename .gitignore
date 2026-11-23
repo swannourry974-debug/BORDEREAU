@@ -30,3 +30,7 @@ dist-ssr
 .env
 .vite
 base44/.app.jsonc
+
+# Backend local (données, sessions, fichiers)
+.data/
+server-dist/

@@ -19,6 +19,7 @@ import LandingRelais from './pages/LandingRelais';
 import LandingPresentation from './pages/LandingPresentation';
 import PanelProfil from './pages/PanelProfil';
 import AdminDashboard from './pages/AdminDashboard';
+import Login from './pages/Login';
 
 const RouteSpinner = () => (
   <div className="fixed inset-0 flex items-center justify-center">
@@ -70,7 +71,7 @@ const AuthenticatedApp = () => {
   const { user, isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const publicRoutes = ['/', '/landing-lecteur', '/LandingLecteur', '/lecteur', '/Lecteur', '/landing-voyageur', '/LandingVoyageur', '/voyageur', '/Voyageur', '/landing-relais', '/LandingRelais', '/LandingRelais/', '/relais', '/Relais'];
+  const publicRoutes = ['/', '/login', '/Login', '/landing-lecteur', '/LandingLecteur', '/lecteur', '/Lecteur', '/landing-voyageur', '/LandingVoyageur', '/voyageur', '/Voyageur', '/landing-relais', '/LandingRelais', '/LandingRelais/', '/relais', '/Relais'];
   const isPublicRoute = publicRoutes.includes(location.pathname);
   const activeProfileChoice = user?.email ? localStorage.getItem(`bordero_active_profile_${user.email}`) : null;
   const shouldRespectManualProfile = ['lecteur', 'voyageur'].includes(activeProfileChoice);
@@ -146,6 +147,7 @@ const AuthenticatedApp = () => {
           <Route path="/panelprofil" element={<RequireAuth><PanelProfil /></RequireAuth>} />
           <Route path="/admin" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
           <Route path="/Admin" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
+          <Route path="/login" element={<Login />} />
           <Route path="*" element={<PageNotFound />} />
         </Routes>
       </motion.div>

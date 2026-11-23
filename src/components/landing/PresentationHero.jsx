@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 
-const logoUrl = 'https://media.base44.com/images/public/69e8b7d9fb460a4f0f638f97/58d652582_logo.png';
+const logoUrl = '/assets/logo-bordero.png';
 
 export default function PresentationHero() {
   const login = () => base44.auth.redirectToLogin('/catalogue');
