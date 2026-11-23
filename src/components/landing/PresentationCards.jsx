@@ -2,23 +2,50 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const cards = [
-  { icon: '📖', title: 'Lecteurs', text: 'Trouvez vos livres, choisissez Express ou Collecte et suivez chaque étape jusqu’au relais.', href: '/landing-lecteur' },
-  { icon: '✈️', title: 'Voyageurs', text: 'Déclarez vos trajets, acceptez des missions et transportez des livres dans un cadre défini.', href: '/landing-voyageur' },
-  { icon: '🏪', title: 'Points relais', text: 'Recevez, stockez et remettez les livres avec des opérations simples à valider.', href: '/landing-relais' },
+  { title: 'Lecteurs', text: 'Trouvez vos livres, choisissez Express ou Collecte et suivez chaque étape jusqu’au relais.', href: '/landing-lecteur', photo: '/assets/photos/img/m113462760-1200.webp' },
+  { title: 'Voyageurs', text: 'Déclarez vos trajets, acceptez des missions et transportez des livres dans un cadre défini.', href: '/landing-voyageur', photo: '/assets/photos/img/m147143894-1200.webp' },
+  { title: 'Points relais', text: 'Recevez, stockez et remettez les livres avec des opérations simples à valider.', href: '/landing-relais', photo: '/assets/photos/img/m179564041-1200.webp' },
 ];
 
 export default function PresentationCards() {
   return (
-    <section className="mx-auto max-w-6xl px-5 pb-12 sm:px-8">
-      <div className="grid gap-4 md:grid-cols-3">
-        {cards.map(card => (
-          <Link key={card.title} to={card.href} className="bordero-surface group p-6 transition-all duration-300 hover:-translate-y-1 hover:border-bordeaux/45">
-            <div className="text-4xl">{card.icon}</div>
-            <h2 className="mt-5 font-heading text-3xl text-bordeaux">{card.title}</h2>
-            <p className="mt-3 font-body text-xl leading-8 text-encre/70">{card.text}</p>
-            <div className="mt-6 font-ui text-xs font-extrabold uppercase tracking-[0.2em] text-cta group-hover:text-cta-dark">Explorer →</div>
-          </Link>
-        ))}
+    <section className="bg-creme px-6 py-20 sm:px-8 sm:py-28">
+      <div className="mx-auto max-w-4xl">
+        <p className="font-ui text-xs font-bold uppercase tracking-[0.32em] text-bordeaux/60">
+          Rôles
+        </p>
+        <h2 className="mt-3 font-heading text-4xl font-bold text-bordeaux sm:text-5xl">
+          Trois rôles, un même réseau.
+        </h2>
+        <p className="mt-3 max-w-xl font-ui text-lg text-encre/70">
+          Chaque acteur voit sa part du parcours, du catalogue au retrait.
+        </p>
+
+        <div className="mt-12 space-y-6">
+          {cards.map(card => (
+            <Link
+              key={card.title}
+              to={card.href}
+              className="group flex items-center gap-6 border border-bordeaux/15 bg-white p-4 transition-all duration-300 hover:border-bordeaux/40 hover:shadow-lg sm:p-6"
+            >
+              <div className="h-[120px] w-[120px] flex-shrink-0 overflow-hidden">
+                <img
+                  src={card.photo}
+                  alt={card.title}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                  loading="lazy"
+                />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-heading text-2xl font-bold text-bordeaux">{card.title}</h3>
+                <p className="mt-2 font-ui text-base leading-relaxed text-encre/70">{card.text}</p>
+              </div>
+              <span className="hidden font-ui text-sm font-bold uppercase tracking-[0.16em] text-bordeaux/60 transition-colors group-hover:text-bordeaux sm:block">
+                Explorer →
+              </span>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );
