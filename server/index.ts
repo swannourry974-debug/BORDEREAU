@@ -1,6 +1,6 @@
 // Point d'entrée du backend Bordero autonome (Worker compatible Cloudflare / Node).
 import { setRuntimeEnv } from './runtime';
-import { DB, db, newId, nowIso } from './db';
+import { DB, db, ensureSchema, newId, nowIso } from './db';
 import {
   audit,
   clearSessionCookie,
@@ -341,6 +341,7 @@ async function handle(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   const method = request.method.toUpperCase();
   const path = url.pathname;
+  await ensureSchema(env);
   const database = db(env);
 
   if (!path.startsWith('/api/')) {
@@ -437,6 +438,31 @@ async function handle(request: Request, env: Env): Promise<Response> {
     });
     await audit(database, user.email, 'user.invite', 'User', created.id);
     return securityHeaders(json({ id: created.id, email: created.email, role: created.role }, 201));
+  }
+
+  // Export CSV (admin) : /api/export/:entity
+  if (segments[0] === 'export' && segments[1] && method === 'GET') {
+    const user = requireUser(await userFromRequest(database, request));
+    if (user.role !== 'admin') throw new Failure('Réservé à l’administration', 403);
+    const entity = segments[1];
+    const records = await listEntity({ db: database, user, service: true }, entity, { limit: 5000 });
+    if (!records.length) return securityHeaders(new Response('', { status: 200, headers: { 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': `attachment; filename="${entity}.csv"` } }));
+    const keys = Object.keys(records[0]);
+    const escape = (v) => {
+      if (v === null || v === undefined) return '';
+      const s = typeof v === 'object' ? JSON.stringify(v) : String(v);
+      return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const lines = [keys.map(escape).join(',')];
+    for (const r of records) lines.push(keys.map((k) => escape(r[k])).join(','));
+    const csv = lines.join('\n') + '\n';
+    return securityHeaders(new Response(csv, {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${entity}.csv"`,
+      },
+    }));
   }
 
   if (segments[0] === 'cron' && segments[1]) {

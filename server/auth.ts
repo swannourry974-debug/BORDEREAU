@@ -5,7 +5,7 @@ import type { Env, SessionUser } from './types';
 
 const COOKIE_NAME = 'bordero_session';
 const SESSION_DAYS = 30;
-const PBKDF2_ITERATIONS = 120_000;
+const PBKDF2_ITERATIONS = 100_000;
 
 const encoder = new TextEncoder();
 

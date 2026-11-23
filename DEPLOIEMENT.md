@@ -36,19 +36,59 @@ Variables utiles (facultatives en local) :
 
 ## Déployer
 
+Site créé sur Freebuff Sites : `sites.json` contient l'ID et les URLs.
+
+- Preview : https://bordero-g0bqxs-preview.freebuff.site
+- Production : https://bordero-g0bqxs.freebuff.site
+
 1. `npm run build:all` produit `dist/` (site) et `server-dist/worker.mjs` +
    `sites.manifest.json` (Worker).
-2. Créer le site puis une base D1 et un bucket R2 (bindings `DB` et `FILES`).
-3. Déployer le manifeste, puis renseigner les secrets (aucune clé dans le code).
-4. Faire pointer `thebordero.com` vers le déploiement (enregistrement fourni par
-   l'hébergeur, puis domaine personnalisé).
+2. Base D1 et bucket R2 créés (bindings `DB` et `FILES`) pour preview et production.
+3. Auth activée (Sign in with Freebuff) pour preview et production.
+4. Déployer le manifeste via `sites_deploy`, puis renseigner les secrets
+   (aucune clé dans le code).
+5. Pour pointer `thebordero.com` vers le déploiement, configurez un CNAME chez
+   votre registrar pointant vers `bordero-g0bqxs.freebuff.site` (ou le
+   sous-domaine fourni par l'hébergeur).
 
 ## Reprise des données
 
+### 1. Exporter depuis Base44
+
+Les données Base44 ne sont pas accessibles par API. Depuis le tableau de bord
+Base44, exportez chaque entité en CSV (ou ZIP contenant des CSV) et placez les
+fichiers dans `bordero/out/csv-base44/`.
+
+### 2. Exporter depuis Bordero (sauvegarde / migration inverse)
+
+Le backend expose un endpoint d'export CSV pour les administrateurs :
+
+```
+GET /api/export/:entité    → fichier CSV (Content-Disposition: attachment)
+```
+
+Exemple : `curl -b cookies.txt http://localhost:8787/api/export/Commande -o Commande.csv`
+
+Un script local exporte toutes les entités d'un coup :
+
+```bash
+node scripts/export-csv.mjs                 # toutes les entités → out/csv/
+node scripts/export-csv.mjs Commande         # une seule entité
+node scripts/export-csv.mjs --out /tmp/csv  # répertoire personnalisé
+```
+
+### 3. Importer dans Bordero
+
+```bash
+node scripts/import-csv.mjs <entité> <fichier.csv> [--id-col id]
+```
+
+L'import utilise `upsertRaw` et préserve les identifiants d'origine, ce qui
+conserve les liens entre commandes, missions et relais. Les types sont détectés
+automatiquement (nombres, booléens, objets JSON).
+
 Les données et les comptes Base44 ne sont pas accessibles par API : il faut
-exporter les entités en CSV depuis Base44, puis les réimporter. L'import crée les
-enregistrements avec leurs identifiants d'origine (`upsertRaw`), ce qui préserve
-les liens entre commandes, missions et relais.
+exporter les entités en CSV depuis Base44, puis les réimporter.
 
 Les mots de passe Base44 (dont les connexions Google) ne sont pas transférables :
 chaque personne définit le sien via « Mot de passe oublié » sur `/login`.

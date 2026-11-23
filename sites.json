@@ -1,0 +1,20 @@
+{
+  "siteId": "c9dec8be-d5d6-4ec6-9c8a-bc92ec3ba364",
+  "name": "Bordero",
+  "preview": {
+    "url": "https://bordero-g0bqxs-preview.freebuff.site",
+    "environment": "preview"
+  },
+  "production": {
+    "url": "https://bordero-g0bqxs.freebuff.site",
+    "environment": "production"
+  },
+  "storage": {
+    "DB": "D1 (SQLite)",
+    "FILES": "R2 (objets)"
+  },
+  "auth": {
+    "issuer": "https://freebuff.com/oidc",
+    "clientId": "b37832c0-051c-4038-8dc2-ee5c47039fbb"
+  }
+}
