@@ -2,9 +2,27 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 const cards = [
-  { title: 'Lecteurs', text: 'Trouvez vos livres, choisissez Express ou Collecte et suivez chaque étape jusqu’au relais.', href: '/landing-lecteur', photo: '/assets/photos/img/m113462760-1200.webp' },
-  { title: 'Voyageurs', text: 'Déclarez vos trajets, acceptez des missions et transportez des livres dans un cadre défini.', href: '/landing-voyageur', photo: '/assets/photos/img/m147143894-1200.webp' },
-  { title: 'Points relais', text: 'Recevez, stockez et remettez les livres avec des opérations simples à valider.', href: '/landing-relais', photo: '/assets/photos/img/m179564041-1200.webp' },
+  {
+    title: 'Lecteurs',
+    text: 'Trouvez vos livres, choisissez Express ou Collecte et suivez chaque étape jusqu’au relais.',
+    href: '/landing-lecteur',
+    photo: '/assets/photos/img/role-lecteur.webp',
+    alt: 'Une lectrice assise sur un canapé, un livre ouvert entre les mains',
+  },
+  {
+    title: 'Voyageurs',
+    text: 'Déclarez vos trajets, acceptez des missions et transportez des livres dans un cadre défini.',
+    href: '/landing-voyageur',
+    photo: '/assets/photos/img/role-voyageur.webp',
+    alt: 'Des voyageurs avec leurs bagages traversent un hall d’aéroport',
+  },
+  {
+    title: 'Points relais',
+    text: 'Recevez, stockez et remettez les livres avec des opérations simples à valider.',
+    href: '/landing-relais',
+    photo: '/assets/photos/img/role-relais.webp',
+    alt: 'Intérieur d’une librairie-café avec ses rayonnages, son escalier et ses plantes',
+  },
 ];
 
 export default function PresentationCards() {
@@ -31,7 +49,7 @@ export default function PresentationCards() {
               <div className="h-[120px] w-[120px] flex-shrink-0 overflow-hidden">
                 <img
                   src={card.photo}
-                  alt={card.title}
+                  alt={card.alt}
                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                   loading="lazy"
                 />

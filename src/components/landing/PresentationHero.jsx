@@ -9,13 +9,13 @@ export default function PresentationHero() {
     <section className="relative flex min-h-screen items-center justify-center overflow-hidden">
       {/* Full-screen background photo */}
       <img
-        src="/assets/photos/img/m138226685-2400.webp"
-        alt="Un voyageur avec un livre dans un aéroport"
+        src="/assets/photos/img/hero-voyageur-livre.webp"
+        alt="Un voyageur lit un livre debout devant la verrière d'une gare, un sac en bandoulière à l'épaule"
         className="absolute inset-0 h-full w-full object-cover"
         fetchPriority="high"
       />
       {/* Bordeaux gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-bordeaux/70 via-bordeaux/50 to-bordeaux/80" />
+      <div className="absolute inset-0 bg-gradient-to-b from-bordeaux/40 via-bordeaux/35 to-bordeaux/70" />
 
       <div className="relative z-10 mx-auto max-w-4xl px-6 text-center">
         <p className="font-ui text-xs font-bold uppercase tracking-[0.32em] text-creme/70">
