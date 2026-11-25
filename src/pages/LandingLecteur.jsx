@@ -36,7 +36,7 @@ export default function LandingLecteur() {
           <div className="bordero-card-premium p-7 sm:p-10">
             <span className="bordero-badge">📖 Espace lecteur</span>
             <h1 className="bordero-heading-display mt-6 text-5xl sm:text-6xl">Commandez vos livres comme on trace une route.</h1>
-            <p className="mt-6 font-body text-2xl leading-9 text-encre/72">
+            <p className="mt-6 font-body text-2xl leading-9 text-encre/75">
               Bordero vous aide à trouver des livres, choisir un mode d’acheminement et suivre leur arrivée jusqu’au point relais.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">

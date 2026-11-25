@@ -147,7 +147,7 @@ export default function LandingRelais() {
           <aside className="bordero-card-premium p-7 sm:p-10 lg:sticky lg:top-8">
             <span className="bordero-badge">🏪 Point relais</span>
             <h1 className="bordero-heading-display mt-6 text-5xl sm:text-6xl">Devenez l’escale locale des livres voyageurs.</h1>
-            <p className="mt-6 font-body text-2xl leading-9 text-encre/72">
+            <p className="mt-6 font-body text-2xl leading-9 text-encre/75">
               Bordero confie aux commerces partenaires la réception, le stockage et la remise des livres dans un parcours simple à contrôler.
             </p>
             <div className="mt-8 grid gap-3">

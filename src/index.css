@@ -127,7 +127,9 @@
     --cta-orange:    #C2410C;
     --cta-orange-dark:#9A3412;
     --cta-foreground:#FDFCF0;
-    --encre:         #F3E8D2;
+    /* L'interface reste sur papier crème en thème sombre : l'encre doit rester sombre,
+       sinon les textes (et les boutons --encre/--creme) deviennent crème sur crème. */
+    --encre:         #1E1A18;
     --sepia:         #D7BB78;
     --bois-fonce:    #3B2A23;
     --or-clair:      #D7BB78;
