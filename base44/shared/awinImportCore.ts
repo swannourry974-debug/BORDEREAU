@@ -248,6 +248,14 @@ function keepNonEmpty(existingValue, incomingValue) {
   return incomingValue;
 }
 
+function offerKey(bookId, retailerName) {
+  return `${String(bookId || '').trim()}||${String(retailerName || '').trim().toLowerCase()}`;
+}
+
+function offerStamp(offer = {}) {
+  return String(offer.last_updated || offer.updated_date || offer.created_date || '');
+}
+
 function mergeOffer(existing = {}, incoming = {}) {
   return {
     ...incoming,
@@ -297,8 +305,13 @@ async function limitedFilter(base44, limiter, entityName, query, options = {}) {
 async function filterInChunks(base44, limiter, entityName, field, values, extraQuery = {}) {
   const output = [];
   for (const chunk of chunks(uniqueValues(values), 500)) {
-    const page = await limitedFilter(base44, limiter, entityName, { ...extraQuery, [field]: { $in: chunk } }, { limit: chunk.length });
-    output.push(...itemsFrom(page));
+    let cursor;
+    for (let pageIndex = 0; pageIndex < 20; pageIndex += 1) {
+      const page = await limitedFilter(base44, limiter, entityName, { ...extraQuery, [field]: { $in: chunk } }, { limit: 500, ...(cursor ? { cursor } : {}) });
+      output.push(...itemsFrom(page));
+      if (!page?.has_more || !page?.next_cursor) break;
+      cursor = page.next_cursor;
+    }
   }
   return output;
 }
@@ -336,23 +349,42 @@ export async function upsertBatch(base44, records, examples, exampleLimit = 10, 
   const bookByIdentifier = new Map(allBooks.map(book => [book.product_identifier || book.isbn13, book]));
   const bookByIsbn = new Map(allBooks.filter(book => book.isbn13).map(book => [book.isbn13, book]));
   const bookIds = uniqueValues(allBooks.map(book => book.id));
-  const existingOffers = await filterInChunks(base44, limiter, 'BookOffers', 'book_id', bookIds, { retailer_name: AWIN_RETAILER });
-  const offerByBook = new Map(existingOffers.map(offer => [offer.book_id, offer]));
-  const offerByRetailerProduct = new Map(existingOffers.map(offer => [String(offer.retailer_product_id || '').trim(), offer]).filter(([key]) => key));
-  const offersToCreate = [];
-  const offersToUpdate = [];
+  // Une seule offre active par couple (book_id, retailer_name) : la plus récente
+  // est conservée, les autres sont marquées fusionnées (aucune suppression).
+  const existingOffers = (await filterInChunks(base44, limiter, 'BookOffers', 'book_id', bookIds))
+    .filter(offer => offer.merged !== true);
+  const activeOfferByKey = new Map();
+  const duplicateOfferMergeUpdates = [];
+  const now = new Date().toISOString();
+  for (const offer of existingOffers) {
+    const key = offerKey(offer.book_id, offer.retailer_name);
+    const current = activeOfferByKey.get(key);
+    if (!current) { activeOfferByKey.set(key, offer); continue; }
+    const keep = offerStamp(offer) > offerStamp(current) ? offer : current;
+    const drop = keep === current ? offer : current;
+    activeOfferByKey.set(key, keep);
+    if (drop.id) duplicateOfferMergeUpdates.push({ id: drop.id, merged: true, merged_into: keep.id, merged_at: now });
+  }
+  const plannedOfferByKey = new Map();
   for (const record of rows) {
     const book = bookByIdentifier.get(record.product_identifier) || (record.isbn13 ? bookByIsbn.get(record.isbn13) : null);
     if (!book?.id) continue;
     const offer = { ...record.offer, book_id: book.id };
-    const merchantKey = String(offer.retailer_product_id || '').trim();
-    const existingOffer = (merchantKey ? offerByRetailerProduct.get(merchantKey) : null) || offerByBook.get(book.id);
-    if (existingOffer) offersToUpdate.push({ id: existingOffer.id, ...mergeOffer(existingOffer, offer) });
-    else offersToCreate.push(offer);
+    const key = offerKey(book.id, offer.retailer_name);
+    const planned = plannedOfferByKey.get(key);
+    if (planned) { planned.draft = mergeOffer(planned.draft, offer); continue; }
+    plannedOfferByKey.set(key, { existing: activeOfferByKey.get(key) || null, draft: offer });
     if (examples.length < exampleLimit) examples.push({ product_identifier: record.book.product_identifier, identifier_type: record.book.identifier_type, isbn_valid: record.book.isbn_valid, product_type: record.book.product_type, classification: record.book.classification, isbn13: record.book.isbn13, title: record.book.title, price: record.offer.price, currency: 'EUR', availability: record.offer.availability, availability_raw: record.offer.availability_raw, author: record.book.author, author_source: record.book.author_source, category: record.book.category, category_source: record.book.category_source });
+  }
+  const offersToCreate = [];
+  const offersToUpdate = [];
+  for (const { existing, draft } of plannedOfferByKey.values()) {
+    if (existing) offersToUpdate.push({ id: existing.id, ...mergeOffer(existing, draft) });
+    else offersToCreate.push(draft);
   }
   const createdOffers = offersToCreate.length ? await bulkCreateInChunks(base44.asServiceRole.entities.BookOffers, offersToCreate, limiter, 'BookOffers.bulkCreate') : { written: 0, chunksUsed: 0 };
   const updatedOffers = offersToUpdate.length ? await bulkUpdateInChunks(base44.asServiceRole.entities.BookOffers, offersToUpdate, limiter, 'BookOffers.bulkUpdate') : { written: 0, chunksUsed: 0 };
+  const mergedOffers = duplicateOfferMergeUpdates.length ? await bulkUpdateInChunks(base44.asServiceRole.entities.BookOffers, duplicateOfferMergeUpdates, limiter, 'BookOffers.bulkUpdate') : { written: 0, chunksUsed: 0 };
   return {
     booksCreated: createdBooks.written,
     booksUpdated: updatedBooks.written,
@@ -370,7 +402,8 @@ export async function upsertBatch(base44, records, examples, exampleLimit = 10, 
         books_update: updatedBooks.chunksUsed,
         offers_create: createdOffers.chunksUsed,
         offers_update: updatedOffers.chunksUsed,
-        total: createdBooks.chunksUsed + updatedBooks.chunksUsed + createdOffers.chunksUsed + updatedOffers.chunksUsed,
+        offers_dedupe: mergedOffers.chunksUsed,
+        total: createdBooks.chunksUsed + updatedBooks.chunksUsed + createdOffers.chunksUsed + updatedOffers.chunksUsed + mergedOffers.chunksUsed,
       },
     }
   };
