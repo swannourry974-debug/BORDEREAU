@@ -138,11 +138,11 @@ export default function AddToCartForm({ book, initialTransit = 'express', onItem
           transition={{ duration: 0.45, ease: 'easeOut' }}
           className="overflow-hidden"
         >
-          <div className="bg-papier border-2 border-encre p-5 shadow-[5px_5px_0_rgba(26,16,8,0.2)] mb-5 relative">
+          <div className="mb-5 relative p-5" style={{ background: 'var(--bordero-surface-strong)', border: '1px solid var(--bordero-line)', borderRadius: 'var(--bordero-radius-md)', boxShadow: 'var(--bordero-shadow-paper)' }}>
             <div className="flex justify-between items-start gap-4 mb-4">
               <div>
-                <div className="text-[12px] tracking-[2px] text-foreground/50 uppercase font-typewriter">Choisir la livraison</div>
-                <div className="font-serif text-[18px] font-bold text-encre leading-tight">{book.title}</div>
+                <div className="font-ui text-[10px] font-bold tracking-[2px] uppercase" style={{ color: 'var(--encre-douce)' }}>Choisir la livraison</div>
+                <div className="font-playfair text-[18px] font-bold leading-tight" style={{ color: 'var(--bordeaux)' }}>{book.title}</div>
                 {book.author && <div className="font-fell italic text-[12px] text-foreground/55">{book.author}</div>}
               </div>
               <button onClick={onClose} className="text-bordeaux text-[18px] leading-none cursor-pointer bg-transparent border-none p-0 hover:opacity-70">✕</button>
@@ -160,14 +160,14 @@ export default function AddToCartForm({ book, initialTransit = 'express', onItem
                 <SectionTitle>1. Destination</SectionTitle>
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   {countries.map(c => (
-                    <button key={c.code} onClick={() => changeCountry(c.code)} className={`p-3 border text-left transition-all ${countryCode === c.code ? 'border-bordeaux bg-bordeaux/5 text-bordeaux' : 'border-encre/20 bg-creme text-encre'}`}>
+                    <button key={c.code} onClick={() => changeCountry(c.code)} className={`p-3 border text-left transition-all ${countryCode === c.code ? 'border-bordeaux text-bordeaux' : 'border-encre/20 bg-creme text-encre'}`} style={countryCode === c.code ? { background: 'rgba(110,30,46,0.06)' } : undefined}>
                       <span className="text-lg mr-2">{c.emoji}</span><span className="font-typewriter text-[11px] uppercase tracking-[1px]">{c.name}</span>
                     </button>
                   ))}
                 </div>
                 <div className="space-y-2 mb-5">
                   {country?.cities.map(v => (
-                    <button key={v.label} onClick={() => changeCity(v.label)} className={`w-full p-3 border text-left font-typewriter text-[11px] uppercase tracking-[1px] transition-all ${cityLabel === v.label ? 'border-bordeaux bg-bordeaux/5 text-bordeaux' : 'border-encre/20 bg-creme text-encre'}`}>
+                    <button key={v.label} onClick={() => changeCity(v.label)} className={`w-full p-3 border text-left font-typewriter text-[11px] uppercase tracking-[1px] transition-all ${cityLabel === v.label ? 'border-bordeaux text-bordeaux' : 'border-encre/20 bg-creme text-encre'}`} style={cityLabel === v.label ? { background: 'rgba(110,30,46,0.06)' } : undefined}>
                       {cityLabel === v.label ? '✓ ' : ''}{v.emoji} {v.label}
                     </button>
                   ))}
@@ -182,8 +182,8 @@ export default function AddToCartForm({ book, initialTransit = 'express', onItem
                     const active = transit === mode.id;
                     const price = getPrixClient(zone, mode.id);
                     return (
-                      <button key={mode.id} onClick={() => setTransit(mode.id)} className={`text-left border-[1.5px] p-4 transition-all ${active ? 'border-bordeaux bg-bordeaux/5 shadow-[3px_3px_0_rgba(110,30,46,0.22)]' : 'border-encre/20 bg-creme'}`}>
-                        <div className="font-typewriter text-[12px] tracking-[1.5px] uppercase text-encre">{active ? '✓ ' : ''}{mode.title}</div>
+                      <button key={mode.id} onClick={() => setTransit(mode.id)} className={`text-left border-[1.5px] p-4 transition-all ${active ? 'border-bordeaux text-bordeaux' : 'border-encre/20 bg-creme text-encre'}`} style={active ? { background: 'rgba(110,30,46,0.06)', boxShadow: '3px 3px 0 rgba(110,30,46,0.18)' } : undefined}>
+                        <div className="font-typewriter text-[12px] tracking-[1.5px] uppercase">{active ? '✓ ' : ''}{mode.title}</div>
                         <div className="font-serif text-[22px] font-bold text-bordeaux my-1">{formatEuro(price)}</div>
                         <div className="font-fell italic text-[12px] text-foreground/55 leading-tight">{mode.desc} · {mode.delay}</div>
                       </button>
@@ -194,7 +194,7 @@ export default function AddToCartForm({ book, initialTransit = 'express', onItem
                 <SectionTitle>3. Point relais</SectionTitle>
                 <div className="space-y-2 mb-5">
                   {city?.relays.map(r => (
-                    <button key={r.id || r.name} onClick={() => setRelayName(r.name)} className={`w-full p-3 border text-left transition-all ${relayName === r.name ? 'border-[#2d6a2d] bg-[#2d6a2d]/5 text-[#2d6a2d]' : 'border-encre/20 bg-creme text-encre'}`}>
+                    <button key={r.id || r.name} onClick={() => setRelayName(r.name)} className={`w-full p-3 border text-left transition-all ${relayName === r.name ? 'text-[#2d6a2d]' : 'border-encre/20 bg-creme text-encre'}`} style={relayName === r.name ? { border: '1.5px solid #2d6a2d', background: 'rgba(45,106,45,0.06)' } : undefined}>
                       <div className="font-typewriter text-[11px] uppercase tracking-[1px]">{relayName === r.name ? '✓ ' : ''}{r.name}</div>
                       <div className="font-fell italic text-[11px] text-foreground/45 mt-1">Retrait sécurisé en boutique partenaire</div>
                     </button>
@@ -206,7 +206,7 @@ export default function AddToCartForm({ book, initialTransit = 'express', onItem
             <SectionTitle>Format du livre</SectionTitle>
             <div className="grid grid-cols-3 gap-[10px] mb-4">
               {FORMATS.map(f => (
-                <button key={f.id} onClick={() => setForfait(f.id)} className={`bg-papier border-[1.5px] p-[12px] px-2 cursor-pointer transition-all text-center relative ${forfait === f.id ? 'border-bordeaux bg-bordeaux/[0.04] shadow-[3px_3px_0_rgba(110,30,46,0.25)]' : 'border-foreground/25 hover:border-foreground/40'}`}>
+                <button key={f.id} onClick={() => setForfait(f.id)} className={`bg-papier border-[1.5px] p-[12px] px-2 cursor-pointer transition-all text-center relative ${forfait === f.id ? 'border-bordeaux text-bordeaux' : 'border-foreground/25 hover:border-foreground/40'}`} style={forfait === f.id ? { background: 'rgba(110,30,46,0.06)', boxShadow: '3px 3px 0 rgba(110,30,46,0.18)' } : undefined}>
                   {forfait === f.id && <span className="absolute top-[5px] right-[6px] text-bordeaux text-[11px]">✓</span>}
                   <div className="text-[10px] tracking-[1.5px] uppercase text-encre mb-1 font-typewriter">{f.name}</div>
                   <div className="text-[9px] text-encre/70 tracking-[0.5px] leading-tight">{f.desc}</div>

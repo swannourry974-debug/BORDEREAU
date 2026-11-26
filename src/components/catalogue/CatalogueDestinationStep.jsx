@@ -33,7 +33,7 @@ export default function CatalogueDestinationStep({ selectedCity, selectedRelay, 
           <label className="font-typewriter text-[9px] tracking-[2px] uppercase text-foreground/50">Pays</label>
           <div className="grid grid-cols-2 gap-2 mt-2">
             {CATALOGUE_COUNTRIES.map(c => (
-              <button key={c.code} onClick={() => changeCountry(c.code)} className={`p-3 border text-left ${countryCode === c.code ? 'border-bordeaux bg-bordeaux/5' : 'border-encre/20 bg-creme'}`}>
+              <button key={c.code} onClick={() => changeCountry(c.code)} className={`p-3 border text-left ${countryCode === c.code ? 'border-bordeaux text-bordeaux' : 'border-encre/20 bg-creme text-encre'}`} style={countryCode === c.code ? { background: 'rgba(110,30,46,0.06)' } : undefined}>
                 <span className="text-lg mr-2">{c.emoji}</span><span className="font-typewriter text-[11px] uppercase">{c.name}</span>
               </button>
             ))}
@@ -43,7 +43,7 @@ export default function CatalogueDestinationStep({ selectedCity, selectedRelay, 
           <label className="font-typewriter text-[9px] tracking-[2px] uppercase text-foreground/50">Destination</label>
           <div className="space-y-2 mt-2">
             {country.cities.map(v => (
-              <button key={v.label} onClick={() => changeCity(v.label)} className={`w-full p-3 border text-left font-typewriter text-[11px] uppercase ${cityLabel === v.label ? 'border-bordeaux bg-bordeaux/5 text-bordeaux' : 'border-encre/20 bg-creme'}`}>
+              <button key={v.label} onClick={() => changeCity(v.label)} className={`w-full p-3 border text-left font-typewriter text-[11px] uppercase ${cityLabel === v.label ? 'border-bordeaux text-bordeaux' : 'border-encre/20 bg-creme text-encre'}`} style={cityLabel === v.label ? { background: 'rgba(110,30,46,0.06)' } : undefined}>
                 {v.emoji} {v.label}
               </button>
             ))}
@@ -53,7 +53,7 @@ export default function CatalogueDestinationStep({ selectedCity, selectedRelay, 
           <label className="font-typewriter text-[9px] tracking-[2px] uppercase text-foreground/50">Point relais</label>
           <div className="space-y-2 mt-2">
             {city.relays.map(relay => (
-              <button key={relay} onClick={() => setRelayName(relay)} className={`w-full p-3 border text-left ${relayName === relay ? 'border-[#2d6a2d] bg-[#2d6a2d]/5 text-[#2d6a2d]' : 'border-encre/20 bg-creme'}`}>
+              <button key={relay} onClick={() => setRelayName(relay)} className={`w-full p-3 border text-left ${relayName === relay ? 'text-[#2d6a2d]' : 'border-encre/20 bg-creme text-encre'}`} style={relayName === relay ? { border: '1.5px solid #2d6a2d', background: 'rgba(45,106,45,0.06)' } : undefined}>
                 <div className="font-typewriter text-[11px] uppercase">{relayName === relay ? '✓ ' : ''}{relay}</div>
                 <div className="font-fell italic text-[11px] text-foreground/45 mt-1">Retrait sécurisé en boutique partenaire</div>
               </button>

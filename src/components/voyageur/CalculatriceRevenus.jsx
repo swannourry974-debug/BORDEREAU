@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { ZONES, POIDS_FORMAT } from '@/lib/tarifsConfig';
 
 const FORMATS = ['Poche', 'Broché', 'BD', 'Relié'];
@@ -33,16 +33,11 @@ export default function CalculatriceRevenus() {
   };
 
   return (
-    <div style={{
-      background: 'var(--papier)',
-      border: '2px solid var(--bordeaux)',
-      marginBottom: 20,
-      boxShadow: '4px 4px 0 rgba(128,0,32,0.15)',
-    }}>
-      {/* Header */}
-      <div style={{ background: 'var(--bordeaux)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 16 }}>💰</span>
-        <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--creme)' }}>
+    <div className="bordero-card mb-5 overflow-hidden">
+      {/* En-tête */}
+      <div style={{ background: '#6E1E2E', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontSize: 16 }} aria-hidden="true">💰</span>
+        <span className="bordero-ui" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: '#F3E8D2' }}>
           Calculatrice de revenus
         </span>
       </div>
@@ -51,84 +46,101 @@ export default function CalculatriceRevenus() {
 
         {/* Sélecteur de zone */}
         <div style={{ marginBottom: 14 }}>
-          <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.5)', marginBottom: 6 }}>
+          <div className="bordero-ui" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--encre-douce)', marginBottom: 6 }}>
             Destination
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-            {Object.values(ZONES).map(z => (
-              <button
-                key={z.id}
-                onClick={() => setZoneId(z.id)}
-                style={{
-                  background: zoneId === z.id ? 'rgba(128,0,32,0.08)' : 'var(--creme)',
-                  border: zoneId === z.id ? '2px solid var(--bordeaux)' : '1.5px solid rgba(26,16,8,0.15)',
-                  padding: '8px 10px', cursor: 'pointer', textAlign: 'left',
-                  display: 'flex', alignItems: 'center', gap: 6,
-                }}
-              >
-                <span style={{ fontSize: 14 }}>{z.emoji}</span>
-                <div>
-                  <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', color: zoneId === z.id ? 'var(--bordeaux)' : 'var(--encre)' }}>
-                    {z.label}
+            {Object.values(ZONES).map(z => {
+              const active = zoneId === z.id;
+              return (
+                <button
+                  key={z.id}
+                  type="button"
+                  onClick={() => setZoneId(z.id)}
+                  aria-pressed={active}
+                  style={{
+                    background: active ? '#6E1E2E' : 'var(--bordero-surface)',
+                    border: `1px solid ${active ? '#6E1E2E' : 'var(--bordero-line)'}`,
+                    padding: '10px 12px', cursor: 'pointer', textAlign: 'left',
+                    minHeight: 44,
+                    display: 'flex', alignItems: 'center', gap: 6,
+                  }}
+                >
+                  <span style={{ fontSize: 14 }} aria-hidden="true">{z.emoji}</span>
+                  <div>
+                    <div className="bordero-ui" style={{ fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', color: active ? '#F3E8D2' : 'var(--encre)' }}>
+                      {z.label}
+                    </div>
+                    <div className="bordero-copy" style={{ fontSize: 10, color: active ? 'rgba(243,232,210,0.78)' : 'var(--encre-douce)', marginTop: 1 }}>
+                      {z.express.part_voyageur.toFixed(2)} € / livre
+                    </div>
                   </div>
-                  <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 9, color: 'rgba(26,16,8,0.4)', marginTop: 1 }}>
-                    {z.express.part_voyageur.toFixed(2)} € / livre
-                  </div>
-                </div>
-              </button>
-            ))}
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Liste des livres */}
         <div style={{ marginBottom: 12 }}>
-          <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.5)', marginBottom: 6 }}>
+          <div className="bordero-ui" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--encre-douce)', marginBottom: 6 }}>
             Livres à transporter ({livres.length} / {quotaLivres})
           </div>
           {livres.map((l, i) => (
             <div key={i} style={{
               display: 'flex', alignItems: 'center', gap: 8,
-              borderBottom: '1px dashed rgba(26,16,8,0.1)', paddingBottom: 8, marginBottom: 8,
+              borderBottom: '1px dashed var(--bordero-line)', paddingBottom: 8, marginBottom: 8,
             }}>
-              <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, color: 'var(--bordeaux)', minWidth: 18 }}>#{i + 1}</span>
+              <span className="bordero-ui" style={{ fontSize: 9, color: 'var(--bordeaux)', minWidth: 18 }}>#{i + 1}</span>
               <select
                 value={l.format}
                 onChange={e => updateFormat(i, e.target.value)}
                 style={{
-                  flex: 1, background: 'var(--creme)', border: '1px solid rgba(26,16,8,0.2)',
-                  fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12,
-                  padding: '5px 8px', color: 'var(--encre)',
+                  flex: 1, background: 'var(--bordero-surface)', border: '1px solid var(--bordero-line)',
+                  fontFamily: "'Cormorant Garamond', serif", fontSize: 13,
+                  padding: '8px 8px', color: 'var(--encre)', minHeight: 44,
                 }}
               >
                 {FORMATS.map(f => (
                   <option key={f} value={f}>{f} (~{POIDS_FORMAT[f]}g)</option>
                 ))}
               </select>
-              <span style={{ fontFamily: 'Playfair Display, serif', fontSize: 13, fontWeight: 700, color: 'var(--bordeaux)', minWidth: 48, textAlign: 'right' }}>
+              <span className="bordero-title" style={{ fontSize: 13, color: 'var(--bordeaux)', minWidth: 48, textAlign: 'right' }}>
                 +{getCommission(zone, i + 1).toFixed(2)} €
               </span>
               {livres.length > 1 && (
-                <button onClick={() => removeLivre(i)} style={{
-                  background: 'none', border: 'none', cursor: 'pointer', fontSize: 14,
-                  color: 'rgba(26,16,8,0.3)', padding: '0 2px', lineHeight: 1,
-                }}>✕</button>
+                <button
+                  type="button"
+                  aria-label={`Retirer le livre ${i + 1}`}
+                  onClick={() => removeLivre(i)}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer', fontSize: 14,
+                    color: 'var(--encre-douce)', padding: 0, lineHeight: 1,
+                    minWidth: 44, minHeight: 44,
+                  }}
+                >✕</button>
               )}
             </div>
           ))}
 
           {/* Bouton ajouter */}
           {!quotaAtteint && (
-            <button onClick={addLivre} style={{
-              width: '100%', background: 'none',
-              border: '1.5px dashed rgba(26,16,8,0.2)', padding: '8px',
-              cursor: 'pointer', fontFamily: 'Special Elite, monospace',
-              fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.4)',
-            }}>
+            <button
+              type="button"
+              onClick={addLivre}
+              style={{
+                width: '100%', background: 'none',
+                border: '1px dashed var(--bordero-line-strong)', padding: '10px',
+                cursor: 'pointer', minHeight: 44,
+                fontFamily: "'Inter', sans-serif", fontWeight: 700,
+                fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--encre-douce)',
+              }}
+            >
               + Ajouter un livre
             </button>
           )}
           {quotaAtteint && (
-            <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 11, color: 'var(--bordeaux)', textAlign: 'center', padding: '6px 0' }}>
+            <div className="bordero-copy" style={{ fontSize: 12, color: 'var(--bordeaux)', textAlign: 'center', padding: '6px 0' }}>
               Quota atteint pour cette zone
             </div>
           )}
@@ -139,31 +151,33 @@ export default function CalculatriceRevenus() {
           background: 'var(--encre)', color: 'var(--creme)',
           padding: '14px 16px',
           display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0,
+          borderRadius: 'var(--bordero-radius-sm)',
         }}>
           {[
             { label: 'Poids total', val: `${poidsKg.toFixed(2)} kg`, sub: `max ${quotaKg} kg`, warn: poidsKg > quotaKg * 0.8 },
             { label: 'Livres', val: `${livres.length}`, sub: `max ${quotaLivres}`, warn: livres.length >= quotaLivres * 0.8 },
-            { label: 'Gain estimé', val: `${gainTotal.toFixed(2)} €`, sub: `+bonus progressif`, warn: false },
+            { label: 'Gain estimé', val: `${gainTotal.toFixed(2)} €`, sub: '+bonus progressif', warn: false },
           ].map(({ label, val, sub, warn }, i) => (
             <div key={label} style={{
               textAlign: 'center', padding: '0 8px',
               borderRight: i < 2 ? '1px dashed rgba(253,252,240,0.15)' : 'none',
             }}>
-              <div style={{ fontFamily: 'Playfair Display, serif', fontSize: i === 2 ? 20 : 18, fontWeight: 700, color: warn ? '#e8a838' : i === 2 ? '#a8d5a2' : 'var(--creme)' }}>
+              <div className="bordero-title" style={{ fontSize: i === 2 ? 20 : 18, color: warn ? 'var(--sepia)' : i === 2 ? 'var(--or-clair)' : 'var(--creme)' }}>
                 {val}
               </div>
-              <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 7.5, letterSpacing: 1, textTransform: 'uppercase', opacity: 0.5, marginTop: 3 }}>
+              <div className="bordero-ui" style={{ fontSize: 8, letterSpacing: 1, textTransform: 'uppercase', opacity: 0.55, marginTop: 3 }}>
                 {label}
               </div>
-              <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 9, opacity: 0.4, marginTop: 2 }}>
+              <div className="bordero-copy" style={{ fontSize: 10, opacity: 0.45, marginTop: 2 }}>
                 {sub}
               </div>
             </div>
           ))}
         </div>
 
-        <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 10, color: 'rgba(26,16,8,0.4)', marginTop: 10, textAlign: 'center', lineHeight: 1.5 }}>
-          Commission de base {zone.express.part_voyageur.toFixed(2)} € · +10% de bonus par livre supplémentaire
+        <div className="bordero-copy" style={{ fontSize: 11, marginTop: 10, textAlign: 'center' }}>
+          Commission de base {zone.express.part_voyageur.toFixed(2)} € · +10% de bonus par livre supplém
+entaire
         </div>
       </div>
     </div>

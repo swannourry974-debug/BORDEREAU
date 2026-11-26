@@ -214,11 +214,11 @@ export default function PanelCatalogue() {
               onClick={() => setCatalogueStep(3)}
               style={{
                 position: 'sticky', top: 12, zIndex: 50, width: '100%',
-                background: 'var(--bordeaux)', color: 'var(--creme)',
-                border: 'none', padding: '11px 16px', cursor: 'pointer',
-                fontFamily: 'Special Elite, monospace', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
+                background: 'linear-gradient(135deg, var(--cta-orange), var(--cta-orange-dark))', color: 'var(--cta-foreground)',
+                border: 'none', borderRadius: 16, padding: '13px 18px', cursor: 'pointer',
+                fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: 1.6, textTransform: 'uppercase',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                marginBottom: 14, boxShadow: '3px 3px 0 rgba(90,0,21,0.5)',
+                marginBottom: 16, boxShadow: '0 10px 22px rgba(194,65,12,0.22)',
               }}
             >
               <span>🛒 Voir résumé — {items.length} livre{items.length !== 1 ? 's' : ''}</span>

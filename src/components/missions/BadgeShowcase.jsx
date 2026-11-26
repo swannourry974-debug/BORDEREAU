@@ -31,7 +31,7 @@ function BadgeItem({ badge, unlocked }) {
 
       {/* Nom */}
       <div style={{
-        fontFamily: 'Special Elite, monospace',
+        fontFamily: "'Inter', sans-serif",
         fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase',
         color: unlocked ? 'var(--encre)' : 'hsl(var(--muted-foreground))',
         textAlign: 'center', lineHeight: 1.3,
@@ -42,7 +42,7 @@ function BadgeItem({ badge, unlocked }) {
       {/* Rareté */}
       {unlocked && (
         <div style={{
-          fontFamily: 'Special Elite, monospace', fontSize: 8,
+          fontFamily: "'Inter', sans-serif", fontSize: 8,
           letterSpacing: 2, textTransform: 'uppercase',
           color: style.labelColor, opacity: 0.8,
         }}>
@@ -79,7 +79,7 @@ export default function BadgeShowcase({ stats = STATS_DEMO }) {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div>
-          <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.6, marginBottom: 4 }}>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.6, marginBottom: 4 }}>
             Vos distinctions
           </div>
           <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 16, fontWeight: 700 }}>
@@ -87,10 +87,10 @@ export default function BadgeShowcase({ stats = STATS_DEMO }) {
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 22, fontWeight: 700, color: '#d4b896' }}>
+          <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 22, fontWeight: 700, color: 'var(--or-clair)' }}>
             {obtenus}<span style={{ fontSize: 13, opacity: 0.6 }}>/{total}</span>
           </div>
-          <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 8, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.5 }}>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.5 }}>
             Badges
           </div>
         </div>
@@ -130,17 +130,17 @@ export default function BadgeShowcase({ stats = STATS_DEMO }) {
           <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
             <div style={{ fontSize: 36 }}>{debloques.includes(detail.id) ? detail.emoji : '🔒'}</div>
             <div>
-              <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--encre)', marginBottom: 4 }}>
+              <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--encre)', marginBottom: 4 }}>
                 {detail.nom}
-                <span style={{ marginLeft: 8, fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, color: RARETE_STYLES[detail.rarete].labelColor }}>
+                <span style={{ marginLeft: 8, fontFamily: "'Inter', sans-serif", fontSize: 9, letterSpacing: 2, color: RARETE_STYLES[detail.rarete].labelColor }}>
                   · {RARETE_STYLES[detail.rarete].label}
                 </span>
               </div>
-              <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))', lineHeight: 1.5 }}>
                 {detail.description}
               </div>
               {!debloques.includes(detail.id) && (
-                <div style={{ marginTop: 6, fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase' }}>
+                <div style={{ marginTop: 6, fontFamily: "'Inter', sans-serif", fontSize: 9, letterSpacing: 2, color: 'hsl(var(--muted-foreground))', textTransform: 'uppercase' }}>
                   🔒 Non débloqué
                 </div>
               )}

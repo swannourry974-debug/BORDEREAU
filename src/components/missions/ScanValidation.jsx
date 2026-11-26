@@ -94,8 +94,8 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
       zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
     }} onClick={(e) => e.target === e.currentTarget && onClose()}>
       <div style={{
-        background: 'var(--creme)', width: '100%', maxWidth: 520,
-        borderRadius: '0', borderTop: '3px solid var(--bordeaux)',
+        background: 'var(--bordero-surface-strong)', width: '100%', maxWidth: 520,
+        borderRadius: 'var(--bordero-radius-lg)', borderTop: '3px solid var(--bordeaux)',
         padding: 24, maxHeight: '90vh', overflowY: 'auto', position: 'relative', zIndex: 1001,
         animation: 'fadeSlideIn 0.3s ease',
       }}>
@@ -130,9 +130,9 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
               type="button"
               onClick={() => onValidated && onValidated()}
               style={{
-                width: '100%', background: '#1a3a5c', color: 'var(--creme)', border: 'none',
+                width: '100%', background: 'var(--statut-valide)', color: 'var(--creme)', border: 'none',
                 padding: '14px 16px', marginBottom: 16, cursor: 'pointer',
-                fontFamily: 'Special Elite, monospace', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
+                fontFamily: "'Inter', sans-serif", fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
               }}
             >
               ✓ Valider l'achat et passer en transit
@@ -177,14 +177,14 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
                 width: '100%', padding: '10px 14px',
                 border: '1.5px solid hsl(var(--border))',
                 background: 'hsl(var(--background))', color: 'hsl(var(--foreground))',
-                fontFamily: "'Special Elite', monospace", fontSize: 14,
+                fontFamily: "'Inter', sans-serif", fontSize: 14,
                 marginBottom: 12, boxSizing: 'border-box',
               }}
             />
 
             {isbn && (
               <div style={{
-                background: 'rgba(45,106,45,0.08)', border: '1px solid #2d6a2d',
+                background: 'var(--statut-valide-soft)', border: '1px solid var(--statut-valide)',
                 padding: '8px 12px', marginBottom: 12, fontSize: 13,
               }}>
                 ✅ ISBN détecté : <strong>{isbn}</strong>
@@ -209,7 +209,7 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
             <div style={{
               background: 'rgba(128,0,32,0.06)', border: '1px dashed var(--bordeaux)',
               padding: '12px 16px', marginBottom: 20, fontSize: 12,
-              fontFamily: 'IM Fell English, serif', fontStyle: 'italic', lineHeight: 1.6,
+              fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', lineHeight: 1.6,
             }}>
               📋 Le ticket de caisse prouve l'achat du livre. Il sera vérifié par notre équipe avant de valider votre commission.
             </div>
@@ -244,7 +244,7 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
 
             {ticketPreview && (
               <div style={{
-                background: 'rgba(45,106,45,0.08)', border: '1px solid #2d6a2d',
+                background: 'var(--statut-valide-soft)', border: '1px solid var(--statut-valide)',
                 padding: '8px 12px', marginBottom: 12, fontSize: 13,
               }}>
                 ✅ Photo du ticket capturée
@@ -261,7 +261,7 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
               value={ticketAmount}
               onChange={e => setTicketAmount(e.target.value)}
               placeholder="Ex : 12.90"
-              style={{ width: '100%', padding: '10px 14px', border: '1.5px solid hsl(var(--border))', background: 'hsl(var(--background))', color: 'hsl(var(--foreground))', fontFamily: "'Special Elite', monospace", fontSize: 14, marginBottom: 12, boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '10px 14px', border: '1.5px solid hsl(var(--border))', background: 'hsl(var(--background))', color: 'hsl(var(--foreground))', fontFamily: "'Inter', sans-serif", fontSize: 14, marginBottom: 12, boxSizing: 'border-box' }}
             />
 
             {error && <div style={{ color: 'var(--bordeaux)', fontSize: 12, marginBottom: 8 }}>{error}</div>}
@@ -282,7 +282,7 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
               Étape 3 — Confirmer l'envoi
             </div>
 
-            <div style={{ background: 'hsl(var(--card))', border: '1.5px solid hsl(var(--border))', padding: 16, marginBottom: 20 }}>
+            <div className="bordero-surface" style={{ padding: 16, marginBottom: 20 }}>
               <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: 10, letterSpacing: 1.5, textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 4 }}>Livre</div>
@@ -320,7 +320,7 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
         {step === 'done' && (
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
             <div style={{ fontSize: 56, marginBottom: 16 }}>📬</div>
-            <div className="font-special" style={{ fontSize: 16, letterSpacing: 3, textTransform: 'uppercase', color: '#2d6a2d', marginBottom: 8 }}>
+            <div className="font-special" style={{ fontSize: 16, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--statut-valide)', marginBottom: 8 }}>
               Soumis avec succès
             </div>
             <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))', lineHeight: 1.7 }}>
@@ -330,7 +330,7 @@ export default function ScanValidation({ mission, onValidated, onClose }) {
             <div style={{ marginTop: 20 }}>
               <div className="font-special animate-stamp" style={{
                 display: 'inline-block',
-                border: '3px solid #2d6a2d', color: '#2d6a2d',
+                border: '3px solid var(--statut-valide)', color: 'var(--statut-valide)',
                 fontSize: 11, letterSpacing: 3, textTransform: 'uppercase',
                 padding: '6px 12px',
               }}>EN ATTENTE ADMIN</div>

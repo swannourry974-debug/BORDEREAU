@@ -2,33 +2,62 @@ import React from 'react';
 
 const SEGMENTS = 20;
 
-export default function LoadingPassportTicket({ mode = 'loading', progress = 0 }) {
-  const filled = Math.round((progress / 100) * SEGMENTS);
+export default function LoadingPassportTicket({ mode = 'loading', progress = 0, onWake }) {
   const isIdle = mode === 'idle';
+  const filled = Math.round((progress / 100) * SEGMENTS);
+  const done = progress >= 100;
 
   return (
     <>
-      <div className="bordero-loading-ticket">
-        <span className="bordero-loading-edge" />
-        <div className="bordero-loading-visa">{isIdle ? 'En attente' : 'Visa livres'}</div>
-        <div className="bordero-loading-stars"><span>✦</span><span>✦</span></div>
-        <div className="bordero-loading-route">France → le Monde</div>
-        <div className="bordero-loading-brand">BORDERO</div>
-        <div className="bordero-loading-manifest">Manifeste des livres voyageurs.</div>
-      </div>
+      <span className="bordero-wait-stamp" aria-hidden="true">
+        {isIdle ? 'En veille' : done ? 'Visa' : 'Carnet'}
+      </span>
+
+      <p className="bordero-heading-section">
+        {isIdle ? 'Carnet en veille' : 'Ouverture du carnet'}
+      </p>
+
+      <div className="bordero-wait-brand">BORDERO</div>
+      <div className="bordero-wait-rule" aria-hidden="true">✦</div>
 
       {isIdle ? (
-        <div className="bordero-loading-text">Touchez l’écran pour reprendre le carnet Bordero.</div>
+        <>
+          <p className="bordero-wait-caption">
+            Le carnet est resté ouvert. Touchez la page pour reprendre la lecture.
+          </p>
+          <button
+            type="button"
+            className="bordero-action-secondary mt-5 px-6 py-3 text-[11px]"
+            onClick={onWake}
+          >
+            Reprendre
+          </button>
+        </>
       ) : (
-        <div className="bordero-loading-progress">
-          <div className="bordero-loading-track">
-            <div className="bordero-loading-perfs">
-              {Array.from({ length: SEGMENTS }).map((_, i) => <i key={i} className={i < filled ? 'is-filled' : ''} />)}
-            </div>
+        <>
+          <div
+            className="bordero-wait-perfs"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress}
+            aria-label="Progression de l’ouverture du carnet"
+          >
+            {Array.from({ length: SEGMENTS }).map((_, i) => (
+              <i key={i} data-on={i < filled ? 'true' : 'false'} />
+            ))}
           </div>
-          <div className="bordero-loading-scale"><span>0%</span><span>50%</span><span>100%</span></div>
-          <div className="bordero-loading-text">{progress < 100 ? 'Préparation du carnet Bordero…' : 'Prêt pour le voyage.'}</div>
-        </div>
+
+          <div className="bordero-wait-meta" aria-hidden="true">
+            <span>Départ</span>
+            <span>{progress}%</span>
+            <span>Visa</span>
+          </div>
+
+          <p className="bordero-wait-caption" role="status">
+            {done ? 'Carnet prêt. Bon voyage.' : 'On relie le carnet, page après page…'}
+          </p>
+        </>
       )}
     </>
   );

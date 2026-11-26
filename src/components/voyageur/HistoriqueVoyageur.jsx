@@ -3,9 +3,9 @@ import { base44 } from '@/api/base44Client';
 
 const STATUT_CONFIG = {
   disponible: { label: 'Disponible', color: 'rgba(26,16,8,0.4)', bg: 'rgba(26,16,8,0.05)' },
-  acceptee:   { label: 'Acceptée',   color: '#1a3a5c',           bg: 'rgba(26,58,92,0.08)' },
-  engagee:    { label: 'En cours',   color: '#8B6914',           bg: 'rgba(139,105,20,0.1)' },
-  livree:     { label: 'Livrée ✓',  color: '#2d6a2d',           bg: 'rgba(45,106,45,0.1)' },
+  acceptee:   { label: 'Acceptée',   color: 'var(--statut-transit)',           bg: 'rgba(26,58,92,0.08)' },
+  engagee:    { label: 'En cours',   color: 'var(--statut-attente)',           bg: 'rgba(139,105,20,0.1)' },
+  livree:     { label: 'Livrée ✓',  color: 'var(--statut-valide)',           bg: 'rgba(45,106,45,0.1)' },
 };
 
 function MoyenneEtoiles({ notes }) {
@@ -14,13 +14,13 @@ function MoyenneEtoiles({ notes }) {
   const arrondi = Math.round(moy * 10) / 10;
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-      <span style={{ color: '#8B6914', fontSize: 13, letterSpacing: 1 }}>
+      <span style={{ color: 'var(--statut-attente)', fontSize: 13, letterSpacing: 1 }}>
         {'★'.repeat(Math.round(moy))}{'☆'.repeat(5 - Math.round(moy))}
       </span>
-      <span style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: 13, color: '#8B6914' }}>
+      <span style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: 13, color: 'var(--statut-attente)' }}>
         {arrondi.toFixed(1)}
       </span>
-      <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 8, color: 'rgba(26,16,8,0.35)', letterSpacing: 1 }}>
+      <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, color: 'rgba(26,16,8,0.35)', letterSpacing: 1 }}>
         ({notes.length} avis)
       </span>
     </div>
@@ -51,7 +51,7 @@ function MissionCard({ mission, notation }) {
               {mission.livre}
             </div>
             {mission.auteur && (
-              <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.5)', marginBottom: 6 }}>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.5)', marginBottom: 6 }}>
                 {mission.auteur}
               </div>
             )}
@@ -59,13 +59,13 @@ function MissionCard({ mission, notation }) {
               <span style={{
                 display: 'inline-block', padding: '2px 8px',
                 background: cfg.bg, color: cfg.color,
-                fontFamily: 'Special Elite, monospace', fontSize: 8, letterSpacing: 1.5,
+                fontFamily: "'Inter', sans-serif", fontSize: 8, letterSpacing: 1.5,
                 textTransform: 'uppercase', border: `1px solid ${cfg.color}`,
               }}>
                 {cfg.label}
               </span>
               {mission.ville_destination && (
-                <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, color: 'rgba(26,16,8,0.4)', letterSpacing: 1 }}>
+                <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, color: 'rgba(26,16,8,0.4)', letterSpacing: 1 }}>
                   📍 {mission.ville_destination}
                 </span>
               )}
@@ -73,11 +73,11 @@ function MissionCard({ mission, notation }) {
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
             {mission.commission > 0 && (
-              <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 16, fontWeight: 700, color: '#2d6a2d' }}>
+              <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 16, fontWeight: 700, color: 'var(--statut-valide)' }}>
                 +{mission.commission.toFixed(2)} €
               </div>
             )}
-            <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 8, color: 'rgba(26,16,8,0.3)', letterSpacing: 1, marginTop: 2 }}>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, color: 'rgba(26,16,8,0.3)', letterSpacing: 1, marginTop: 2 }}>
               {expanded ? '▲' : '▼'}
             </div>
           </div>
@@ -88,7 +88,7 @@ function MissionCard({ mission, notation }) {
           <div style={{ marginTop: 8 }}>
             <MoyenneEtoiles notes={[notation]} />
             {notation.commentaire && (
-              <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.45)', marginTop: 4 }}>
+              <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 11, color: 'rgba(26,16,8,0.45)', marginTop: 4 }}>
                 "{notation.commentaire}"
               </div>
             )}
@@ -108,8 +108,8 @@ function MissionCard({ mission, notation }) {
             ['Date limite', mission.date_limite ? new Date(mission.date_limite).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'long' }) : null],
           ].filter(([, v]) => v).map(([label, val]) => (
             <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 7 }}>
-              <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 1, color: 'rgba(26,16,8,0.4)', textTransform: 'uppercase' }}>{label}</span>
-              <span style={{ fontFamily: 'IM Fell English, serif', fontSize: 12, color: 'var(--encre)' }}>{val}</span>
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, letterSpacing: 1, color: 'rgba(26,16,8,0.4)', textTransform: 'uppercase' }}>{label}</span>
+              <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 12, color: 'var(--encre)' }}>{val}</span>
             </div>
           ))}
         </div>
@@ -157,7 +157,7 @@ export default function HistoriqueVoyageur({ userEmail }) {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: 24, fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.4)' }}>
+      <div style={{ textAlign: 'center', padding: 24, fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.4)' }}>
         Chargement…
       </div>
     );
@@ -177,7 +177,7 @@ export default function HistoriqueVoyageur({ userEmail }) {
             background: 'var(--papier)', border: '1px dashed rgba(26,16,8,0.2)',
           }}>
             <div style={{ fontFamily: 'Playfair Display, serif', fontSize: label === 'Gains totaux' ? 14 : 22, fontWeight: 700, color: 'var(--bordeaux)', lineHeight: 1.2 }}>{val}</div>
-            <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 7.5, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(26,16,8,0.4)', marginTop: 3 }}>{label}</div>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 7.5, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(26,16,8,0.4)', marginTop: 3 }}>{label}</div>
           </div>
         ))}
       </div>
@@ -190,7 +190,7 @@ export default function HistoriqueVoyageur({ userEmail }) {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <div>
-            <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 8, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--sepia)', marginBottom: 4 }}>Votre réputation</div>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--sepia)', marginBottom: 4 }}>Votre réputation</div>
             <MoyenneEtoiles notes={notations} />
           </div>
           <div style={{ fontFamily: 'Playfair Display, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.45)', textAlign: 'right' }}>
@@ -207,7 +207,7 @@ export default function HistoriqueVoyageur({ userEmail }) {
             onClick={() => setFiltre(f.key)}
             style={{
               padding: '6px 14px', cursor: 'pointer',
-              fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase',
+              fontFamily: "'Inter', sans-serif", fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase',
               background: filtre === f.key ? 'var(--bordeaux)' : 'transparent',
               color: filtre === f.key ? 'var(--creme)' : 'rgba(26,16,8,0.5)',
               border: filtre === f.key ? 'none' : '1px dashed rgba(26,16,8,0.25)',
@@ -226,7 +226,7 @@ export default function HistoriqueVoyageur({ userEmail }) {
         }}>
           <div style={{ fontSize: 32, marginBottom: 10 }}>✈️</div>
           <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 14, fontWeight: 700, marginBottom: 6 }}>Aucune mission</div>
-          <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.45)' }}>
+          <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.45)' }}>
             Vos missions de transport apparaîtront ici
           </div>
         </div>

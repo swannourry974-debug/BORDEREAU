@@ -23,43 +23,52 @@ export default function MissionCard({ mission, index }) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: accepted ? 0.75 : 1, y: 0 }}
       transition={{ delay: index * 0.08, duration: 0.4 }}
-      className="bg-papier border-[1.5px] border-encre p-4 mb-3 relative shadow-[3px_3px_0_rgba(26,16,8,0.12)]"
+      className="bordero-surface relative mb-3 p-4"
     >
-      {/* Corner fold */}
-      <span className="absolute top-0 right-0 w-0 h-0 border-solid border-t-0 border-r-[32px] border-b-[32px] border-l-0 border-transparent border-r-bordeaux" />
+      {/* Coin corné */}
+      <span
+        className="absolute right-0 top-0 h-0 w-0"
+        style={{ borderStyle: 'solid', borderWidth: '0 32px 32px 0', borderColor: 'transparent var(--sepia) transparent transparent' }}
+      />
 
-      <div className="font-typewriter text-[18px] tracking-[3px] uppercase mb-1">{mission.city}</div>
-      <div className="font-fell italic text-[12px] text-foreground/55 mb-3">
+      <div className="bordero-ui mb-1 text-[18px] uppercase tracking-[3px]" style={{ color: 'var(--bordeaux)' }}>{mission.city}</div>
+      <div className="bordero-copy mb-3 text-[12px] italic">
         {accepted ? 'Ticket scanné · Achat confirmé' : mission.date}
       </div>
-      <div className="text-[12px] text-foreground/60">
-        <span>📚</span> <em className="font-fell">{mission.bookTitle}</em> · {mission.bookType} · {mission.weight}
+      <div className="text-[12px]" style={{ color: 'var(--encre-douce)' }}>
+        <span>📚</span> <em className="bordero-copy">{mission.bookTitle}</em> · {mission.bookType} · {mission.weight}
       </div>
 
-      <div className="flex items-center justify-between border-t border-dashed border-foreground/20 pt-[10px] mt-2">
+      <div className="mt-2 flex items-center justify-between pt-[10px]" style={{ borderTop: '1px dashed var(--bordero-line)' }}>
         <div>
-          <span className={`font-serif text-[22px] font-bold ${accepted ? 'text-foreground/40' : 'text-bordeaux'}`}>
+          <span className="bordero-title text-[22px]" style={{ color: accepted ? 'var(--encre-douce)' : 'var(--bordeaux)' }}>
             {mission.commission}
           </span>
-          <span className="block text-[9px] text-foreground/50 tracking-[1px] -mt-[2px]">
+          <span className="bordero-ui -mt-[2px] block text-[9px] tracking-[1px]" style={{ color: 'var(--encre-douce)' }}>
             {accepted ? 'En séquestre' : 'Commission'}
           </span>
         </div>
         {accepted ? (
-          <CouponButton secondary disabled className="opacity-50 cursor-not-allowed">
+          <CouponButton secondary disabled className="cursor-not-allowed opacity-50">
             ENGAGÉ
           </CouponButton>
         ) : (
           <CouponButton onClick={handleAccept} disabled={accepting}>
-            {accepting ? '⟳ ...' : 'Accepter'}
+            {accepting ? '⟳ …' : 'Accepter'}
           </CouponButton>
         )}
       </div>
 
-      {/* Stamp */}
+      {/* Tampon */}
       {accepted && (
-        <div className="absolute right-[14px] top-1/2 -translate-y-1/2 -rotate-12 border-[3px] border-[#1a3a5c] text-[#1a3a5c] font-typewriter text-[9px] tracking-[2px] uppercase px-2 py-1 opacity-70 pointer-events-none"
-          style={{ animation: !mission.engaged ? 'stampIn 0.4s cubic-bezier(0.22,1,0.36,1) forwards' : undefined }}
+        <div
+          className="bordero-ui pointer-events-none absolute right-[14px] top-1/2 -translate-y-1/2 -rotate-12 px-2 py-1 text-[9px] uppercase tracking-[2px]"
+          style={{
+            border: '3px solid var(--statut-transit)',
+            color: 'var(--statut-transit)',
+            opacity: 0.7,
+            animation: !mission.engaged ? 'stampIn 0.4s cubic-bezier(0.22,1,0.36,1) forwards' : undefined,
+          }}
         >
           ENGAGÉ
         </div>

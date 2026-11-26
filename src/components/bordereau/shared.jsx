@@ -45,23 +45,29 @@ export function SectionTitle({ children }) {
 }
 
 export function BtnCoupon({ children, onClick, secondary, style, disabled }) {
+  if (secondary) {
+    return (
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        className="font-special border border-dashed border-bordeaux text-bordeaux bg-transparent px-4 py-2 text-[12px] tracking-[2px] uppercase cursor-pointer transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        style={{ padding: '8px 16px', opacity: disabled ? 0.5 : 1, ...style }}
+      >
+        {children}
+      </button>
+    );
+  }
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      className="font-special"
+      className="font-special px-4 py-2 text-[12px] tracking-[2px] uppercase cursor-pointer relative transition-all hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
       style={{
-        background: secondary ? 'transparent' : 'var(--bordeaux)',
-        color: secondary ? 'var(--bordeaux)' : 'var(--creme)',
-        border: secondary ? '1.5px dashed var(--bordeaux)' : 'none',
+        background: 'var(--bordeaux)',
+        color: 'var(--creme)',
+        border: 'none',
         padding: '8px 16px',
-        fontSize: 12,
-        letterSpacing: 2,
-        textTransform: 'uppercase',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        position: 'relative',
-        transition: 'all 0.15s',
-        outline: secondary ? 'none' : '2px dashed var(--bordeaux)',
+        outline: '2px dashed var(--bordeaux)',
         outlineOffset: 3,
         opacity: disabled ? 0.5 : 1,
         ...style,

@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { base44 } from '@/api/base44Client';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import LoadingScreen from '@/components/shared/LoadingScreen';
+import WaitScreen from '@/components/shared/WaitScreen';
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { CartProvider } from '@/lib/CartContext';
@@ -21,11 +22,7 @@ import PanelProfil from './pages/PanelProfil';
 import AdminDashboard from './pages/AdminDashboard';
 import Login from './pages/Login';
 
-const RouteSpinner = () => (
-  <div className="fixed inset-0 flex items-center justify-center">
-    <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
-  </div>
-);
+const RouteSpinner = () => <WaitScreen label="On ouvre le carnet…" />;
 
 // Écran affiché aux visiteurs non connectés sur un espace privé.
 // Avant, l'application entière s'affichait sans compte (données bloquées côté serveur, mais parcours faux).

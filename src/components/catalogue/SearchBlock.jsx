@@ -17,9 +17,17 @@ export default function SearchBlock({ onSearch, onScanOpen, onScanResult }) {
   };
 
   return (
-    <div className="bg-papier border-[1.5px] border-encre p-3 sm:p-[14px] sm:px-4 relative mb-5 shadow-[3px_3px_0_#1a1008]">
-      <div className="text-[12px] sm:text-[13px] text-foreground/40 tracking-[0.5px] mb-2 font-typewriter leading-snug">
-        🔍 Chercher un titre, auteur, ISBN...
+    <div
+      className="relative mb-5 p-4"
+      style={{
+        background: 'var(--bordero-surface-strong)',
+        border: '1px solid var(--bordero-line)',
+        borderRadius: 'var(--bordero-radius-md)',
+        boxShadow: 'var(--bordero-shadow-paper)',
+      }}
+    >
+      <div className="font-ui mb-2 text-[11px] uppercase tracking-[1.4px]" style={{ color: 'var(--encre-douce)' }}>
+        Chercher un titre, auteur, ISBN…
       </div>
       <div className="flex flex-col sm:flex-row gap-2">
         <input
@@ -28,8 +36,8 @@ export default function SearchBlock({ onSearch, onScanOpen, onScanResult }) {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && submit()}
           placeholder="Le Petit Prince..."
-          className="w-full min-w-0 flex-1 bg-creme border border-foreground/30 px-3 py-3 sm:py-2 text-[16px] sm:text-[15px] text-foreground outline-none focus:border-bordeaux focus:shadow-[0_0_0_2px_rgba(128,0,32,0.1)]"
-          style={{ fontFamily: 'Poppins, sans-serif', color: 'var(--encre)' }}
+          className="w-full min-w-0 flex-1 px-4 py-3 text-[16px] outline-none"
+          style={{ fontFamily: "'Inter', sans-serif", color: 'var(--encre)', background: '#FFFAF0', border: '1px solid var(--bordero-line-strong)', borderRadius: 14 }}
         />
         <CouponButton onClick={submit} className="w-full sm:w-auto justify-center">Chercher</CouponButton>
       </div>

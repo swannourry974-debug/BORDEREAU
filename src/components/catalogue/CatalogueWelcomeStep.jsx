@@ -118,7 +118,7 @@ export default function CatalogueWelcomeStep({ deliveryMode, onSelectMode, selec
             <label className="font-typewriter text-[9px] tracking-[2px] uppercase text-foreground/50">Pays</label>
             <div className="grid grid-cols-2 gap-2 mt-2">
               {countries.map(c => (
-                <button key={c.code} onClick={() => changeCountry(c.code)} className={`p-3 border text-left ${countryCode === c.code ? 'border-bordeaux bg-bordeaux/5' : 'border-encre/20 bg-creme'}`}>
+                <button key={c.code} onClick={() => changeCountry(c.code)} className={`p-3 border text-left ${countryCode === c.code ? 'border-bordeaux text-bordeaux' : 'border-encre/20 bg-creme text-encre'}`} style={countryCode === c.code ? { background: 'rgba(110,30,46,0.06)' } : undefined}>
                   <span className="text-lg mr-2">{c.emoji}</span><span className="font-typewriter text-[11px] uppercase">{c.name}</span>
                 </button>
               ))}
@@ -129,7 +129,7 @@ export default function CatalogueWelcomeStep({ deliveryMode, onSelectMode, selec
             <label className="font-typewriter text-[9px] tracking-[2px] uppercase text-foreground/50">Destination</label>
             <div className="space-y-2 mt-2">
               {country?.cities.map(v => (
-                <button key={v.label} onClick={() => changeCity(v.label)} className={`w-full p-3 border text-left font-typewriter text-[11px] uppercase ${cityLabel === v.label ? 'border-bordeaux bg-bordeaux/5 text-bordeaux' : 'border-encre/20 bg-creme'}`}>
+                <button key={v.label} onClick={() => changeCity(v.label)} className={`w-full p-3 border text-left font-typewriter text-[11px] uppercase ${cityLabel === v.label ? 'border-bordeaux text-bordeaux' : 'border-encre/20 bg-creme text-encre'}`} style={cityLabel === v.label ? { background: 'rgba(110,30,46,0.06)' } : undefined}>
                   {v.emoji} {v.label}
                 </button>
               ))}
@@ -140,7 +140,7 @@ export default function CatalogueWelcomeStep({ deliveryMode, onSelectMode, selec
             <label className="font-typewriter text-[9px] tracking-[2px] uppercase text-foreground/50">Point relais</label>
             <div className="space-y-2 mt-2">
               {city?.relays.map(relay => (
-                <button key={relay.id || relay.name} onClick={() => setRelayName(relay.name)} className={`w-full p-3 border text-left ${relayName === relay.name ? 'border-[#2d6a2d] bg-[#2d6a2d]/5 text-[#2d6a2d]' : 'border-encre/20 bg-creme'}`}>
+                <button key={relay.id || relay.name} onClick={() => setRelayName(relay.name)} className={`w-full p-3 border text-left ${relayName === relay.name ? 'text-[#2d6a2d]' : 'border-encre/20 bg-creme text-encre'}`} style={relayName === relay.name ? { border: '1.5px solid #2d6a2d', background: 'rgba(45,106,45,0.06)' } : undefined}>
                   <div className="font-typewriter text-[11px] uppercase">{relayName === relay.name ? '✓ ' : ''}{relay.name}</div>
                   <div className="font-fell italic text-[11px] text-foreground/45 mt-1">Retrait sécurisé en boutique partenaire</div>
                 </button>
@@ -156,7 +156,7 @@ export default function CatalogueWelcomeStep({ deliveryMode, onSelectMode, selec
           {MODES.map(mode => {
             const active = deliveryMode === mode.id;
             return (
-              <button key={mode.id} onClick={() => onSelectMode(mode.id)} className={`w-full text-left border-[1.5px] p-4 transition-all ${active ? 'border-bordeaux bg-bordeaux/5' : 'border-encre/20 bg-creme'}`}>
+              <button key={mode.id} onClick={() => onSelectMode(mode.id)} className={`w-full text-left border-[1.5px] p-4 transition-all ${active ? 'border-bordeaux text-bordeaux' : 'border-encre/20 bg-creme text-encre'}`} style={active ? { background: 'rgba(110,30,46,0.06)' } : undefined}>
                 <div className="font-typewriter text-[12px] tracking-[1.5px] uppercase text-encre">{active ? '✓ ' : ''}{mode.title}</div>
                 <div className="font-fell italic text-[12px] text-foreground/55 mt-1">{mode.desc}</div>
               </button>
