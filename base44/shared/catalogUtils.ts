@@ -212,9 +212,20 @@ export async function fetchOffersByBookIds(base44, bookIds = []) {
   const ids = [...new Set(bookIds.filter(Boolean))];
   if (!ids.length) return new Map();
   const page = await base44.asServiceRole.entities.BookOffers.filter({ book_id: { $in: ids } }, { limit: Math.min(500, Math.max(1, ids.length * 8)) });
-  const offers = page.items || page || [];
+  // Une seule offre par couple (book_id, retailer_name), même si la base en
+  // contient plusieurs : la meilleure (disponible puis moins chère) est retenue.
+  const bestByKey = new Map();
+  for (const offer of (page.items || page || [])) {
+    if (!offer || offer.merged === true || !offer.book_id) continue;
+    const key = `${offer.book_id}||${String(offer.retailer_name || '').trim().toLowerCase()}`;
+    const current = bestByKey.get(key);
+    if (!current || bestOffer([current, offer]) === offer) bestByKey.set(key, offer);
+  }
   const map = new Map();
-  offers.forEach((offer) => { if (!map.has(offer.book_id)) map.set(offer.book_id, []); map.get(offer.book_id).push(offer); });
+  for (const offer of bestByKey.values()) {
+    if (!map.has(offer.book_id)) map.set(offer.book_id, []);
+    map.get(offer.book_id).push(offer);
+  }
   return map;
 }
 
