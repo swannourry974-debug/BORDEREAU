@@ -39,7 +39,7 @@ export default function VoyageurStatsCard({ missions }) {
         display: 'flex', alignItems: 'center', gap: 8,
       }}>
         <span style={{ fontSize: 16 }}>{level.emoji}</span>
-        <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--creme)' }}>
+        <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--creme)' }}>
           {level.label}
         </span>
       </div>
@@ -47,9 +47,9 @@ export default function VoyageurStatsCard({ missions }) {
       {/* Stats principales */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0 }}>
         {[
-          { val: livrees.length, label: 'Livraisons', icon: '📦', color: '#2d6a2d' },
+          { val: livrees.length, label: 'Livraisons', icon: '📦', color: 'var(--statut-valide)' },
           { val: `${gainsTotal.toFixed(2)} €`, label: 'Gains cumulés', icon: '💰', color: 'var(--bordeaux)' },
-          { val: enCours, label: 'En cours', icon: '✈️', color: '#1a3a5c' },
+          { val: enCours, label: 'En cours', icon: '✈️', color: 'var(--statut-transit)' },
         ].map(({ val, label, icon, color }, i) => (
           <div key={label} style={{
             textAlign: 'center', padding: '18px 8px',
@@ -59,7 +59,7 @@ export default function VoyageurStatsCard({ missions }) {
             <div style={{ fontFamily: 'Playfair Display, serif', fontSize: label === 'Gains cumulés' ? 15 : 22, fontWeight: 700, color, lineHeight: 1.1 }}>
               {val}
             </div>
-            <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 7.5, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(26,16,8,0.4)', marginTop: 4 }}>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 7.5, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(26,16,8,0.4)', marginTop: 4 }}>
               {label}
             </div>
           </div>
@@ -71,7 +71,7 @@ export default function VoyageurStatsCard({ missions }) {
         {nextLevel ? (
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 8, letterSpacing: 1, color: 'rgba(26,16,8,0.4)', textTransform: 'uppercase' }}>
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, letterSpacing: 1, color: 'rgba(26,16,8,0.4)', textTransform: 'uppercase' }}>
                 Progression → {nextLevel.emoji} {LEVELS[LEVELS.indexOf(nextLevel)].label || ''}
               </span>
               <span style={{ fontFamily: 'Playfair Display, serif', fontSize: 10, color: 'var(--bordeaux)', fontWeight: 700 }}>
@@ -87,14 +87,14 @@ export default function VoyageurStatsCard({ missions }) {
             </div>
           </>
         ) : (
-          <div style={{ textAlign: 'center', fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: 'var(--bordeaux)' }}>
+          <div style={{ textAlign: 'center', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 12, color: 'var(--bordeaux)' }}>
             👑 Niveau maximum atteint !
           </div>
         )}
 
         {/* Message motivant */}
         <div style={{
-          fontFamily: 'IM Fell English, serif', fontStyle: 'italic',
+          fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic',
           fontSize: 11, color: 'rgba(26,16,8,0.5)', marginTop: 10, textAlign: 'center', lineHeight: 1.5,
         }}>
           {level.message}

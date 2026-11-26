@@ -6,35 +6,35 @@ export default function WalletCard({ soldeDisponible, gainsPrevisionnels, vireme
   const manque = Math.max(0, MIN_VIREMENT - soldeDisponible).toFixed(2);
 
   return (
-    <div style={{
+    <div className="mb-5 overflow-hidden" style={{
       background: 'var(--encre)',
       color: 'var(--creme)',
       padding: '18px 20px',
-      marginBottom: 20,
       position: 'relative',
-      overflow: 'hidden',
+      borderRadius: 'var(--bordero-radius-md)',
+      boxShadow: 'var(--bordero-shadow-soft)',
+      border: '1px solid rgba(199,161,90,0.32)',
     }}>
-      {/* Decoration */}
-      <span style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', fontSize: 80, opacity: 0.05, fontFamily: 'Playfair Display, serif' }}>€</span>
+      <span aria-hidden="true" style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', fontSize: 80, opacity: 0.06, fontFamily: "'Playfair Display', serif" }}>€</span>
 
-      <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.6, marginBottom: 14 }}>
+      <div className="bordero-ui" style={{ fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', opacity: 0.66, marginBottom: 14 }}>
         Portefeuille Voyageur
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
         <div>
-          <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 8, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.55, marginBottom: 4 }}>
+          <div className="bordero-ui" style={{ fontSize: 8, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.6, marginBottom: 4 }}>
             Solde disponible
           </div>
-          <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 26, fontWeight: 700, color: '#a8d5a2' }}>
+          <div className="bordero-title" style={{ fontSize: 26, color: 'var(--sepia)' }}>
             {soldeDisponible.toFixed(2)} €
           </div>
         </div>
         <div>
-          <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 8, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.55, marginBottom: 4 }}>
+          <div className="bordero-ui" style={{ fontSize: 8, letterSpacing: 2, textTransform: 'uppercase', opacity: 0.6, marginBottom: 4 }}>
             Gains prévisionnels
           </div>
-          <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 26, fontWeight: 700, color: '#d4b896' }}>
+          <div className="bordero-title" style={{ fontSize: 26, color: 'var(--or-clair)' }}>
             {gainsPrevisionnels.toFixed(2)} €
           </div>
         </div>
@@ -42,20 +42,22 @@ export default function WalletCard({ soldeDisponible, gainsPrevisionnels, vireme
 
       {!hideTransfer && (
         <button
+          type="button"
           disabled={!peutVirer}
           onClick={() => alert('Transfert bancaire initié !')}
+          className="bordero-ui"
           style={{
             width: '100%',
-            background: peutVirer ? '#a8d5a2' : 'rgba(253,252,240,0.1)',
-            color: peutVirer ? '#1a1008' : 'rgba(253,252,240,0.35)',
-            border: peutVirer ? 'none' : '1px dashed rgba(253,252,240,0.2)',
+            minHeight: 44,
+            background: peutVirer ? 'var(--cta-orange)' : 'rgba(253,252,240,0.10)',
+            color: peutVirer ? 'var(--cta-foreground)' : 'rgba(253,252,240,0.5)',
+            border: peutVirer ? '1px solid var(--cta-orange-dark)' : '1px dashed rgba(253,252,240,0.2)',
             padding: '12px 16px',
-            fontFamily: 'Special Elite, monospace',
             fontSize: 10,
-            letterSpacing: 3,
+            fontWeight: 700,
+            letterSpacing: 2,
             textTransform: 'uppercase',
             cursor: peutVirer ? 'pointer' : 'not-allowed',
-            transition: 'all 0.2s',
           }}
         >
           {virementSuspendu

@@ -1,40 +1,30 @@
 import React from 'react';
 
+const MAX = 10;
+
 export default function JaugeValise({ livresActifs, totalCommission }) {
-  const MAX = 10;
-  const pct = (livresActifs / MAX) * 100;
+  const pct = Math.min(100, (livresActifs / MAX) * 100);
   const isMax = livresActifs >= MAX;
   const isNearMax = livresActifs >= 8;
 
-  const couleur = isMax
-    ? '#800020'
-    : isNearMax
-    ? '#8B6914'
-    : '#2d6a2d';
+  const couleur = isMax ? 'var(--bordeaux)' : isNearMax ? 'var(--statut-attente)' : 'var(--sepia)';
 
   return (
-    <div style={{
-      background: 'var(--papier)',
-      border: '1.5px solid var(--encre)',
-      padding: '16px 18px',
-      marginBottom: 20,
-      boxShadow: '3px 3px 0 rgba(26,16,8,0.1)',
-    }}>
-      {/* Header jauge */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 10 }}>
+    <div className="bordero-card mb-5 p-4">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 12, marginBottom: 10 }}>
         <div>
-          <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', color: 'rgba(26,16,8,0.5)', marginBottom: 2 }}>
+          <div className="bordero-ui" style={{ fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--encre-douce)', marginBottom: 2 }}>
             Capacité valise
           </div>
-          <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 22, fontWeight: 700, color: isMax ? '#800020' : 'var(--encre)' }}>
-            {livresActifs} <span style={{ fontSize: 14, color: 'rgba(26,16,8,0.4)' }}>/ {MAX} livres</span>
+          <div className="bordero-title" style={{ fontSize: 22, color: isMax ? 'var(--bordeaux)' : 'var(--encre)' }}>
+            {livresActifs} <span style={{ fontSize: 14, color: 'var(--encre-douce)' }}>/ {MAX} livres</span>
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.5)', marginBottom: 2 }}>
+          <div className="bordero-ui" style={{ fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--encre-douce)', marginBottom: 2 }}>
             Commission totale
           </div>
-          <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 20, fontWeight: 700, color: '#2d6a2d' }}>
+          <div className="bordero-title" style={{ fontSize: 20, color: 'var(--bordeaux)' }}>
             {totalCommission.toFixed(2)} €
           </div>
         </div>
@@ -43,8 +33,8 @@ export default function JaugeValise({ livresActifs, totalCommission }) {
       {/* Barre de progression */}
       <div style={{
         height: 12,
-        background: 'var(--papier-fonce)',
-        border: '1px solid rgba(26,16,8,0.2)',
+        background: 'var(--statut-attente-soft)',
+        border: '1px solid var(--bordero-line)',
         position: 'relative',
         overflow: 'hidden',
       }}>
@@ -54,13 +44,12 @@ export default function JaugeValise({ livresActifs, totalCommission }) {
           background: couleur,
           transition: 'width 0.6s cubic-bezier(0.22, 1, 0.36, 1)',
         }} />
-        {/* Graduations */}
         {Array.from({ length: 9 }, (_, i) => (
           <div key={i} style={{
             position: 'absolute',
             left: `${(i + 1) * 10}%`,
             top: 0, bottom: 0, width: 1,
-            background: 'rgba(26,16,8,0.15)',
+            background: 'var(--bordero-line)',
           }} />
         ))}
       </div>
@@ -72,7 +61,6 @@ export default function JaugeValise({ livresActifs, totalCommission }) {
             fontSize: 14,
             filter: i < livresActifs ? 'none' : 'grayscale(1)',
             opacity: i < livresActifs ? 1 : 0.3,
-            transition: 'all 0.3s',
           }}>
             📚
           </span>
@@ -81,32 +69,12 @@ export default function JaugeValise({ livresActifs, totalCommission }) {
 
       {/* Message contextuel */}
       {isMax && (
-        <div style={{
-          marginTop: 10,
-          background: 'rgba(128,0,32,0.08)',
-          border: '1px dashed #800020',
-          padding: '8px 12px',
-          fontFamily: 'IM Fell English, serif',
-          fontStyle: 'italic',
-          fontSize: 12,
-          color: '#800020',
-          lineHeight: 1.5,
-        }}>
+        <div className="bordero-note" data-tone="attente" style={{ marginTop: 10 }}>
           🔒 Limite de sécurité atteinte (10 livres max) pour garantir un passage serein en douane.
         </div>
       )}
       {livresActifs === 1 && (
-        <div style={{
-          marginTop: 10,
-          background: 'rgba(139,105,20,0.08)',
-          border: '1px dashed #8B6914',
-          padding: '8px 12px',
-          fontFamily: 'IM Fell English, serif',
-          fontStyle: 'italic',
-          fontSize: 12,
-          color: '#8B6914',
-          lineHeight: 1.5,
-        }}>
+        <div className="bordero-note" data-tone="attente" style={{ marginTop: 10 }}>
           💡 Ajoutez un 2ème livre pour gagner +6,50 € au lieu de 5 € !
         </div>
       )}

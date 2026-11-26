@@ -11,26 +11,40 @@ const routeSteps = [
 
 export default function LandingPresentation() {
   return (
-    <main className="min-h-screen bordero-shell text-encre">
+    <main className="min-h-screen bg-creme text-encre">
       <PresentationHero />
       <PresentationCards />
-      <section className="mx-auto max-w-6xl px-5 pb-14 sm:px-8">
-        <div className="bordero-card-premium p-6 sm:p-8">
-          <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
-            <div>
-              <p className="bordero-heading-section">Comment circule un livre</p>
-              <h2 className="mt-4 font-heading text-4xl text-bordeaux sm:text-5xl">Un itinéraire lisible, du catalogue au retrait.</h2>
-              <p className="mt-4 font-body text-xl leading-8 text-encre/70">
-                Bordero transforme chaque commande en route suivie : achat, transport, arrivée au relais et remise au lecteur restent visibles.
-              </p>
-            </div>
-            <div className="grid gap-4">
+
+      {/* Timeline itinerary */}
+      <section className="bg-creme px-6 py-20 sm:px-8 sm:py-28">
+        <div className="mx-auto max-w-4xl">
+          <p className="font-ui text-xs font-bold uppercase tracking-[0.32em] text-bordeaux/60">
+            Parcours
+          </p>
+          <h2 className="mt-3 font-heading text-4xl font-bold text-bordeaux sm:text-5xl">
+            Un itinéraire lisible, du catalogue au retrait.
+          </h2>
+          <p className="mt-3 max-w-xl font-ui text-lg text-encre/70">
+            Bordero transforme chaque commande en route suivie.
+          </p>
+
+          <div className="relative mt-12 pl-8">
+            {/* Vertical line */}
+            <div className="absolute left-[11px] top-2 bottom-2 w-px bg-bordeaux/20" />
+
+            <div className="space-y-12">
               {routeSteps.map(([step, title, text]) => (
-                <div key={step} className="bordero-surface flex gap-4 p-5">
-                  <div className="font-ui text-2xl font-extrabold text-bordeaux/45">{step}</div>
+                <div key={step} className="relative">
+                  {/* Dot */}
+                  <div className="absolute -left-8 top-1 flex h-6 w-6 items-center justify-center">
+                    <div className="h-3 w-3 rounded-full bg-bordeaux" />
+                  </div>
                   <div>
-                    <h3 className="font-ui text-sm font-extrabold uppercase tracking-[0.18em] text-bordeaux">{title}</h3>
-                    <p className="mt-2 font-body text-lg leading-7 text-encre/70">{text}</p>
+                    <span className="font-ui text-xs font-bold uppercase tracking-[0.24em] text-bordeaux/50">
+                      Étape {step}
+                    </span>
+                    <h3 className="mt-1 font-heading text-2xl font-bold text-bordeaux">{title}</h3>
+                    <p className="mt-2 max-w-lg font-ui text-base leading-relaxed text-encre/70">{text}</p>
                   </div>
                 </div>
               ))}
@@ -38,14 +52,23 @@ export default function LandingPresentation() {
           </div>
         </div>
       </section>
-      <section className="mx-auto max-w-6xl px-5 pb-16 text-center sm:px-8">
-        <div className="rounded-[28px] border border-sepia/60 bg-secondary px-6 py-10 text-creme shadow-2xl">
-          <p className="font-ui text-xs font-extrabold uppercase tracking-[0.28em] text-or">Rejoindre Bordero</p>
-          <h2 className="mx-auto mt-4 max-w-3xl font-heading text-4xl text-creme sm:text-5xl">Choisissez votre rôle et entrez dans le réseau des livres voyageurs.</h2>
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <Link to="/landing-lecteur" className="bordero-action-primary px-6 py-3 text-xs">Je suis lecteur</Link>
-            <Link to="/landing-voyageur" className="bordero-action-secondary border-creme/30 bg-creme/10 px-6 py-3 text-xs !text-creme">Je voyage</Link>
-            <Link to="/landing-relais" className="bordero-action-secondary border-creme/30 bg-creme/10 px-6 py-3 text-xs !text-creme">Je suis relais</Link>
+
+      {/* Single CTA */}
+      <section className="border-t border-bordeaux/15 bg-creme px-6 py-20 sm:px-8 sm:py-28">
+        <div className="mx-auto max-w-4xl text-center">
+          <h2 className="font-heading text-4xl font-bold text-bordeaux sm:text-5xl">
+            Entrez dans le réseau des livres voyageurs.
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl font-ui text-lg text-encre/70">
+            Rejoignez Bordero comme lecteur, voyageur ou point relais.
+          </p>
+          <div className="mt-10">
+            <Link
+              to="/landing-lecteur"
+              className="inline-block min-h-[48px] bg-bordeaux px-10 py-3 font-ui text-sm font-bold uppercase tracking-[0.16em] text-creme transition-all duration-300 hover:bg-bordeaux-dark"
+            >
+              Commencer
+            </Link>
           </div>
         </div>
       </section>

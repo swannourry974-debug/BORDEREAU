@@ -70,7 +70,7 @@ export default function CalendrierVoyageur({ missions, voyages }) {
         padding: '10px 16px',
       }}>
         <button onClick={prevMonth} style={{ background: 'none', border: 'none', color: 'var(--creme)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>‹</button>
-        <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' }}>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' }}>
           {MOIS[viewMonth]} {viewYear}
         </div>
         <button onClick={nextMonth} style={{ background: 'none', border: 'none', color: 'var(--creme)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>›</button>
@@ -81,7 +81,7 @@ export default function CalendrierVoyageur({ missions, voyages }) {
         {['L','M','M','J','V','S','D'].map((j, i) => (
           <div key={i} style={{
             textAlign: 'center', padding: '6px 2px',
-            fontFamily: 'Special Elite, monospace', fontSize: 8, letterSpacing: 1.5,
+            fontFamily: "'Inter', sans-serif", fontSize: 8, letterSpacing: 1.5,
             color: i >= 5 ? 'var(--bordeaux)' : 'rgba(26,16,8,0.4)',
           }}>{j}</div>
         ))}
@@ -115,8 +115,8 @@ export default function CalendrierVoyageur({ missions, voyages }) {
               }}>{day}</div>
               {/* Points indicateurs */}
               <div style={{ display: 'flex', justifyContent: 'center', gap: 2, marginTop: 2 }}>
-                {hasMission && <div style={{ width: 4, height: 4, borderRadius: '50%', background: isSelected ? 'var(--creme)' : '#8B6914' }} />}
-                {hasVol     && <div style={{ width: 4, height: 4, borderRadius: '50%', background: isSelected ? 'var(--creme)' : '#1a3a5c' }} />}
+                {hasMission && <div style={{ width: 4, height: 4, borderRadius: '50%', background: isSelected ? 'var(--creme)' : 'var(--statut-attente)' }} />}
+                {hasVol     && <div style={{ width: 4, height: 4, borderRadius: '50%', background: isSelected ? 'var(--creme)' : 'var(--statut-transit)' }} />}
               </div>
             </div>
           );
@@ -126,23 +126,23 @@ export default function CalendrierVoyageur({ missions, voyages }) {
       {/* Légende */}
       <div style={{ display: 'flex', gap: 14, padding: '8px 16px', borderTop: '1px dashed rgba(26,16,8,0.12)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#8B6914' }} />
-          <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 8, letterSpacing: 1, color: 'rgba(26,16,8,0.45)' }}>Date limite livraison</span>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--statut-attente)' }} />
+          <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, letterSpacing: 1, color: 'rgba(26,16,8,0.45)' }}>Date limite livraison</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#1a3a5c' }} />
-          <span style={{ fontFamily: 'Special Elite, monospace', fontSize: 8, letterSpacing: 1, color: 'rgba(26,16,8,0.45)' }}>Vol programmé</span>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--statut-transit)' }} />
+          <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, letterSpacing: 1, color: 'rgba(26,16,8,0.45)' }}>Vol programmé</span>
         </div>
       </div>
 
       {/* Détail jour sélectionné */}
       {selectedDay && (
         <div style={{ borderTop: '1px dashed rgba(26,16,8,0.2)', padding: '12px 16px', background: 'rgba(26,16,8,0.02)' }}>
-          <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 8, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.4)', marginBottom: 8 }}>
+          <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.4)', marginBottom: 8 }}>
             {selectedDay} {MOIS[viewMonth]}
           </div>
           {selectedEvents.length === 0 ? (
-            <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.35)' }}>
+            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.35)' }}>
               Aucun événement ce jour.
             </div>
           ) : selectedEvents.map((ev, i) => (
@@ -154,19 +154,19 @@ export default function CalendrierVoyageur({ missions, voyages }) {
             }}>
               <div style={{
                 width: 8, height: 8, borderRadius: '50%', flexShrink: 0, marginTop: 4,
-                background: ev.type === 'vol' ? '#1a3a5c' : '#8B6914',
+                background: ev.type === 'vol' ? 'var(--statut-transit)' : 'var(--statut-attente)',
               }} />
               <div>
-                <div style={{ fontFamily: 'IM Fell English, serif', fontSize: 13, color: 'var(--encre)' }}>
+                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 13, color: 'var(--encre)' }}>
                   {ev.label}
                 </div>
                 {ev.ville && (
-                  <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, color: 'rgba(26,16,8,0.4)', letterSpacing: 1, marginTop: 2 }}>
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, color: 'rgba(26,16,8,0.4)', letterSpacing: 1, marginTop: 2 }}>
                     📍 {ev.ville}
                   </div>
                 )}
                 {ev.statut && (
-                  <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 8, color: '#8B6914', letterSpacing: 1, marginTop: 2, textTransform: 'uppercase' }}>
+                  <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 8, color: 'var(--statut-attente)', letterSpacing: 1, marginTop: 2, textTransform: 'uppercase' }}>
                     {ev.statut === 'acceptee' ? '⏳ À valider' : ev.statut === 'engagee' ? '✈ En cours' : ev.statut}
                   </div>
                 )}

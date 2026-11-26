@@ -44,7 +44,14 @@ const getAppParams = () => {
 		token: getAppParamValue("access_token", { removeFromUrl: true }),
 		fromUrl: getAppParamValue("from_url", { defaultValue: window.location.href }),
 		functionsVersion: getAppParamValue("functions_version", { defaultValue: import.meta.env.VITE_BASE44_FUNCTIONS_VERSION }),
-		appBaseUrl: getAppParamValue("app_base_url", { defaultValue: import.meta.env.VITE_BASE44_APP_BASE_URL }),
+		// Sans URL de base, les boutons « Se connecter » construisaient un lien cassé.
+		// On retombe sur l'origine courante : le domaine (ou l'URL Base44) sert aussi /login.
+		appBaseUrl: getAppParamValue("app_base_url", {
+			defaultValue: import.meta.env.VITE_BASE44_APP_BASE_URL || (isNode ? undefined : window.location.origin),
+		}),
+		// Backend par défaut : le nôtre. Mettre VITE_BACKEND=base44 pour revenir
+		// temporairement à l'ancienne plateforme.
+		backend: import.meta.env.VITE_BACKEND || 'local',
 	}
 }
 

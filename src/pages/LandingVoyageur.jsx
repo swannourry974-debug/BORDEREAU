@@ -53,7 +53,7 @@ export default function LandingVoyageur() {
           <div className="bordero-card-premium p-7 sm:p-10">
             <span className="bordero-badge">✈ Espace voyageur</span>
             <h1 className="bordero-heading-display mt-6 text-5xl sm:text-6xl">Rentabilisez vos trajets avec des livres en mission.</h1>
-            <p className="mt-6 font-body text-2xl leading-9 text-encre/72">
+            <p className="mt-6 font-body text-2xl leading-9 text-encre/75">
               Bordero vous propose des missions sur vos routes réelles. Vous transportez des livres, respectez les conditions de validation et recevez une rémunération selon le barème existant.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">

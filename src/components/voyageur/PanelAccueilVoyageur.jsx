@@ -63,7 +63,7 @@ export default function PanelAccueilVoyageur() {
             <div className="font-special" style={{ fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(26,16,8,0.45)' }}>En cours</div>
           </div>
           <div style={{ background: 'rgba(45,106,45,0.08)', padding: 12, textAlign: 'center' }}>
-            <div className="font-playfair" style={{ fontSize: 26, color: '#2d6a2d', fontWeight: 700 }}>{livresLivres.length}</div>
+            <div className="font-playfair" style={{ fontSize: 26, color: 'var(--statut-valide)', fontWeight: 700 }}>{livresLivres.length}</div>
             <div className="font-special" style={{ fontSize: 8, letterSpacing: 1.5, textTransform: 'uppercase', color: 'rgba(26,16,8,0.45)' }}>Livrés</div>
           </div>
         </div>

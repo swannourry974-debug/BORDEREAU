@@ -72,12 +72,13 @@ function MissionCard({ mission, rang, onAccept, disabled, onScan, onRemove }) {
 
   return (
     <div style={{
-      background: 'var(--papier)',
-      border: '1.5px solid hsl(var(--border))',
+      background: 'linear-gradient(145deg, var(--bordero-surface-strong), var(--bordero-surface))',
+      border: '1px solid var(--bordero-line)',
+      borderRadius: 'var(--bordero-radius-md)',
       padding: 16,
       marginBottom: 12,
       position: 'relative',
-      boxShadow: '3px 3px 0 rgba(26,16,8,0.12)',
+      boxShadow: 'var(--bordero-shadow-paper)',
       animation: 'fadeSlideIn 0.4s ease both',
       opacity: isEngaged ? 0.75 : 1,
     }}>
@@ -85,7 +86,7 @@ function MissionCard({ mission, rang, onAccept, disabled, onScan, onRemove }) {
       <div style={{
         position: 'absolute', top: 0, right: 0,
         borderStyle: 'solid', borderWidth: '0 32px 32px 0',
-        borderColor: `transparent var(--bordeaux) transparent transparent`,
+        borderColor: 'transparent var(--sepia) transparent transparent',
       }} />
 
       {isEngaged && onRemove && (
@@ -107,10 +108,10 @@ function MissionCard({ mission, rang, onAccept, disabled, onScan, onRemove }) {
       <div className="font-special" style={{ fontSize: 18, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 4 }}>
         {mission.ville}
       </div>
-      <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))', marginBottom: 10 }}>
+              <div className="bordero-copy" style={{ fontSize: 13, marginBottom: 10 }}>
         {isEngaged ? (mission.status === 'livree' ? 'Livraison confirmée · Mission terminée' : mission.status === 'en_transit' ? 'Achat confirmé · En transit' : 'En attente du scan d’achat') : mission.date}
       </div>
-      <div style={{ fontSize: 13, color: 'hsl(var(--muted-foreground))', marginBottom: 8 }}>
+      <div style={{ fontSize: 13, color: 'var(--encre-douce)', marginBottom: 8 }}>
         📚 <em>{mission.livre}</em> · {mission.type} · {mission.poids}
       </div>
 
@@ -118,9 +119,9 @@ function MissionCard({ mission, rang, onAccept, disabled, onScan, onRemove }) {
       {isEngaged && mission.rang && (
         <div style={{
           display: 'inline-block',
-          background: mission.status === 'livree' ? 'rgba(45,106,45,0.1)' : mission.status === 'en_transit' ? 'rgba(26,58,92,0.1)' : 'rgba(128,0,32,0.08)',
-          border: `1px solid ${mission.status === 'livree' ? '#2d6a2d' : mission.status === 'en_transit' ? '#1a3a5c' : 'var(--bordeaux)'}`,
-          color: mission.status === 'livree' ? '#2d6a2d' : mission.status === 'en_transit' ? '#1a3a5c' : 'var(--bordeaux)',
+          background: mission.status === 'livree' ? 'var(--statut-valide-soft)' : mission.status === 'en_transit' ? 'var(--statut-transit-soft)' : 'var(--statut-attente-soft)',
+          border: `1px solid ${mission.status === 'livree' ? 'var(--statut-valide)' : mission.status === 'en_transit' ? 'var(--statut-transit)' : 'var(--statut-attente)'}`,
+          color: mission.status === 'livree' ? 'var(--statut-valide)' : mission.status === 'en_transit' ? 'var(--statut-transit)' : 'var(--statut-attente)',
           fontFamily: 'Special Elite, monospace',
           fontSize: 11, letterSpacing: 2, textTransform: 'uppercase',
           padding: '2px 8px', marginBottom: 8,
@@ -134,18 +135,18 @@ function MissionCard({ mission, rang, onAccept, disabled, onScan, onRemove }) {
           <span className="font-playfair" style={{ fontSize: 22, fontWeight: 700, color: isEngaged ? 'hsl(var(--muted-foreground))' : 'var(--bordeaux)' }}>
             {commission ? `${commission.toFixed(2)} €` : (mission.commission ? `${mission.commission.toFixed(2)} €` : '—')}
           </span>
-          <span style={{ fontSize: 11, color: 'hsl(var(--muted-foreground))', letterSpacing: 1, display: 'block', marginTop: -2 }}>
+          <span style={{ fontSize: 11, color: 'var(--encre-douce)', letterSpacing: 1, display: 'block', marginTop: -2 }}>
             {isEngaged ? 'En séquestre' : 'Commission'}
           </span>
         </div>
 
         {isEngaged ? (
           mission.status === 'livree' ? (
-            <BtnCoupon disabled secondary style={{ borderColor: '#2d6a2d', color: '#2d6a2d' }}>✓ Livrée</BtnCoupon>
+            <BtnCoupon disabled secondary style={{ borderColor: 'var(--statut-valide)', color: 'var(--statut-valide)' }}>✓ Livrée</BtnCoupon>
           ) : mission.status === 'en_transit' ? (
-            <BtnCoupon onClick={() => onScan && onScan(mission, 'livree')} style={{ background: '#2d6a2d' }}>✓ Confirmer livraison</BtnCoupon>
+            <BtnCoupon onClick={() => onScan && onScan(mission, 'livree')} style={{ background: 'var(--statut-valide)' }}>✓ Confirmer livraison</BtnCoupon>
           ) : (
-            <BtnCoupon onClick={() => onScan && onScan(mission, 'scan')} secondary style={{ borderColor: '#1a3a5c', color: '#1a3a5c' }}>📷 Scanner l'achat</BtnCoupon>
+            <BtnCoupon onClick={() => onScan && onScan(mission, 'scan')} secondary style={{ borderColor: 'var(--statut-transit)', color: 'var(--statut-transit)' }}>📷 Scanner l'achat</BtnCoupon>
           )
         ) : (
           <BtnCoupon onClick={handleAccept} disabled={disabled || loading || mission.statut === 'expiree'}>
@@ -158,7 +159,7 @@ function MissionCard({ mission, rang, onAccept, disabled, onScan, onRemove }) {
         <div className="font-special animate-stamp" style={{
           position: 'absolute', right: 14, top: '50%',
           transform: 'translateY(-50%) rotate(-12deg)',
-          border: '3px solid #1a3a5c', color: '#1a3a5c',
+          border: '3px solid var(--statut-transit)', color: 'var(--statut-transit)',
           fontSize: 9, letterSpacing: 2, textTransform: 'uppercase',
           padding: '4px 8px', opacity: 0.7, pointerEvents: 'none',
         }}>ENGAGÉE</div>
@@ -379,20 +380,20 @@ export default function PanelMissions() {
               position: 'fixed', top: 80, left: '50%', transform: 'translateX(-50%)',
               zIndex: 500, background: 'var(--encre)', color: 'var(--creme)',
               padding: '16px 24px', maxWidth: 320, width: '90%',
-              border: '2px solid var(--bordeaux)',
-              boxShadow: '0 0 20px rgba(128,0,32,0.4)',
+              border: '2px solid var(--sepia)',
+              boxShadow: 'var(--bordero-shadow-soft)',
               animation: 'fadeSlideIn 0.4s ease',
               cursor: 'pointer', textAlign: 'center',
             }}
           >
             <div style={{ fontSize: 36, marginBottom: 6 }}>{newBadge.emoji}</div>
-            <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 4 }}>
+            <div className="bordero-ui" style={{ fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--sepia)', marginBottom: 4 }}>
               Badge débloqué !
             </div>
             <div style={{ fontFamily: 'Playfair Display, serif', fontWeight: 700, fontSize: 16, marginBottom: 4 }}>
               {newBadge.nom}
             </div>
-            <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, opacity: 0.7, lineHeight: 1.5 }}>
+            <div className="bordero-copy" style={{ fontSize: 12, opacity: 0.7, lineHeight: 1.5 }}>
               {newBadge.description}
             </div>
           </div>
@@ -445,25 +446,25 @@ export default function PanelMissions() {
             <FiltreVille filtre={filtreVille} onFiltre={setFiltreVille} missions={missionsMode} />
 
             {!voyageActif && (
-              <div style={{ background: validationBloquee ? 'rgba(180,20,20,0.08)' : 'rgba(128,0,32,0.08)', border: `1px dashed ${validationBloquee ? '#b41414' : 'var(--bordeaux)'}`, padding: '12px 16px', marginBottom: 16, fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: validationBloquee ? '#b41414' : 'var(--bordeaux)', lineHeight: 1.6 }}>
+              <div className="bordero-note" data-tone={validationBloquee ? 'alerte' : 'attente'} style={{ marginBottom: 16 }}>
                 {validationBloquee ? '⛔ Profil voyageur bloqué : accès aux missions fermé.' : validationEnAttente ? '⏳ Votre justificatif de vol est en cours de validation admin.' : '🔒 Déclarez un vol futur avec justificatif, puis attendez la validation admin pour accéder aux missions.'}
               </div>
             )}
 
             {limitAtteinte && (
-              <div style={{ background: 'rgba(128,0,32,0.08)', border: '1px dashed #800020', padding: '12px 16px', marginBottom: 16, fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'var(--bordeaux)', lineHeight: 1.6 }}>
+              <div className="bordero-note" data-tone="attente" style={{ marginBottom: 16 }}>
                 🔒 Quota atteint ({quotaLivres} livres / {quotaKg} kg max — Zone {zoneVoyage.label}) pour garantir un passage serein en douane.
               </div>
             )}
 
             {voyageActif && (
-              <div style={{ background: 'rgba(45,106,45,0.07)', border: '1px solid #2d6a2d', padding: '10px 14px', marginBottom: 12, fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: '#2d6a2d', lineHeight: 1.6, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="bordero-note" data-tone="valide" style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
                 ✈️ <span>Filtré sur <strong>{voyageActif.arrivee_ville}</strong> · {voyageActif.date_vol}</span>
               </div>
             )}
 
             {missionsFiltered.length === 0 && !limitAtteinte && (
-              <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 13, color: 'hsl(var(--muted-foreground))', textAlign: 'center', padding: 20 }}>
+              <div className="bordero-copy" style={{ textAlign: 'center', padding: 20, fontSize: 14 }}>
                 {missionSearch ? 'Aucune mission ne correspond à cette recherche.' : 'Aucune annonce pour l’instant.'}
               </div>
             )}
@@ -494,14 +495,14 @@ export default function PanelMissions() {
             <CalendrierVoyageur missions={engagees} voyages={voyages} />
             <SectionTitle>Déclarer un nouveau vol</SectionTitle>
             {!showFormVol ? (
-              <div style={{ background: 'var(--papier)', border: '1.5px dashed hsl(var(--border))', padding: 20, textAlign: 'center' }}>
+              <div className="bordero-note" style={{ padding: 20, textAlign: 'center' }}>
                 <div style={{ fontSize: 32, marginBottom: 8 }}>✈️</div>
                 {voyageActif && (
-                  <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.55)', marginBottom: 10 }}>
+                  <div className="bordero-copy" style={{ fontSize: 13, marginBottom: 10 }}>
                     Vol actif : <strong>{voyageActif.depart_ville} → {voyageActif.arrivee_ville}</strong> · {voyageActif.date_vol}
                   </div>
                 )}
-                <div className="font-fell" style={{ fontSize: 13, color: 'rgba(26,16,8,0.5)', marginBottom: 14, fontStyle: 'italic' }}>
+                <div className="bordero-copy" style={{ fontSize: 13, marginBottom: 14 }}>
                   {voyageActif ? 'Déclarer un autre voyage ?' : 'Vous avez un voyage prévu ?'}
                 </div>
                 <BtnCoupon onClick={() => setShowFormVol(true)} disabled={validationBloquee}>{validationBloquee ? 'Profil bloqué' : '+ Déclarer un vol'}</BtnCoupon>

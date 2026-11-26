@@ -15,15 +15,15 @@ export default function CatalogueOrderStep({ onBack, onPay }) {
 
   return (
     <div className="space-y-4">
-      <div className="bg-bordeaux text-creme p-4 shadow-[3px_3px_0_rgba(26,16,8,0.18)]">
-        <div className="font-typewriter text-[9px] tracking-[3px] uppercase opacity-70 mb-2">Commande Bordero</div>
+      <div className="p-4 shadow-[3px_3px_0_rgba(26,16,8,0.18)]" style={{ background: 'var(--bordeaux)', color: 'var(--creme)', borderRadius: 'var(--bordero-radius-md)' }}>
+        <div className="font-ui text-[9px] font-bold tracking-[3px] uppercase opacity-70 mb-2">Commande Bordero</div>
         <h2 className="font-serif text-[23px] font-bold leading-tight">Résumé, facture et suivi</h2>
         <p className="font-fell italic text-[12px] opacity-80 mt-2 leading-relaxed">
           Chaque livre conserve sa destination, son mode de livraison et son point relais.
         </p>
       </div>
 
-      <div className="bg-papier border-[1.5px] border-encre p-4 shadow-[3px_3px_0_rgba(26,16,8,0.14)]">
+      <div className="p-4 shadow-[3px_3px_0_rgba(26,16,8,0.14)]" style={{ background: 'var(--bordero-surface-strong)', border: '1px solid var(--bordero-line)', borderRadius: 'var(--bordero-radius-md)' }}>
         <div className="font-typewriter text-[10px] tracking-[2px] uppercase text-bordeaux mb-3">Résumé de la commande</div>
         {items.length === 0 ? (
           <div className="font-fell italic text-[13px] text-foreground/50 py-4 text-center">Ajoutez un livre depuis la page de recherche.</div>
@@ -32,7 +32,7 @@ export default function CatalogueOrderStep({ onBack, onPay }) {
             {items.map(item => {
               const comparative = item.comparative || getComparativeSavings(item.adresse, item.prixVal);
               return (
-                <div key={item.cartId} className="border border-encre/15 bg-creme p-3 flex gap-3 justify-between">
+                <div key={item.cartId} className="p-3 flex gap-3 justify-between" style={{ background: 'var(--creme)', border: '1px solid var(--bordero-line)', borderRadius: 'var(--bordero-radius-sm)' }}>
                   <div className="min-w-0">
                     <div className="font-serif text-[15px] font-bold text-encre break-words">{item.book.title}</div>
                     <div className="font-fell italic text-[12px] text-foreground/55">{item.book.author}</div>
@@ -51,7 +51,7 @@ export default function CatalogueOrderStep({ onBack, onPay }) {
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">
-        <div className="bg-papier border-[1.5px] border-encre/25 p-4">
+        <div className="p-4" style={{ background: 'var(--bordero-surface-strong)', border: '1px solid var(--bordero-line)', borderRadius: 'var(--bordero-radius-md)' }}>
           <div className="font-typewriter text-[10px] tracking-[2px] uppercase text-bordeaux mb-3">Facture</div>
           <div className="space-y-2 text-[13px]">
             <div className="flex justify-between"><span>Livres + livraisons</span><strong>{total.toFixed(2)} €</strong></div>
@@ -60,7 +60,7 @@ export default function CatalogueOrderStep({ onBack, onPay }) {
           </div>
         </div>
 
-        <div className="bg-papier border-[1.5px] border-encre/25 p-4">
+        <div className="p-4" style={{ background: 'var(--bordero-surface-strong)', border: '1px solid var(--bordero-line)', borderRadius: 'var(--bordero-radius-md)' }}>
           <div className="font-typewriter text-[10px] tracking-[2px] uppercase text-bordeaux mb-3">Suivi de commande</div>
           {['Commande préparée', 'Achat du livre', 'Transit vers relais', 'Retrait lecteur'].map((step, index) => (
             <div key={step} className="flex gap-3 items-center mb-2 last:mb-0">
@@ -71,14 +71,14 @@ export default function CatalogueOrderStep({ onBack, onPay }) {
         </div>
       </div>
 
-      <div className="bg-papier border-[1.5px] border-encre p-4">
+      <div className="p-4" style={{ background: 'var(--bordero-surface-strong)', border: '1px solid var(--bordero-line)', borderRadius: 'var(--bordero-radius-md)' }}>
         <div className="font-typewriter text-[10px] tracking-[2px] uppercase text-bordeaux mb-2">Messagerie lecteur ↔ Bordero</div>
         <div className="space-y-2 mb-3">
           {messages.map((msg, index) => (
             <div key={index} className="bg-creme border border-encre/15 p-3 font-fell italic text-[12px] text-foreground/60">{msg}</div>
           ))}
         </div>
-        <textarea value={message} onChange={e => setMessage(e.target.value)} placeholder="Écrire un message à Bordero..." className="w-full min-h-[86px] bg-creme border border-encre/25 p-3 text-[13px] outline-none focus:border-bordeaux" />
+        <textarea value={message} onChange={e => setMessage(e.target.value)} placeholder="Écrire un message à Bordero..." className="w-full min-h-[86px] p-3 text-[13px] outline-none" style={{ background: 'var(--creme)', border: '1px solid var(--bordero-line)', borderRadius: 'var(--bordero-radius-sm)', color: 'var(--encre)' }} />
         <CouponButton secondary onClick={() => { if (!message.trim()) return; setMessages(prev => [...prev, `Lecteur : ${message.trim()}`]); setMessage(''); }} className="w-full mt-2">Envoyer le message</CouponButton>
       </div>
 

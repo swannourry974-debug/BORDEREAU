@@ -42,15 +42,15 @@ export default function CodeSecretValidation({ mission, commande, onValidated, o
   if (success) {
     return (
       <div style={{
-        background: 'rgba(45,106,45,0.1)', border: '2px solid #2d6a2d',
+        background: 'rgba(45,106,45,0.1)', border: '2px solid var(--statut-valide)',
         padding: '24px', textAlign: 'center',
         animation: 'fadeSlideIn 0.3s ease',
       }}>
         <div style={{ fontSize: 40, marginBottom: 8 }}>✅</div>
-        <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 13, letterSpacing: 3, textTransform: 'uppercase', color: '#2d6a2d' }}>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, letterSpacing: 3, textTransform: 'uppercase', color: 'var(--statut-valide)' }}>
           Remise confirmée
         </div>
-        <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: '#2d6a2d', marginTop: 6 }}>
+        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 12, color: 'var(--statut-valide)', marginTop: 6 }}>
           Le paiement sera débloqué sous 24h.
         </div>
       </div>
@@ -63,13 +63,13 @@ export default function CodeSecretValidation({ mission, commande, onValidated, o
       padding: 20, boxShadow: '5px 5px 0 rgba(26,16,8,0.15)',
     }}>
       <div style={{ marginBottom: 16 }}>
-        <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 4 }}>
+        <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 11, letterSpacing: 3, textTransform: 'uppercase', color: 'hsl(var(--muted-foreground))', marginBottom: 4 }}>
           🔐 Code de remise
         </div>
         <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 16, fontWeight: 700, color: 'var(--encre)' }}>
           {mission?.livre || commande?.livre_titre || 'Livre'}
         </div>
-        <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: 'hsl(var(--muted-foreground))', marginTop: 4, lineHeight: 1.5 }}>
+        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 12, color: 'hsl(var(--muted-foreground))', marginTop: 4, lineHeight: 1.5 }}>
           Demandez au lecteur son code secret à 3 chiffres pour valider la remise et débloquer le paiement.
         </div>
       </div>
@@ -100,7 +100,7 @@ export default function CodeSecretValidation({ mission, commande, onValidated, o
             style={{
               width: 56, height: 68, textAlign: 'center',
               fontFamily: 'Playfair Display, serif', fontSize: 32, fontWeight: 700,
-              border: error ? '2px solid #b41414' : '2px solid hsl(var(--border))',
+              border: error ? '2px solid var(--statut-alerte)' : '2px solid hsl(var(--border))',
               background: 'var(--creme)', color: 'var(--encre)',
               outline: 'none',
             }}
@@ -109,7 +109,7 @@ export default function CodeSecretValidation({ mission, commande, onValidated, o
       </div>
 
       {error && (
-        <div style={{ fontFamily: 'IM Fell English, serif', fontStyle: 'italic', fontSize: 12, color: '#b41414', textAlign: 'center', marginBottom: 12 }}>
+        <div style={{ fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontSize: 12, color: 'var(--statut-alerte)', textAlign: 'center', marginBottom: 12 }}>
           {error}
         </div>
       )}
@@ -122,7 +122,7 @@ export default function CodeSecretValidation({ mission, commande, onValidated, o
             flex: 1, padding: '12px 0',
             background: code.length === 3 ? 'var(--bordeaux)' : 'hsl(var(--muted))',
             color: code.length === 3 ? 'var(--creme)' : 'hsl(var(--muted-foreground))',
-            border: 'none', fontFamily: 'Special Elite, monospace',
+            border: 'none', fontFamily: "'Inter', sans-serif",
             fontSize: 12, letterSpacing: 3, textTransform: 'uppercase',
             cursor: code.length === 3 ? 'pointer' : 'not-allowed',
             boxShadow: code.length === 3 ? '3px 3px 0 var(--bordeaux-dark)' : 'none',
@@ -136,7 +136,7 @@ export default function CodeSecretValidation({ mission, commande, onValidated, o
           style={{
             padding: '12px 16px', background: 'transparent',
             border: '1.5px dashed hsl(var(--border))',
-            fontFamily: 'Special Elite, monospace', fontSize: 11, cursor: 'pointer',
+            fontFamily: "'Inter', sans-serif", fontSize: 11, cursor: 'pointer',
             color: 'hsl(var(--muted-foreground))',
           }}
         >

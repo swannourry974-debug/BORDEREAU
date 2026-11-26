@@ -6,6 +6,18 @@ function missionRoute(mission) {
   return depart ? `${depart} → ${arrivee}` : arrivee;
 }
 
+function statutLabel(statut) {
+  if (statut === 'expiree') return { label: 'Expirée · attente lecteur', tone: 'attente' };
+  if (statut === 'engagee' || statut === 'acceptee') return { label: 'Prise', tone: 'transit' };
+  return { label: 'Annonce ouverte', tone: 'valide' };
+}
+
+const TONE_COLORS = {
+  attente: 'var(--statut-attente)',
+  transit: 'var(--statut-transit)',
+  valide: 'var(--statut-valide)',
+};
+
 export default function MissionAnnouncementList({ title, missions = [], emptyText = 'Aucune annonce pour l’instant.', onAccept, disabled = false, grouped = false }) {
   const groups = grouped
     ? missions.reduce((acc, mission) => {
@@ -19,23 +31,43 @@ export default function MissionAnnouncementList({ title, missions = [], emptyTex
   const entries = Object.entries(groups).filter(([, items]) => items.length > 0);
 
   return (
-    <div style={{ background: 'linear-gradient(145deg, rgba(243,232,210,0.98), rgba(247,238,220,0.96))', border: '1.5px solid rgba(110,30,46,0.28)', padding: 16, marginBottom: 18, boxShadow: '3px 3px 0 rgba(26,16,8,0.10)' }}>
-      <div className="font-special" style={{ fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 12 }}>{title}</div>
+    <div className="bordero-card mb-5 p-4">
+      <div className="bordero-ui mb-3 text-[10px] uppercase tracking-[2px]" style={{ color: 'var(--bordeaux)' }}>{title}</div>
       {entries.length === 0 ? (
-        <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 13, color: 'rgba(26,16,8,0.48)', textAlign: 'center', padding: '14px 8px' }}>{emptyText}</div>
+        <div className="bordero-copy px-2 py-3 text-center text-sm italic">{emptyText}</div>
       ) : entries.map(([route, items]) => (
-        <div key={route} style={{ borderTop: grouped ? '1px dashed rgba(26,16,8,0.16)' : 'none', paddingTop: grouped ? 10 : 0, marginTop: grouped ? 10 : 0 }}>
-          {grouped && <div className="font-playfair" style={{ fontSize: 16, color: 'var(--encre)', marginBottom: 8 }}>{route} · {items.length} livre{items.length > 1 ? 's' : ''}</div>}
-          {items.map((mission) => (
-            <div key={mission.id} style={{ background: 'rgba(255,255,255,0.28)', border: '1px solid rgba(26,16,8,0.12)', padding: 12, marginBottom: 10 }}>
-              <div className="font-playfair" style={{ fontSize: 16, color: 'var(--encre)', fontWeight: 700 }}>{mission.livre || mission.title || 'Livre'}</div>
-              <div className="font-fell" style={{ fontSize: 12, fontStyle: 'italic', color: 'rgba(26,16,8,0.55)', marginTop: 2 }}>{missionRoute(mission)}{mission.point_relais_nom ? ` · ${mission.point_relais_nom}` : ''}</div>
-              <div className="font-special" style={{ fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', color: mission.statut === 'expiree' ? '#9A3412' : 'var(--bordeaux)', marginTop: 8 }}>{mission.statut === 'expiree' ? 'Expirée · attente lecteur' : mission.statut === 'engagee' || mission.statut === 'acceptee' ? 'Prise' : 'Annonce ouverte'}</div>
-              {onAccept && (
-                <button type="button" onClick={() => onAccept(mission)} disabled={disabled || mission.statut === 'expiree'} className="font-special" style={{ marginTop: 10, width: '100%', minHeight: 42, background: disabled || mission.statut === 'expiree' ? 'rgba(26,16,8,0.16)' : 'var(--cta-orange)', color: disabled || mission.statut === 'expiree' ? 'rgba(26,16,8,0.45)' : 'var(--cta-foreground)', border: 'none', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', cursor: disabled || mission.statut === 'expiree' ? 'not-allowed' : 'pointer' }}>Accepter la mission</button>
-              )}
+        <div key={route} style={{ borderTop: grouped ? '1px dashed var(--bordero-line)' : 'none', paddingTop: grouped ? 10 : 0, marginTop: grouped ? 10 : 0 }}>
+          {grouped && (
+            <div className="bordero-title mb-2 text-base" style={{ color: 'var(--encre)' }}>
+              {route} · {items.length} livre{items.length > 1 ? 's' : ''}
             </div>
-          ))}
+          )}
+          {items.map((mission) => {
+            const statut = statutLabel(mission.statut);
+            const blocked = disabled || mission.statut === 'expiree';
+            return (
+              <div key={mission.id} className="bordero-surface mb-2.5 p-3">
+                <div className="bordero-title text-base" style={{ color: 'var(--encre)' }}>{mission.livre || mission.title || 'Livre'}</div>
+                <div className="bordero-copy mt-0.5 text-xs italic">
+                  {missionRoute(mission)}{mission.point_relais_nom ? ` · ${mission.point_relais_nom}` : ''}
+                </div>
+                <div className="bordero-ui mt-2 text-[9px] uppercase tracking-[1.5px]" style={{ color: TONE_COLORS[statut.tone] }}>
+                  {statut.label}
+                </div>
+                {onAccept && (
+                  <button
+                    type="button"
+                    onClick={() => onAccept(mission)}
+                    disabled={blocked}
+                    className="bordero-action-secondary mt-2.5 w-full text-[10px]"
+                    style={{ opacity: blocked ? 0.5 : 1, cursor: blocked ? 'not-allowed' : 'pointer' }}
+                  >
+                    Accepter la mission
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       ))}
     </div>

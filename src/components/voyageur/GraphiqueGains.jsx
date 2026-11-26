@@ -35,7 +35,7 @@ const CustomTooltip = ({ active, payload, label }) => {
   return (
     <div style={{
       background: 'var(--encre)', color: 'var(--creme)',
-      padding: '8px 12px', fontFamily: 'Special Elite, monospace', fontSize: 10,
+      padding: '8px 12px', fontFamily: "'Inter', sans-serif", fontSize: 10,
       border: 'none',
     }}>
       <div style={{ marginBottom: 4, letterSpacing: 1, opacity: 0.7 }}>{label}</div>
@@ -61,10 +61,10 @@ export default function GraphiqueGains({ missions }) {
       <div style={{ padding: '12px 16px', borderBottom: '1px dashed rgba(26,16,8,0.15)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <div style={{ fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.4)', marginBottom: 2 }}>
+            <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.4)', marginBottom: 2 }}>
               Évolution · 6 derniers mois
             </div>
-            <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 20, fontWeight: 700, color: mode === 'gains' ? 'var(--bordeaux)' : '#1a3a5c' }}>
+            <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 20, fontWeight: 700, color: mode === 'gains' ? 'var(--bordeaux)' : 'var(--statut-transit)' }}>
               {mode === 'gains' ? `${totalGains.toFixed(2)} €` : `${totalLivres} livres`}
             </div>
           </div>
@@ -72,14 +72,14 @@ export default function GraphiqueGains({ missions }) {
           <div style={{ display: 'flex', gap: 4 }}>
             {[
               { key: 'gains',  label: '€',  color: 'var(--bordeaux)' },
-              { key: 'livres', label: '📚', color: '#1a3a5c' },
+              { key: 'livres', label: '📚', color: 'var(--statut-transit)' },
             ].map(({ key, label, color }) => (
               <button
                 key={key}
                 onClick={() => setMode(key)}
                 style={{
                   padding: '6px 12px', cursor: 'pointer',
-                  fontFamily: 'Special Elite, monospace', fontSize: 10,
+                  fontFamily: "'Inter', sans-serif", fontSize: 10,
                   background: mode === key ? color : 'transparent',
                   color: mode === key ? 'var(--creme)' : 'rgba(26,16,8,0.4)',
                   border: `1px solid ${mode === key ? color : 'rgba(26,16,8,0.2)'}`,
@@ -105,18 +105,18 @@ export default function GraphiqueGains({ missions }) {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(26,16,8,0.08)" />
-              <XAxis dataKey="mois" tick={{ fontFamily: 'Special Elite, monospace', fontSize: 9, fill: 'rgba(26,16,8,0.4)', letterSpacing: 1 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontFamily: 'Special Elite, monospace', fontSize: 8, fill: 'rgba(26,16,8,0.35)' }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="mois" tick={{ fontFamily: "'Inter', sans-serif", fontSize: 9, fill: 'rgba(26,16,8,0.4)', letterSpacing: 1 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontFamily: "'Inter', sans-serif", fontSize: 8, fill: 'rgba(26,16,8,0.35)' }} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomTooltip />} />
               <Area type="monotone" dataKey="gains" name="gains" stroke="#800020" strokeWidth={2} fill="url(#gainsGrad)" dot={{ fill: '#800020', r: 3 }} activeDot={{ r: 5 }} />
             </AreaChart>
           ) : (
             <BarChart data={data} margin={{ top: 4, right: 12, left: -20, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(26,16,8,0.08)" />
-              <XAxis dataKey="mois" tick={{ fontFamily: 'Special Elite, monospace', fontSize: 9, fill: 'rgba(26,16,8,0.4)', letterSpacing: 1 }} axisLine={false} tickLine={false} />
-              <YAxis allowDecimals={false} tick={{ fontFamily: 'Special Elite, monospace', fontSize: 8, fill: 'rgba(26,16,8,0.35)' }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="mois" tick={{ fontFamily: "'Inter', sans-serif", fontSize: 9, fill: 'rgba(26,16,8,0.4)', letterSpacing: 1 }} axisLine={false} tickLine={false} />
+              <YAxis allowDecimals={false} tick={{ fontFamily: "'Inter', sans-serif", fontSize: 8, fill: 'rgba(26,16,8,0.35)' }} axisLine={false} tickLine={false} />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="livres" name="livres" fill="#1a3a5c" radius={[2, 2, 0, 0]} />
+              <Bar dataKey="livres" name="livres" fill="var(--statut-transit)" radius={[2, 2, 0, 0]} />
             </BarChart>
           )}
         </ResponsiveContainer>

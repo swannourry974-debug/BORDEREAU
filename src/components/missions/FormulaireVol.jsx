@@ -49,23 +49,55 @@ export default function FormulaireVol({ user, onVolDeclare }) {
     }
   };
 
-  const inputStyle = { width: '100%', padding: '10px 12px', background: 'var(--creme)', border: '1.5px solid rgba(26,16,8,0.25)', fontFamily: 'Special Elite, monospace', fontSize: 13, color: 'var(--encre)', outline: 'none', boxSizing: 'border-box', marginBottom: 12 };
-  const labelStyle = { fontFamily: 'Special Elite, monospace', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'rgba(26,16,8,0.5)', marginBottom: 5, display: 'block' };
+  const inputStyle = { width: '100%', padding: '10px 12px', background: 'var(--bordero-surface-strong)', border: '1.5px solid var(--bordero-line-strong)', fontFamily: "'Inter', sans-serif", fontSize: 13, color: 'var(--encre)', outline: 'none', boxSizing: 'border-box', marginBottom: 12 };
+  const labelStyle = { fontFamily: "'Inter', sans-serif", fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--encre-douce)', marginBottom: 5, display: 'block' };
 
   if (success) {
-    return <div style={{ background: 'rgba(45,106,45,0.08)', border: '1.5px solid #2d6a2d', padding: 20, textAlign: 'center' }}><div style={{ fontSize: 32, marginBottom: 8 }}>✅</div><div className="font-playfair" style={{ fontWeight: 700, fontSize: 15, color: '#2d6a2d', marginBottom: 4 }}>Vol envoyé en validation</div><div className="font-fell" style={{ fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.5)', marginBottom: 14 }}>Un administrateur doit vérifier votre confirmation de vol avant l’accès aux missions.</div><button onClick={() => { setSuccess(false); setForm({ depart_ville: '', arrivee_ville: '', date_vol: '' }); setDocumentVol(null); }} className="font-special" style={{ background: 'none', border: '1px dashed #2d6a2d', color: '#2d6a2d', padding: '8px 16px', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase', cursor: 'pointer' }}>Envoyer un autre vol</button></div>;
+    return (
+      <div className="bordero-note" data-tone="valide" style={{ padding: 20, textAlign: 'center' }}>
+        <div style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
+        <div className="bordero-title" style={{ fontSize: 16, marginBottom: 4 }}>Vol envoyé en validation</div>
+        <div className="bordero-copy" style={{ fontSize: 13, marginBottom: 14, color: 'inherit' }}>
+          Un administrateur doit vérifier votre confirmation de vol avant l’accès aux missions.
+        </div>
+        <button
+          type="button"
+          onClick={() => { setSuccess(false); setForm({ depart_ville: '', arrivee_ville: '', date_vol: '' }); setDocumentVol(null); }}
+          className="bordero-action-secondary bordero-ui"
+          style={{ padding: '8px 16px', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' }}
+        >
+          Envoyer un autre vol
+        </button>
+      </div>
+    );
   }
 
   return (
-    <div style={{ background: 'var(--papier)', border: '1.5px solid rgba(26,16,8,0.2)', padding: 20 }}>
+    <div className="bordero-card p-5">
       <div style={{ fontSize: 32, marginBottom: 12, textAlign: 'center' }}>✈️</div>
-      <label style={labelStyle}>Ville de départ</label><input style={inputStyle} placeholder="ex: Paris CDG" value={form.depart_ville} onChange={e => setForm(f => ({ ...f, depart_ville: e.target.value }))} />
-      <label style={labelStyle}>Ville d'arrivée</label><input style={inputStyle} placeholder="ex: Miami, FL" value={form.arrivee_ville} onChange={e => setForm(f => ({ ...f, arrivee_ville: e.target.value }))} />
-      <label style={labelStyle}>Date du vol futur</label><input type="date" style={inputStyle} value={form.date_vol} onChange={e => setForm(f => ({ ...f, date_vol: e.target.value }))} />
-      <label style={labelStyle}>Mail/PDF de confirmation du vol</label><input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.eml,.txt" style={inputStyle} onChange={e => setDocumentVol(e.target.files?.[0] || null)} />
-      <div className="font-fell" style={{ fontStyle: 'italic', fontSize: 12, color: 'rgba(26,16,8,0.55)', marginBottom: 12, lineHeight: 1.6 }}>Joignez la confirmation officielle du vol futur. Après 6 essais refusés, le profil est bloqué ; une tentative frauduleuse peut être bloquée immédiatement.</div>
-      {message && <div style={{ background: 'rgba(180,20,20,0.08)', border: '1px solid #b41414', color: '#b41414', padding: 10, fontSize: 12, marginBottom: 12 }}>{message}</div>}
-      <button onClick={handleSubmit} disabled={loading || !form.depart_ville || !form.arrivee_ville || !form.date_vol || !documentVol} className="font-special" style={{ width: '100%', background: 'var(--bordeaux)', color: 'var(--creme)', border: 'none', padding: '12px 0', fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', opacity: (!form.depart_ville || !form.arrivee_ville || !form.date_vol || !documentVol) ? 0.5 : 1 }}>{loading ? '⟳ Envoi en validation...' : '✦ Envoyer pour validation'}</button>
+      <label style={labelStyle}>Ville de départ</label>
+      <input style={inputStyle} placeholder="ex: Paris CDG" value={form.depart_ville} onChange={e => setForm(f => ({ ...f, depart_ville: e.target.value }))} />
+      <label style={labelStyle}>Ville d'arrivée</label>
+      <input style={inputStyle} placeholder="ex: Miami, FL" value={form.arrivee_ville} onChange={e => setForm(f => ({ ...f, arrivee_ville: e.target.value }))} />
+      <label style={labelStyle}>Date du vol futur</label>
+      <input type="date" style={inputStyle} value={form.date_vol} onChange={e => setForm(f => ({ ...f, date_vol: e.target.value }))} />
+      <label style={labelStyle}>Mail/PDF de confirmation du vol</label>
+      <input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.eml,.txt" style={inputStyle} onChange={e => setDocumentVol(e.target.files?.[0] || null)} />
+      <div className="bordero-copy" style={{ fontSize: 13, marginBottom: 12 }}>
+        Joignez la confirmation officielle du vol futur. Après 6 essais refusés, le profil est bloqué ; une tentative frauduleuse peut être bloquée immédiatement.
+      </div>
+      {message && (
+        <div className="bordero-note" data-tone="alerte" style={{ marginBottom: 12, fontSize: 13 }}>{message}</div>
+      )}
+      <button
+        type="button"
+        onClick={handleSubmit}
+        disabled={loading || !form.depart_ville || !form.arrivee_ville || !form.date_vol || !documentVol}
+        className="bordero-action-primary w-full text-[11px]"
+        style={{ opacity: (!form.depart_ville || !form.arrivee_ville || !form.date_vol || !documentVol) ? 0.5 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
+      >
+        {loading ? '⟳ Envoi en validation…' : '✦ Envoyer pour validation'}
+      </button>
     </div>
   );
 }

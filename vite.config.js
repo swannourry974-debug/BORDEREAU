@@ -5,6 +5,12 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   logLevel: 'error', // Suppress warnings, only show errors
+  // Le backend autonome tourne sur :8787 (npm run server:dev).
+  server: {
+    proxy: {
+      '/api': 'http://localhost:8787',
+    },
+  },
   resolve: {
     dedupe: ['react', 'react-dom'],
   },

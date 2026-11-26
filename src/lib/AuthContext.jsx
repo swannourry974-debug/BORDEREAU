@@ -22,6 +22,15 @@ export const AuthProvider = ({ children }) => {
     try {
       setIsLoadingPublicSettings(true);
       setAuthError(null);
+
+      // Backend autonome : pas de « public settings » à interroger, la session
+      // est un cookie HttpOnly validé par /api/auth/me.
+      if (base44.mode === 'local') {
+        setAppPublicSettings({ id: appParams.appId || 'bordero', public_settings: {} });
+        setIsLoadingPublicSettings(false);
+        await checkUserAuth();
+        return;
+      }
       
       // First, check app public settings (with token if available)
       // This will tell us if auth is required, user not registered, etc.

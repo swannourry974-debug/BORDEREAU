@@ -50,7 +50,7 @@ export default function PanelScannerVoyageur() {
     <div>
       <SectionTitle>Scanner</SectionTitle>
       <div style={{ background: 'var(--papier)', border: '1.5px solid rgba(26,16,8,0.2)', padding: 16, marginBottom: 18, boxShadow: '3px 3px 0 rgba(26,16,8,0.10)' }}>
-        <div className="font-special" style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: 'var(--bordeaux)', marginBottom: 8 }}>
+        <div className="font-special" style={{ fontSize: 11, letterSpacing: 2, textTransform: 'uppercase', color: '#6E1E2E', marginBottom: 8 }}>
           Livres à valider
         </div>
         {missions.length === 0 ? (
@@ -63,7 +63,7 @@ export default function PanelScannerVoyageur() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8, minWidth: 118 }}>
               <button onClick={() => setSelectedMission(m)} className="font-special" style={{ minHeight: 42, background: 'var(--cta-orange)', color: 'var(--cta-foreground)', border: 'none', fontSize: 10, letterSpacing: 2, textTransform: 'uppercase' }}>Scanner</button>
-              <button onClick={() => setPhotoMission(m)} className="font-special" style={{ minHeight: 42, background: m.justificatif_photo_uri ? 'rgba(45,106,45,0.12)' : 'var(--papier)', color: m.justificatif_photo_uri ? '#2d6a2d' : 'var(--bordeaux)', border: '1.5px dashed rgba(110,30,46,0.42)', fontSize: 9, letterSpacing: 1.4, textTransform: 'uppercase' }}>{m.justificatif_photo_uri ? 'Photo reçue' : 'Prendre en photo'}</button>
+              <button onClick={() => setPhotoMission(m)} className="font-special" style={{ minHeight: 42, background: m.justificatif_photo_uri ? 'rgba(45,106,45,0.12)' : 'var(--papier)', color: m.justificatif_photo_uri ? 'var(--statut-valide)' : '#6E1E2E', border: '1.5px dashed rgba(110,30,46,0.42)', fontSize: 9, letterSpacing: 1.4, textTransform: 'uppercase' }}>{m.justificatif_photo_uri ? 'Photo reçue' : 'Prendre en photo'}</button>
             </div>
           </div>
         ))}
@@ -82,8 +82,8 @@ export default function PanelScannerVoyageur() {
               <tr key={v.id} style={{ borderTop: '1px dashed rgba(26,16,8,0.14)' }}>
                 <td style={{ padding: 12, color: 'var(--encre)' }}>{v.livre_titre || 'Livre'}</td>
                 <td style={{ padding: 12, color: 'rgba(26,16,8,0.62)' }}>{v.code_barre_isbn || '—'}</td>
-                <td style={{ padding: 12, color: v.validation_admin === 'rejetee' ? '#b41414' : v.validation_admin === 'validee' ? '#2d6a2d' : 'var(--bordeaux)' }}>{validationLabel(v.validation_admin)}</td>
-                <td style={{ padding: 12 }}>{v.ticket_caisse_url ? (String(v.ticket_caisse_url).startsWith('http') ? <a href={v.ticket_caisse_url} target="_blank" rel="noreferrer" style={{ color: 'var(--bordeaux)', textDecoration: 'underline' }}>Voir</a> : <span style={{ color: '#2d6a2d' }}>Privé</span>) : '—'}</td>
+                <td style={{ padding: 12, color: v.validation_admin === 'rejetee' ? 'var(--statut-alerte)' : v.validation_admin === 'validee' ? 'var(--statut-valide)' : '#6E1E2E' }}>{validationLabel(v.validation_admin)}</td>
+                <td style={{ padding: 12 }}>{v.ticket_caisse_url ? (String(v.ticket_caisse_url).startsWith('http') ? <a href={v.ticket_caisse_url} target="_blank" rel="noreferrer" style={{ color: '#6E1E2E', textDecoration: 'underline' }}>Voir</a> : <span style={{ color: 'var(--statut-valide)' }}>Privé</span>) : '—'}</td>
               </tr>
             ))}
           </tbody>
